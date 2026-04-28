@@ -237,6 +237,55 @@
   flex-shrink: 0;
 }
 
+/* ── Loop controls ─────────────────────────────────────────── */
+.loop-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 16px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 16px;
+  background: #151a22;
+  color: white;
+}
+
+.loop-status strong {
+  font-size: 0.9rem;
+}
+
+.loop-status span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.loop-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.loop-btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #202733;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  font-weight: 700;
+}
+
+.loop-btn.recording {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: #071014;
+}
+
+.loop-btn.playing {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #071014;
+}
+
 .instrument-select {
   width: 100%;
   background: var(--panel);
@@ -252,43 +301,7 @@
   cursor: pointer;
 }
 
-/* ── Loop controls ─────────────────────────────────────────── */
-.loop-panel {
-  display: flex !important;
-  position: fixed !important;
-  left: 16px;
-  right: 16px;
-  bottom: 78px;
-  z-index: 9999;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 14px;
-  border: 2px solid #ffc247;
-  border-radius: 16px;
-  background: #151a22;
-  color: white;
-}
 
-.loop-buttons {
-  display: flex !important;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.loop-btn {
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: #202733;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.25);
-  font-weight: 800;
-}
-
-.loop-status {
-  display: grid;
-  gap: 1px;
-}
 
 .loop-status strong {
   font-size: 0.86rem;
@@ -428,13 +441,3 @@
   font-size: 0.85rem;
 }
 
-.loop-panel {
-  display: block !important;
-  margin: 16px;
-  padding: 16px;
-  border: 1px solid #444;
-  border-radius: 12px;
-  background: #151a22;
-  color: white;
-  z-index: 10;
-}

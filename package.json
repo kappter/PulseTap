@@ -1,0 +1,20 @@
+{
+  "name": "pulsetap-phase1",
+  "version": "1.0.0",
+  "description": "PulseTap Phase 1 — multi-user music session prototype",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["music", "web-audio", "socket.io", "realtime"],
+  "author": "PulseTap",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}

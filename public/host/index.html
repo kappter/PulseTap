@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseTap · Host</title>
+  <link rel="stylesheet" href="/shared/style.css" />
+  <link rel="stylesheet" href="host.css" />
+</head>
+<body class="host-page">
+
+  <!-- ── SETUP SCREEN ─────────────────────────────────────── -->
+  <div id="setupScreen" class="screen host-setup">
+    <header class="pt-header">
+      <div class="logo">
+        <div class="logo-mark">P</div>
+        <span>PulseTap</span>
+      </div>
+      <div class="badge host-badge">Host</div>
+    </header>
+
+    <div class="setup-card">
+      <h1 class="setup-title">Open a Room</h1>
+      <p class="setup-sub">Create a room code and share it with your players.</p>
+
+      <div class="field-group">
+        <label for="roomCodeInput">Room code</label>
+        <div class="room-input-row">
+          <input id="roomCodeInput" type="text" placeholder="e.g. JAZZ01"
+                 maxlength="16" autocomplete="off" autocapitalize="characters" />
+          <button id="genRoomBtn" class="btn-ghost gen-btn" title="Generate random code">⟳</button>
+        </div>
+      </div>
+
+      <button id="openRoomBtn" class="btn-primary">Open Room</button>
+      <p id="hostSetupError" class="setup-error" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- ── MIXER SCREEN ──────────────────────────────────────── -->
+  <div id="mixerScreen" class="screen mixer-screen hidden">
+
+    <!-- Top nav bar -->
+    <nav class="mixer-nav">
+      <div class="logo logo-sm">
+        <div class="logo-mark logo-mark-sm">P</div>
+        <span>PulseTap</span>
+      </div>
+
+      <div class="room-pill">
+        <span class="room-pill-label">ROOM</span>
+        <span id="roomDisplay" class="room-pill-code"></span>
+        <button id="copyRoomBtn" class="icon-btn" title="Copy room code">⎘</button>
+      </div>
+
+      <div class="nav-conn">
+        <span id="hostConnDot" class="conn-dot disconnected"></span>
+        <span id="hostConnLabel" class="conn-label">Connecting…</span>
+      </div>
+    </nav>
+
+    <!-- Global transport + settings bar -->
+    <div class="transport-bar">
+
+      <!-- BPM -->
+      <div class="transport-group">
+        <label class="transport-label" for="bpmInput">BPM</label>
+        <div class="bpm-row">
+          <button class="bpm-nudge" id="bpmDown">−</button>
+          <input id="bpmInput" type="number" min="40" max="240" value="120" class="bpm-input" />
+          <button class="bpm-nudge" id="bpmUp">+</button>
+        </div>
+      </div>
+
+      <!-- Time signature -->
+      <div class="transport-group">
+        <label class="transport-label">TIME SIG</label>
+        <div class="timesig-row">
+          <select id="beatsPerBar" class="transport-select">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+          <span class="timesig-slash">/</span>
+          <select id="beatUnit" class="transport-select">
+            <option value="4" selected>4</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Key -->
+      <div class="transport-group">
+        <label class="transport-label" for="keySelect">KEY</label>
+        <select id="keySelect" class="transport-select">
+          <option>C</option><option>C#</option><option>D</option>
+          <option>D#</option><option>E</option><option>F</option>
+          <option>F#</option><option>G</option><option>G#</option>
+          <option>A</option><option>A#</option><option>B</option>
+        </select>
+      </div>
+
+      <!-- Mode -->
+      <div class="transport-group">
+        <label class="transport-label" for="modeSelect">MODE</label>
+        <select id="modeSelect" class="transport-select">
+          <option value="major">Major</option>
+          <option value="minor">Minor</option>
+          <option value="dorian">Dorian</option>
+          <option value="phrygian">Phrygian</option>
+          <option value="lydian">Lydian</option>
+          <option value="mixolydian">Mixolydian</option>
+          <option value="pentatonic">Pentatonic</option>
+        </select>
+      </div>
+
+      <!-- Quantize -->
+      <div class="transport-group">
+        <label class="transport-label" for="quantizeSelect">QUANTIZE</label>
+        <select id="quantizeSelect" class="transport-select">
+          <option value="none">Off</option>
+          <option value="1/4">1/4</option>
+          <option value="1/8">1/8</option>
+          <option value="1/16">1/16</option>
+        </select>
+      </div>
+
+      <!-- Transport controls -->
+      <div class="transport-group transport-btns">
+        <button id="startStopBtn" class="btn-transport start">▶ Start</button>
+        <button id="recordBtn" class="btn-transport record" title="Record (Phase 2)">⏺</button>
+      </div>
+
+    </div>
+
+    <!-- Beat indicator bar -->
+    <div id="hostBeatBar" class="beat-bar host-beat-bar" aria-hidden="true"></div>
+
+    <!-- Channel strips area -->
+    <div class="mixer-body">
+      <div id="channelStrips" class="channel-strips">
+        <!-- Injected by host.js -->
+      </div>
+
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">🎙</div>
+        <p>Waiting for players to join…</p>
+        <p class="empty-sub">Share the room code <strong id="emptyRoomCode"></strong> with your players.</p>
+      </div>
+    </div>
+
+    <!-- Status / event log -->
+    <div class="host-log-bar">
+      <div id="hostLog" class="host-log">System ready.</div>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="host.js"></script>
+</body>
+</html>

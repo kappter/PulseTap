@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>PulseTap · Player</title>
+  <link rel="stylesheet" href="/shared/style.css" />
+  <link rel="stylesheet" href="player.css" />
+</head>
+<body class="player-page">
+
+  <!-- ── SETUP SCREEN ─────────────────────────────────────── -->
+  <div id="setupScreen" class="screen setup-screen">
+    <header class="pt-header">
+      <div class="logo">
+        <div class="logo-mark">P</div>
+        <span>PulseTap</span>
+      </div>
+      <div class="badge">Player</div>
+    </header>
+
+    <div class="setup-card">
+      <h1 class="setup-title">Join a Session</h1>
+
+      <div class="field-group">
+        <label for="playerName">Your name</label>
+        <input id="playerName" type="text" placeholder="e.g. Alex" maxlength="24" autocomplete="off" />
+      </div>
+
+      <div class="field-group">
+        <label for="roomCode">Room code</label>
+        <input id="roomCode" type="text" placeholder="e.g. JAZZ01" maxlength="16"
+               autocomplete="off" autocapitalize="characters" />
+      </div>
+
+      <div class="field-group">
+        <label>Your role</label>
+        <div class="role-grid" id="roleGrid">
+          <button class="role-btn active" data-role="Melody">🎵 Melody</button>
+          <button class="role-btn" data-role="Bass">🎸 Bass</button>
+          <button class="role-btn" data-role="Percussion">🥁 Percussion</button>
+          <button class="role-btn" data-role="Chords">🎹 Chords</button>
+          <button class="role-btn" data-role="FX">✨ FX</button>
+        </div>
+      </div>
+
+      <button id="joinBtn" class="btn-primary">Join Session</button>
+      <p id="setupError" class="setup-error" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- ── PAD SCREEN ────────────────────────────────────────── -->
+  <div id="padScreen" class="screen pad-screen hidden">
+
+    <!-- Top bar -->
+    <div class="pad-topbar">
+      <div class="pad-session-info">
+        <span id="padRoomLabel" class="room-label"></span>
+        <span id="padPlayerLabel" class="player-label"></span>
+      </div>
+      <div class="pad-status-row">
+        <span id="connStatus" class="conn-dot disconnected" title="Connection status"></span>
+        <span id="connLabel" class="conn-label">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Session settings bar (read-only, set by host) -->
+    <div class="settings-bar">
+      <div class="setting-chip">
+        <span class="chip-label">KEY</span>
+        <span id="dispKey" class="chip-value">C</span>
+      </div>
+      <div class="setting-chip">
+        <span class="chip-label">MODE</span>
+        <span id="dispMode" class="chip-value">major</span>
+      </div>
+      <div class="setting-chip">
+        <span class="chip-label">BPM</span>
+        <span id="dispBpm" class="chip-value">120</span>
+      </div>
+      <div class="setting-chip">
+        <span class="chip-label">Q</span>
+        <span id="dispQuantize" class="chip-value">off</span>
+      </div>
+    </div>
+
+    <!-- Metronome beat indicator -->
+    <div id="beatBar" class="beat-bar" aria-hidden="true">
+      <!-- Beat dots injected by JS -->
+    </div>
+
+    <!-- Instrument selector -->
+    <div class="instrument-row">
+      <label for="instrumentSelect" class="sr-only">Instrument</label>
+      <select id="instrumentSelect" class="instrument-select">
+        <option value="sine">Sine</option>
+        <option value="triangle">Triangle</option>
+        <option value="square">Square</option>
+        <option value="sawtooth">Sawtooth</option>
+        <option value="kick">Kick</option>
+        <option value="snare">Snare</option>
+        <option value="hi-hat">Hi-Hat</option>
+        <option value="tom">Tom</option>
+      </select>
+    </div>
+
+    <!-- 8 tap pads -->
+    <div class="pad-grid" id="padGrid">
+      <button class="pad" data-degree="0" aria-label="Pad 1">1</button>
+      <button class="pad" data-degree="1" aria-label="Pad 2">2</button>
+      <button class="pad" data-degree="2" aria-label="Pad 3">3</button>
+      <button class="pad" data-degree="3" aria-label="Pad 4">4</button>
+      <button class="pad" data-degree="4" aria-label="Pad 5">5</button>
+      <button class="pad" data-degree="5" aria-label="Pad 6">6</button>
+      <button class="pad" data-degree="6" aria-label="Pad 7">7</button>
+      <button class="pad" data-degree="7" aria-label="Pad 8">8</button>
+    </div>
+
+    <!-- Mute indicator (set by host) -->
+    <div id="muteOverlay" class="mute-overlay hidden">
+      <span>🔇 Muted by host</span>
+    </div>
+
+    <!-- Leave button -->
+    <button id="leaveBtn" class="btn-ghost leave-btn">Leave session</button>
+  </div>
+
+  <!-- Socket.IO client (served by the server automatically) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="player.js"></script>
+</body>
+</html>

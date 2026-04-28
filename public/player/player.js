@@ -69,6 +69,8 @@ function updateLoopUI() {
 // ==============================
 
 function startLoopRecording() {
+  loopStartMs = performance.now();
+requestAnimationFrame(animatePlayhead);
   loopEvents = [];
   loopStartMs = performance.now();
   isLoopRecording = true;
@@ -147,7 +149,20 @@ document.getElementById("loopLengthSelect")?.addEventListener("change", (e) => {
 document.getElementById("quantizeSelect")?.addEventListener("change", (e) => {
   quantizeDivision = e.target.value;
 });
+function animatePlayhead() {
+  if (!isLoopPlaying) return;
 
+  const loopLength = getLoopLengthMs();
+  const now = performance.now();
+  const progress = ((now - loopStartMs) % loopLength) / loopLength;
+
+  const playhead = document.getElementById("loopPlayhead");
+  if (playhead) {
+    playhead.style.transform = `translateX(${progress * 100}%)`;
+  }
+
+  requestAnimationFrame(animatePlayhead);
+}
 // ==============================
 // MODIFY YOUR EXISTING triggerTap
 // ==============================

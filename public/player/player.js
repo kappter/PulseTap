@@ -11,7 +11,7 @@ let loopTimeouts = [];
 let loopBars = 1;
 let quantizeDivision = "off";
 let currentLoopLengthMs = 2000;
-
+let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 // ==============================
 // LOOP HELPERS
 // ==============================

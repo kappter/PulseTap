@@ -254,16 +254,35 @@
 
 /* ── Loop controls ─────────────────────────────────────────── */
 .loop-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex !important;
+  position: fixed !important;
+  left: 16px;
+  right: 16px;
+  bottom: 78px;
+  z-index: 9999;
   gap: 12px;
-  margin: 6px 16px 8px;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.045);
-  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 14px;
+  border: 2px solid #ffc247;
+  border-radius: 16px;
+  background: #151a22;
+  color: white;
+}
+
+.loop-buttons {
+  display: flex !important;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.loop-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #202733;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  font-weight: 800;
 }
 
 .loop-status {

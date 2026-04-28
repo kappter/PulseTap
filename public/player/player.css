@@ -234,3 +234,21 @@ padding: 12px;
   color: var(--text);
   padding: 8px 10px;
 }
+.loop-progress {
+  position: relative;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.loop-playhead {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #ffc247;
+  transform: translateX(0%);
+}

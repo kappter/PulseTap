@@ -71,14 +71,14 @@ const PORT = process.env.PORT || 3000;
 // ─────────────────────────────────────────────────────────────
 //  Static routes
 // ─────────────────────────────────────────────────────────────
+// Serve root landing page and app pages
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 // Serve /player  →  public/player/index.html
 app.use("/player", express.static(path.join(__dirname, "public", "player")));
 // Serve /host    →  public/host/index.html
 app.use("/host",   express.static(path.join(__dirname, "public", "host")));
 // Serve shared assets (CSS, fonts, icons)
 app.use("/shared", express.static(path.join(__dirname, "public", "shared")));
-// Root redirect to landing page (existing GitHub Pages site)
-app.get("/", (req, res) => res.redirect("/player"));
 
 // ─────────────────────────────────────────────────────────────
 //  Room state

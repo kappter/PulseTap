@@ -252,6 +252,83 @@
   cursor: pointer;
 }
 
+/* ── Loop controls ─────────────────────────────────────────── */
+.loop-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 16px 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.045);
+  flex-shrink: 0;
+}
+
+.loop-status {
+  display: grid;
+  gap: 1px;
+}
+
+.loop-status strong {
+  font-size: 0.86rem;
+  color: var(--text);
+}
+
+.loop-status span {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.loop-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.loop-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 8px 12px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loop-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.loop-btn.recording {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: #071014;
+}
+
+.loop-btn.playing {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #071014;
+}
+
+@media (max-width: 520px) {
+  .loop-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .loop-buttons {
+    justify-content: flex-start;
+  }
+}
+
 /* ── Pad grid ─────────────────────────────────────────────── */
 .pad-grid {
   flex: 1;

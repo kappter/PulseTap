@@ -73,6 +73,10 @@ const padGrid        = document.getElementById("padGrid");
 const pads           = padGrid.querySelectorAll(".pad");
 const muteOverlay    = document.getElementById("muteOverlay");
 const leaveBtn       = document.getElementById("leaveBtn");
+const recordLoopBtn = document.getElementById("recordLoopBtn");
+const playLoopBtn   = document.getElementById("playLoopBtn");
+const clearLoopBtn  = document.getElementById("clearLoopBtn");
+const loopStatus    = document.getElementById("loopStatus");
 
 // ─────────────────────────────────────────────────────────────
 //  Session state
@@ -368,6 +372,130 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
   }
 });
 
+
+// ─────────────────────────────────────────────────────────────
+//  Loop Mode v1
+// ─────────────────────────────────────────────────────────────
+// Local-first one-bar looping. The player hears their own tap instantly.
+// Recorded loop playback also emits normal tap events so the host board
+// can respond and other connected players can hear the loop.
+let loopEvents = [];
+let isLoopRecording = false;
+let isLoopPlaying = false;
+let loopStartMs = 0;
+let loopTimeouts = [];
+let currentLoopLengthMs = 2000;
+
+function getLoopLengthMs() {
+  const bpm = Number(sessionSettings.bpm) || 120;
+  const beatsPerBar = metroBeatsPerBar || 4;
+  return Math.round((60 / bpm) * 1000 * beatsPerBar);
+}
+
+function quantizeLoopTime(ms, loopLengthMs) {
+  const q = sessionSettings.quantize;
+  if (!q || q === "none") return ms;
+  // v1: snap to a 16th-note grid for any active quantize setting.
+  const grid = loopLengthMs / 16;
+  return Math.round(ms / grid) * grid;
+}
+
+function updateLoopUI() {
+  recordLoopBtn.classList.toggle("recording", isLoopRecording);
+  playLoopBtn.classList.toggle("playing", isLoopPlaying);
+
+  recordLoopBtn.textContent = isLoopRecording ? "Stop Recording" : "Record Loop";
+  playLoopBtn.textContent = isLoopPlaying ? "Stop Loop" : "Play Loop";
+
+  playLoopBtn.disabled = loopEvents.length === 0;
+  clearLoopBtn.disabled = loopEvents.length === 0 && !isLoopRecording;
+
+  if (isLoopRecording) {
+    loopStatus.textContent = `Recording · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"}`;
+  } else if (isLoopPlaying) {
+    loopStatus.textContent = `Playing · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"} · ${Math.round(currentLoopLengthMs)}ms`;
+  } else if (loopEvents.length) {
+    loopStatus.textContent = `Ready · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"} · one-bar loop`;
+  } else {
+    loopStatus.textContent = "Empty · one-bar loop";
+  }
+}
+
+function startLoopRecording() {
+  stopLoopPlayback();
+  loopEvents = [];
+  currentLoopLengthMs = getLoopLengthMs();
+  loopStartMs = performance.now();
+  isLoopRecording = true;
+  updateLoopUI();
+}
+
+function stopLoopRecording() {
+  isLoopRecording = false;
+  updateLoopUI();
+}
+
+function clearLoop() {
+  stopLoopPlayback();
+  isLoopRecording = false;
+  loopEvents = [];
+  updateLoopUI();
+}
+
+function scheduleLoopCycle() {
+  if (!isLoopPlaying || !loopEvents.length) return;
+
+  loopTimeouts.forEach(clearTimeout);
+  loopTimeouts = [];
+
+  const sorted = [...loopEvents].sort((a, b) => a.timeMs - b.timeMs);
+  for (const event of sorted) {
+    const t = setTimeout(() => {
+      if (!isLoopPlaying) return;
+      triggerTap(event.degree, event.instrument, { fromLoop: true, record: false, emit: true });
+    }, Math.max(0, event.timeMs));
+    loopTimeouts.push(t);
+  }
+
+  const next = setTimeout(scheduleLoopCycle, currentLoopLengthMs);
+  loopTimeouts.push(next);
+}
+
+function startLoopPlayback() {
+  if (!loopEvents.length) return;
+  isLoopRecording = false;
+  isLoopPlaying = true;
+  currentLoopLengthMs = getLoopLengthMs();
+  updateLoopUI();
+  scheduleLoopCycle();
+}
+
+function stopLoopPlayback() {
+  isLoopPlaying = false;
+  loopTimeouts.forEach(clearTimeout);
+  loopTimeouts = [];
+  updateLoopUI();
+}
+
+recordLoopBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (isLoopRecording) stopLoopRecording();
+  else startLoopRecording();
+});
+
+playLoopBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (isLoopPlaying) stopLoopPlayback();
+  else startLoopPlayback();
+});
+
+clearLoopBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  clearLoop();
+});
+
+updateLoopUI();
+
 // ─────────────────────────────────────────────────────────────
 //  Pad interaction
 // ─────────────────────────────────────────────────────────────
@@ -376,32 +504,54 @@ function flashPad(pad, cls) {
   setTimeout(() => pad.classList.remove(cls), 130);
 }
 
+function emitTapEvent(degree, instrument, source = "live") {
+  socket.emit("player:tap", {
+    roomId:     roomCodeIn.value.trim().toUpperCase(),
+    playerId,
+    playerName: playerNameIn.value.trim() || "Player",
+    role:       selectedRole,
+    padNumber:  degree,
+    timestamp:  Date.now(),
+    soundType:  sessionSettings.mode,
+    instrument,
+    frequency:  padFrequency(degree),
+    source
+  });
+}
+
+function triggerTap(degree, instrument, options = {}) {
+  const { fromLoop = false, record = true, emit = true } = options;
+  if (isMuted) return;
+  initAudio();
+
+  // ── IMMEDIATE local playback ──────────────────────────
+  playSound(degree, instrument);
+  const pad = padGrid.querySelector(`.pad[data-degree="${degree}"]`);
+  if (pad) flashPad(pad, fromLoop ? "active-remote" : "active-local");
+  if (!fromLoop && navigator.vibrate) navigator.vibrate(10);
+
+  // ── Record to one-bar loop if Loop Mode is recording ───
+  if (record && isLoopRecording) {
+    const loopLength = currentLoopLengthMs || getLoopLengthMs();
+    let rel = (performance.now() - loopStartMs) % loopLength;
+    rel = quantizeLoopTime(rel, loopLength);
+    if (rel >= loopLength) rel = 0;
+
+    loopEvents.push({ degree, instrument, timeMs: rel });
+    updateLoopUI();
+  }
+
+  // ── Relay to server ───────────────────────────────────
+  if (emit) {
+    emitTapEvent(degree, instrument, fromLoop ? "loop" : "live");
+  }
+}
+
 pads.forEach((pad) => {
   pad.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    if (isMuted) return;
-    initAudio();
-
-    const degree     = Number(pad.dataset.degree);
-    const instrument = instrumentSel.value;
-
-    // ── IMMEDIATE local playback ──────────────────────────
-    playSound(degree, instrument);
-    flashPad(pad, "active-local");
-    if (navigator.vibrate) navigator.vibrate(10);
-
-    // ── Relay to server ───────────────────────────────────
-    socket.emit("player:tap", {
-      roomId:     roomCodeIn.value.trim().toUpperCase(),
-      playerId,
-      playerName: playerNameIn.value.trim() || "Player",
-      role:       selectedRole,
-      padNumber:  degree,
-      timestamp:  Date.now(),
-      soundType:  sessionSettings.mode,
-      instrument,
-      frequency:  padFrequency(degree)
-    });
+    const degree = Number(pad.dataset.degree);
+    triggerTap(degree, instrumentSel.value, { fromLoop: false, record: true, emit: true });
   });
 });
 
@@ -453,6 +603,7 @@ joinBtn.addEventListener("pointerdown", (e) => {
 leaveBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   stopMetronome();
+  stopLoopPlayback();
   socket.disconnect();
   padScreen.classList.add("hidden");
   setupScreen.classList.remove("hidden");

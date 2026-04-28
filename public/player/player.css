@@ -209,3 +209,28 @@ background: var(--accent-2);
 margin: 6px 16px 10px;
 padding: 12px;
 }
+
+.loop-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.loop-options label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.loop-options select {
+  min-width: 110px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 10px;
+}

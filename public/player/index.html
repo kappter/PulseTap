@@ -107,45 +107,73 @@
       </select>
     </div>
 
-
     <!-- Loop controls -->
     <div class="loop-panel" aria-label="Loop Mode controls">
       <div class="loop-status">
         <strong>Loop Mode</strong>
         <span id="loopStatus">Empty · one-bar loop</span>
       </div>
+
       <div class="loop-buttons">
         <button id="recordLoopBtn" class="loop-btn">Record Loop</button>
         <button id="playLoopBtn" class="loop-btn" disabled>Play Loop</button>
         <button id="clearLoopBtn" class="loop-btn" disabled>Clear</button>
       </div>
-      
-  <div class="loop-options">
-  <label>
-    Loop Length
-    <select id="loopLengthSelect">
-      <option value="1">1 bar</option>
-      <option value="2">2 bars</option>
-      <option value="4">4 bars</option>
-    </select>
-  </label>
 
-  <label>
-    Quantize
-    <select id="quantizeSelect">
-      <option value="off">Off</option>
-      <option value="4">1/4</option>
-      <option value="8">1/8</option>
-      <option value="16">1/16</option>
-      <option value="32">1/32</option>
-    </select>
-  </label>
-</div>
-      <div class="loop-progress">
-  <div id="loopPlayhead" class="loop-playhead"></div>
-</div>
+      <div class="loop-options">
+        <label>
+          Loop Length
+          <select id="loopLengthSelect">
+            <option value="1">1 bar</option>
+            <option value="2">2 bars</option>
+            <option value="4">4 bars</option>
+          </select>
+        </label>
+
+        <label>
+          Quantize
+          <select id="quantizeSelect">
+            <option value="off">Off</option>
+            <option value="4">1/4</option>
+            <option value="8">1/8</option>
+            <option value="16">1/16</option>
+            <option value="32">1/32</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Loop progress bar -->
+      <div class="loop-progress" aria-label="Loop playback progress">
+        <div id="loopPlayhead" class="loop-playhead"></div>
+      </div>
+
+      <!-- Time divider / step counter -->
+      <div class="time-divider" aria-label="Loop time divider">
+        <div class="time-counter">
+          <span id="currentStep">1</span>
+        </div>
+
+        <div class="time-grid" aria-label="16 step loop grid">
+          <div class="time-box" data-step="0"></div>
+          <div class="time-box" data-step="1"></div>
+          <div class="time-box" data-step="2"></div>
+          <div class="time-box" data-step="3"></div>
+          <div class="time-box" data-step="4"></div>
+          <div class="time-box" data-step="5"></div>
+          <div class="time-box" data-step="6"></div>
+          <div class="time-box" data-step="7"></div>
+          <div class="time-box" data-step="8"></div>
+          <div class="time-box" data-step="9"></div>
+          <div class="time-box" data-step="10"></div>
+          <div class="time-box" data-step="11"></div>
+          <div class="time-box" data-step="12"></div>
+          <div class="time-box" data-step="13"></div>
+          <div class="time-box" data-step="14"></div>
+          <div class="time-box" data-step="15"></div>
+        </div>
+      </div>
     </div>
-    
+
     <!-- 8 tap pads -->
     <div class="pad-grid" id="padGrid">
       <button class="pad" data-degree="0" aria-label="Pad 1">1</button>

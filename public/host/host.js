@@ -328,7 +328,7 @@ function startMetronome() {
   const bpm         = Number(bpmInput.value) || 120;
   const beatsPerBar = Number(beatsPerBarSel.value) || 4;
   const beatUnit    = Number(beatUnitSel.value)    || 4;
-  const startTime   = Date.now();
+  const startTime = Date.now() + 300;
   metroBarZeroTime = startTime;
   metroBeatsPerBar  = beatsPerBar;
   metroBeat         = 0;
@@ -346,13 +346,21 @@ function startMetronome() {
   });
 
   const intervalMs = (60 / bpm) * 1000;
-  function tick() {
-    const beat = metroBeat % beatsPerBar;
-    highlightBeat(beat);
-    metroBeat++;
-  }
+
+const elapsed = Date.now() - startTime;
+const phase = elapsed % intervalMs;
+const delay = phase > 0 ? intervalMs - phase : 0;
+
+function tick() {
+  const beat = metroBeat % beatsPerBar;
+  highlightBeat(beat);
+  metroBeat++;
+}
+
+setTimeout(() => {
   tick();
   metroTimer = setInterval(tick, intervalMs);
+}, delay);
   log(`Metronome started · ${bpm} BPM · ${beatsPerBar}/${beatUnit}`, "system");
 }
 

@@ -317,14 +317,27 @@ function updateLoopMirror(loopState) {
   }
 
   const grid = mirror.querySelector(".loop-mirror-grid");
-  grid.innerHTML = "";
-
   const events = loopState.events || [];
   const loopLength = loopState.loopLengthMs || 2000;
 
-  // ✅ set timing AFTER mirror exists
   mirror.dataset.loopLengthMs = loopLength;
-  mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
+  mirror.dataset.action = loopState.action || "update";
+
+  if (loopState.action === "play-start") {
+    mirror.dataset.startedAt = performance.now();
+  }
+
+  if (!mirror.dataset.startedAt) {
+    mirror.dataset.startedAt = performance.now();
+  }
+
+  if (loopState.action === "clear") {
+    mirror.dataset.startedAt = performance.now();
+    grid.innerHTML = "";
+    return;
+  }
+
+  grid.innerHTML = "";
 
   for (let i = 0; i < 16; i++) {
     const cell = document.createElement("div");
@@ -340,12 +353,6 @@ function updateLoopMirror(loopState) {
     }
 
     grid.appendChild(cell);
-  }
-
-  mirror.dataset.action = loopState.action || "update";
-
-  if (loopState.action === "clear") {
-    mirror.dataset.startedAt = performance.now();
   }
 }
 

@@ -486,7 +486,39 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
+.loop-mirror {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
 
+.loop-mirror-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.loop-mirror-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 3px;
+}
+
+.loop-mirror-cell {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  opacity: 0.45;
+}
+
+.loop-mirror-cell.has-event {
+  background: #ffc247;
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(255,194,71,0.65);
+}
 .host-log::-webkit-scrollbar { display: none; }
 
 .log-line { flex-shrink: 0; }

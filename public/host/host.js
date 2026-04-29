@@ -66,10 +66,20 @@ let isRunning     = false;
 let metroBeat     = 0;
 let metroTimer    = null;
 let metroBeatsPerBar = 4;
+const savedLoopStates = new Map();
 
 /** Map<playerId, { playerName, role, socketId, muted, volume, stripEl, meterEl, meterTimer }> */
 const players = new Map();
+const saveSessionBtn = document.createElement("button");
+saveSessionBtn.className = "transport-btn";
+saveSessionBtn.textContent = "Save";
 
+const loadSessionBtn = document.createElement("button");
+loadSessionBtn.className = "transport-btn";
+loadSessionBtn.textContent = "Load";
+
+startAllLoopsBtn.insertAdjacentElement("afterend", saveSessionBtn);
+saveSessionBtn.insertAdjacentElement("afterend", loadSessionBtn);
 // ─────────────────────────────────────────────────────────────
 //  Logging
 // ─────────────────────────────────────────────────────────────
@@ -86,7 +96,12 @@ function log(msg, kind = "system") {
 //  Socket.IO
 // ─────────────────────────────────────────────────────────────
 const socket = io();
+socket.on("host:loop-state", (loopState) => {
+  savedLoopStates.set(loopState.playerId, loopState);
 
+  updateLoopMirror(loopState);
+  startHostLoopMirrorAnimation();
+});
 socket.on("connect", () => {
   hostConnDot.className   = "conn-dot connected";
   hostConnLabel.textContent = "Connected";
@@ -141,7 +156,10 @@ socket.on("player:tap:meter", ({ playerId, role, padNumber }) => {
   log(`${p.playerName} · pad ${padNumber + 1}`, "remote");
 });
 
-
+loadSessionBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  loadSavedSession();
+});
 // ─────────────────────────────────────────────────────────────
 //  Room setup
 // ─────────────────────────────────────────────────────────────
@@ -178,7 +196,26 @@ copyRoomBtn.addEventListener("pointerdown", (e) => {
     navigator.clipboard.writeText(currentRoom).then(() => log("Room code copied", "system"));
   }
 });
+function saveCurrentSession() {
+  if (!currentRoom) return;
 
+  const sessionSave = {
+    savedAt: Date.now(),
+    roomId: currentRoom,
+    settings: {
+      bpm: Number(bpmInput.value),
+      beatsPerBar: Number(beatsPerBarSel.value),
+      beatUnit: Number(beatUnitSel.value),
+      key: keySelect.value,
+      mode: modeSelect.value,
+      quantize: quantizeSelect.value
+    },
+    players: Array.from(savedLoopStates.values())
+  };
+
+  localStorage.setItem("pulsetap_saved_session", JSON.stringify(sessionSave));
+  log("Session saved", "system");
+}
 // ─────────────────────────────────────────────────────────────
 //  Transport — settings broadcast
 // ─────────────────────────────────────────────────────────────
@@ -623,6 +660,37 @@ function pulseMeter(meterEl, role) {
   }, 120);
 }
 
+function loadSavedSession() {
+  const raw = localStorage.getItem("pulsetap_saved_session");
+  if (!raw) {
+    log("No saved session found", "system");
+    return;
+  }
+
+  const sessionSave = JSON.parse(raw);
+
+  if (sessionSave.settings) {
+    bpmInput.value = sessionSave.settings.bpm || 120;
+    beatsPerBarSel.value = sessionSave.settings.beatsPerBar || 4;
+    beatUnitSel.value = sessionSave.settings.beatUnit || 4;
+    keySelect.value = sessionSave.settings.key || "C";
+    modeSelect.value = sessionSave.settings.mode || "major";
+    quantizeSelect.value = sessionSave.settings.quantize || "off";
+
+    broadcastSettings();
+  }
+
+  savedLoopStates.clear();
+
+  (sessionSave.players || []).forEach(loopState => {
+    savedLoopStates.set(loopState.playerId, loopState);
+    updateLoopMirror(loopState);
+  });
+
+  startHostLoopMirrorAnimation();
+  log("Session loaded on host", "system");
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Utilities
 // ─────────────────────────────────────────────────────────────
@@ -636,3 +704,11 @@ function escHtml(str) {
 
 // Pre-fill a random room code on load
 roomCodeInput.value = generateRoomCode();
+saveSessionBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  saveCurrentSession();
+});
+
+
+
+

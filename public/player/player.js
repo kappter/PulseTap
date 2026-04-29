@@ -355,9 +355,14 @@ function startMetronome({ bpm, beatsPerBar, startTime }) {
   const intervalMs = (60 / metroBpm) * 1000;
 
   // Calculate how far into the first beat we already are
-  const elapsed = Date.now() - metroStartEpoch;
-  const phase   = elapsed % intervalMs;
-  const delay   = phase > 0 ? intervalMs - phase : 0;
+  const now = Date.now();
+let delay = Math.max(0, startTime - now);
+
+if (delay === 0) {
+  const elapsed = now - startTime;
+  const phase = elapsed % intervalMs;
+  delay = phase > 0 ? intervalMs - phase : 0;
+}
 
   setTimeout(() => {
     tick();

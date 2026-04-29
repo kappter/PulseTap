@@ -29,6 +29,10 @@ const roomDisplay    = document.getElementById("roomDisplay");
 const copyRoomBtn    = document.getElementById("copyRoomBtn");
 const hostConnDot    = document.getElementById("hostConnDot");
 const hostConnLabel  = document.getElementById("hostConnLabel");
+const startAllLoopsBtn = document.createElement("button");
+startAllLoopsBtn.className = "transport-btn start";
+startAllLoopsBtn.textContent = "Start All Loops";
+startStopBtn.insertAdjacentElement("afterend", startAllLoopsBtn);
 
 // Transport
 const bpmInput       = document.getElementById("bpmInput");
@@ -208,6 +212,19 @@ bpmUp.addEventListener("pointerdown", (e) => {
   bpmInput.value = Math.min(240, Number(bpmInput.value) + 1);
   broadcastSettings();
   if (isRunning) restartMetronome();
+});
+
+startAllLoopsBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!currentRoom) return;
+
+  socket.emit("host:loop-transport", {
+    roomId: currentRoom,
+    action: "start",
+    startTime: Date.now() + 800
+  });
+
+  log("Global loop start sent", "system");
 });
 
 // ─────────────────────────────────────────────────────────────

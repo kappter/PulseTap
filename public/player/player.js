@@ -708,19 +708,6 @@ updateLoopUI();
 scheduleLoopCycle();
 }
 
-function startLoopPlaybackSynced(startTime) {
-  if (!loopEvents.length) return;
-
-  stopLoopPlayback();
-
-  const delay = Math.max(0, (startTime || Date.now()) - Date.now());
-
-  setTimeout(() => {
-    if (!loopEvents.length) return;
-    startLoopPlayback();
-  }, delay);
-}
-
 function stopLoopPlayback() {
   isLoopPlaying = false;
 

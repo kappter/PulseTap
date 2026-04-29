@@ -728,6 +728,7 @@ const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.t
     const t = setTimeout(() => {
       if (!isLoopPlaying) return;
       triggerTap(event.degree, event.instrument, { fromLoop: true, record: false, emit: true });
+flashStepRow(event.degree);
     }, Math.max(0, event.timeMs));
     loopTimeouts.push(t);
   }
@@ -792,6 +793,18 @@ updateLoopUI();
 function flashPad(pad, cls) {
   pad.classList.add(cls);
   setTimeout(() => pad.classList.remove(cls), 130);
+}
+
+function flashStepRow(degree) {
+  document.querySelectorAll(`.step-cell[data-degree="${degree}"]`).forEach(cell => {
+    cell.classList.add("row-trigger");
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll(`.step-cell[data-degree="${degree}"]`).forEach(cell => {
+      cell.classList.remove("row-trigger");
+    });
+  }, 120);
 }
 
 function emitTapEvent(degree, instrument, source = "live") {

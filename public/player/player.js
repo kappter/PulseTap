@@ -53,6 +53,7 @@ const KEY_FREQ = {
 //  DOM references
 // ─────────────────────────────────────────────────────────────
 const stepSequencer = document.getElementById("stepSequencer");
+const stepsPerBeat = Math.floor(stepGridSteps / beatsPerBar);
 const loopLengthSelect = document.getElementById("loopLengthSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
 const loopPlayhead = document.getElementById("loopPlayhead");
@@ -479,6 +480,7 @@ socket.on("loop:transport", ({ action, startTime }) => {
 /** Metronome start from host */
 socket.on("metronome:start", (data) => {
   startMetronome(data);
+  renderStepGrid(); // 🔥 ADD THIS
 });
 
 /** Metronome stop from host */

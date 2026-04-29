@@ -416,6 +416,8 @@ function toggleStepEvent(degree, step) {
   }
 
   renderStepGrid();
+updateLoopUI();
+emitLoopState("update");
 }
 
 function stepToTimeMs(step, loopLengthMs) {
@@ -660,15 +662,18 @@ function updateLoopUI() {
   recordLoopBtn.textContent = isLoopRecording ? "Stop Recording" : "Record Loop";
   playLoopBtn.textContent = isLoopPlaying ? "Stop Loop" : "Play Loop";
 
-  playLoopBtn.disabled = loopEvents.length === 0;
-  clearLoopBtn.disabled = loopEvents.length === 0 && !isLoopRecording;
+  const hasLoopContent = loopEvents.length > 0 || stepGridEvents.length > 0;
+
+playLoopBtn.disabled = !hasLoopContent;
+clearLoopBtn.disabled = !hasLoopContent && !isLoopRecording;
 
   if (isLoopRecording) {
     loopStatus.textContent = `Recording · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"}`;
   } else if (isLoopPlaying) {
     loopStatus.textContent = `Playing · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"} · ${Math.round(currentLoopLengthMs)}ms`;
-  } else if (loopEvents.length) {
-    loopStatus.textContent = `Ready · ${loopEvents.length} event${loopEvents.length === 1 ? "" : "s"} · one-bar loop`;
+  } else if (hasLoopContent) {
+    const totalEvents = loopEvents.length + stepGridEvents.length;
+   loopStatus.textContent = `Ready · ${totalEvents} event${totalEvents === 1 ? "" : "s"} · one-bar loop`;
   } else {
     loopStatus.textContent = "Empty · one-bar loop";
   }
@@ -707,7 +712,7 @@ function clearLoop() {
 }
 
 function scheduleLoopCycle() {
-  if (!isLoopPlaying || !loopEvents.length) return;
+  if (!isLoopPlaying || (!loopEvents.length && !stepGridEvents.length)) return;
 
   loopTimeouts.forEach(clearTimeout);
   loopTimeouts = [];
@@ -819,8 +824,9 @@ function triggerTap(degree, instrument, options = {}) {
 
    loopEvents.push({ degree, instrument, timeMs: rel });
 
-    updateLoopUI();
-    emitLoopState("update");
+    renderStepGrid();
+updateLoopUI();
+emitLoopState("update");
   }
 
   // ── Relay to server ───────────────────────────────────

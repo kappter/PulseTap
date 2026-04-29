@@ -427,7 +427,7 @@ function stopLoopVisuals() {
 }
 
 function updateStepBoxes(activeStep) {
-  const boxes = document.querySelectorAll(".time-step");
+  const boxes = document.querySelectorAll(".time-box");
 
   boxes.forEach((box, index) => {
     box.classList.toggle("active", index + 1 === activeStep);

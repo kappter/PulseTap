@@ -270,6 +270,7 @@ padding: 12px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .loop-options label {
@@ -394,4 +395,21 @@ padding: 12px;
 .step-cell.playhead {
   outline: 2px solid #ffffff;
   box-shadow: 0 0 8px rgba(255,255,255,0.65);
+}
+
+#stepResolution {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 10px;
+  appearance: none;
+}
+select {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  appearance: none;
 }

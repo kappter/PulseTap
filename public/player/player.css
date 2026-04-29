@@ -250,16 +250,22 @@ padding: 12px;
   border-radius: 4px;
   transition: width 0.03s linear;
 }
-.time-step {
+
+.time-box {
   opacity: 0.35;
   transition: opacity 0.08s ease, transform 0.08s ease;
 }
 
-.time-step.active {
+.time-box.active {
   opacity: 1;
   transform: scale(1.15);
 }
 
-.time-step.passed {
+.time-box.passed {
   opacity: 0.7;
 }
+
+
+
+
+

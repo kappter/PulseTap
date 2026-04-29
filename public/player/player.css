@@ -244,13 +244,11 @@ padding: 12px;
 }
 
 .loop-playhead {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
   height: 100%;
+  width: 0%;
   background: #ffc247;
-  transform: translateX(0%);
+  border-radius: 4px;
+  transition: width 0.03s linear;
 }
 .time-step {
   opacity: 0.35;

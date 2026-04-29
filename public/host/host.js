@@ -59,6 +59,7 @@ let hostLoopMirrorAnimationId = null;
 // ─────────────────────────────────────────────────────────────
 //  State
 // ─────────────────────────────────────────────────────────────
+let metroBarZeroTime = null;
 let currentRoom   = null;
 let isRunning     = false;
 let metroBeat     = 0;
@@ -261,14 +262,13 @@ function getNextBarStartTime() {
 
   const now = Date.now();
 
-  // If metronome is running, use its current timing grid.
-  // Otherwise, give players a short lead-in and start cleanly.
-  if (!isRunning) {
+  if (!isRunning || !metroBarZeroTime) {
     return now + 1000;
   }
 
-  const elapsed = now % msPerBar;
-  const untilNextBar = msPerBar - elapsed;
+  const elapsedSinceBarZero = now - metroBarZeroTime;
+  const phaseInBar = elapsedSinceBarZero % msPerBar;
+  const untilNextBar = msPerBar - phaseInBar;
 
   return now + untilNextBar;
 }
@@ -299,6 +299,7 @@ function startMetronome() {
   const beatsPerBar = Number(beatsPerBarSel.value) || 4;
   const beatUnit    = Number(beatUnitSel.value)    || 4;
   const startTime   = Date.now();
+  metroBarZeroTime = startTime;
   metroBeatsPerBar  = beatsPerBar;
   metroBeat         = 0;
 
@@ -333,6 +334,7 @@ socket.on("host:loop-state", (loopState) => {
 function stopMetronome() {
   clearInterval(metroTimer);
   metroTimer = null;
+  metroBarZeroTime = null;
   hostBeatBar.querySelectorAll(".beat-dot").forEach(d => {
     d.classList.remove("beat-active", "beat-accent");
   });

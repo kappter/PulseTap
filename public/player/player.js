@@ -53,7 +53,7 @@ const KEY_FREQ = {
 //  DOM references
 // ─────────────────────────────────────────────────────────────
 const stepSequencer = document.getElementById("stepSequencer");
-const stepsPerBeat = Math.floor(stepGridSteps / beatsPerBar);
+
 const loopLengthSelect = document.getElementById("loopLengthSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
 const loopPlayhead = document.getElementById("loopPlayhead");
@@ -512,10 +512,10 @@ if (!loopEvents.length && !stepGridEvents.length) return;
 
   const delay = Math.max(0, (startTime || Date.now()) - Date.now());
 
-  setTimeout(() => {
-    if (!loopEvents.length) return;
-    startLoopPlayback();
-  }, delay);
+ setTimeout(() => {
+  if (!loopEvents.length && !stepGridEvents.length) return;
+  startLoopPlayback();
+}, delay);
 }
 
 function startLoopVisuals(loopLengthMs) {

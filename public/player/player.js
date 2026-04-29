@@ -447,6 +447,8 @@ function emitLoopState(action = "update", extra = {}) {
     action,
     loopLengthMs: currentLoopLengthMs,
     events: loopEvents,
+    stepGridEvents,
+    stepGridSteps,
     ...extra
   });
 }

@@ -380,16 +380,16 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
 });
 
 function startLoopVisuals(loopLengthMs) {
-  stopLoopVisuals();
+  if (loopVisualAnimationId !== null) return;
 
-  loopVisualStartMs = millis();
+ loopVisualStartMs = performance.now();
   loopVisualLengthMs = loopLengthMs;
 
   animateLoopVisuals();
 }
 
 function animateLoopVisuals() {
-  const elapsed = (millis() - loopVisualStartMs) % loopVisualLengthMs;
+  const elapsed = (performance.now() - loopVisualStartMs) % loopVisualLengthMs;
   const progress = elapsed / loopVisualLengthMs;
 
   // Progress bar
@@ -485,11 +485,14 @@ function updateLoopUI() {
 }
 
 function startLoopRecording() {
-  stopLoopPlayback();
+  stopLoopPlayback(); // already stops visuals too
+
   loopEvents = [];
   currentLoopLengthMs = getLoopLengthMs();
   loopStartMs = performance.now();
+
   isLoopRecording = true;
+
   updateLoopUI();
 }
 
@@ -526,17 +529,25 @@ function scheduleLoopCycle() {
 
 function startLoopPlayback() {
   if (!loopEvents.length) return;
+
   isLoopRecording = false;
   isLoopPlaying = true;
   currentLoopLengthMs = getLoopLengthMs();
+
+  startLoopVisuals(currentLoopLengthMs);
+
   updateLoopUI();
   scheduleLoopCycle();
 }
 
 function stopLoopPlayback() {
   isLoopPlaying = false;
+
   loopTimeouts.forEach(clearTimeout);
   loopTimeouts = [];
+
+  stopLoopVisuals();
+
   updateLoopUI();
 }
 

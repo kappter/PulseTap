@@ -488,8 +488,7 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
 
 
 function startLoopPlaybackSynced(startTime) {
-  if (!loopEvents.length) return;
-
+if (!loopEvents.length && !stepGridEvents.length) return;
   stopLoopPlayback();
 
   const delay = Math.max(0, (startTime || Date.now()) - Date.now());
@@ -679,7 +678,7 @@ const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.t
 }
 
 function startLoopPlayback() {
-  if (!loopEvents.length) return;
+  if (!loopEvents.length && !stepGridEvents.length) return;
 
   isLoopRecording = false;
   isLoopPlaying = true;

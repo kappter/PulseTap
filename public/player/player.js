@@ -119,7 +119,7 @@ function initAudio() {
   }
   audioCtx   = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" });
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.8;
+  masterGain.gain.value = playerVolume;
   masterGain.connect(audioCtx.destination);
 }
 

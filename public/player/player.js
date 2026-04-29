@@ -405,6 +405,16 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
   }
 });
 
+socket.on("loop:transport", ({ action, startTime }) => {
+  if (action === "start") {
+    startLoopPlaybackSynced(startTime);
+  }
+
+  if (action === "stop") {
+    stopLoopPlayback();
+  }
+});
+
 function startLoopVisuals(loopLengthMs) {
   if (loopVisualAnimationId !== null) return;
 
@@ -580,6 +590,19 @@ emitLoopState("play-start", {
 
 updateLoopUI();
 scheduleLoopCycle();
+}
+
+function startLoopPlaybackSynced(startTime) {
+  if (!loopEvents.length) return;
+
+  stopLoopPlayback();
+
+  const delay = Math.max(0, (startTime || Date.now()) - Date.now());
+
+  setTimeout(() => {
+    if (!loopEvents.length) return;
+    startLoopPlayback();
+  }, delay);
 }
 
 function stopLoopPlayback() {

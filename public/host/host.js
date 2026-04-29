@@ -281,6 +281,10 @@ function startMetronome() {
   log(`Metronome started · ${bpm} BPM · ${beatsPerBar}/${beatUnit}`, "system");
 }
 
+socket.on("host:loop-state", (loopState) => {
+  updateLoopMirror(loopState);
+});
+
 function stopMetronome() {
   clearInterval(metroTimer);
   metroTimer = null;
@@ -290,6 +294,49 @@ function stopMetronome() {
   if (currentRoom) {
     socket.emit("host:metronome", { roomId: currentRoom, action: "stop" });
   }
+}
+
+function updateLoopMirror(loopState) {
+  const p = players.get(loopState.playerId);
+  if (!p || !p.stripEl) return;
+
+  let mirror = p.stripEl.querySelector(".loop-mirror");
+
+  if (!mirror) {
+    mirror = document.createElement("div");
+    mirror.className = "loop-mirror";
+
+    mirror.innerHTML = `
+      <div class="loop-mirror-label">Loop</div>
+      <div class="loop-mirror-grid"></div>
+    `;
+
+    p.stripEl.appendChild(mirror);
+  }
+
+  const grid = mirror.querySelector(".loop-mirror-grid");
+  grid.innerHTML = "";
+
+  const events = loopState.events || [];
+  const loopLength = loopState.loopLengthMs || 2000;
+
+  for (let i = 0; i < 16; i++) {
+    const cell = document.createElement("div");
+    cell.className = "loop-mirror-cell";
+
+    const stepStart = (i / 16) * loopLength;
+    const stepEnd = ((i + 1) / 16) * loopLength;
+
+    const hasEvent = events.some(ev => ev.timeMs >= stepStart && ev.timeMs < stepEnd);
+
+    if (hasEvent) {
+      cell.classList.add("has-event");
+    }
+
+    grid.appendChild(cell);
+  }
+
+  mirror.dataset.action = loopState.action || "update";
 }
 
 function restartMetronome() {

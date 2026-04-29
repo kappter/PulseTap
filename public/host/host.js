@@ -210,12 +210,14 @@ function startGlobalLoopCountdown(startTime) {
 function broadcastSettings() {
   if (!currentRoom) return;
   socket.emit("host:settings", {
-    roomId:   currentRoom,
-    bpm:      Number(bpmInput.value),
-    key:      keySelect.value,
-    mode:     modeSelect.value,
-    quantize: quantizeSelect.value
-  });
+  roomId: currentRoom,
+  bpm: Number(bpmInput.value),
+  key: keySelect.value,
+  mode: modeSelect.value,
+  quantize: quantizeSelect.value,
+  beatsPerBar: Number(beatsPerBarSel.value),
+  beatUnit: Number(beatUnitSel.value)
+});
 }
 
 [keySelect, modeSelect, quantizeSelect].forEach(el => {
@@ -461,8 +463,15 @@ function restartMetronome() {
   startMetronome();
 }
 
-beatsPerBarSel.addEventListener("change", () => { if (isRunning) restartMetronome(); });
-beatUnitSel.addEventListener("change",    () => { if (isRunning) restartMetronome(); });
+beatsPerBarSel.addEventListener("change", () => {
+  broadcastSettings();
+  if (isRunning) restartMetronome();
+});
+
+beatUnitSel.addEventListener("change", () => {
+  broadcastSettings();
+  if (isRunning) restartMetronome();
+});
 
 // ─────────────────────────────────────────────────────────────
 //  Channel strips

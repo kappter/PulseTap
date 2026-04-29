@@ -343,6 +343,39 @@ function setConnected(ok) {
   connLabel.textContent = ok ? "Connected" : "Reconnecting…";
 }
 
+let stepGridEvents = [];
+const stepGridSteps = 16;
+function toggleStepEvent(degree, step) {
+  const existingIndex = stepGridEvents.findIndex(
+    ev => ev.degree === degree && ev.step === step
+  );
+
+  if (existingIndex >= 0) {
+    stepGridEvents.splice(existingIndex, 1);
+  } else {
+    stepGridEvents.push({
+      degree,
+      step,
+      instrument: instrumentSel.value
+    });
+  }
+
+  renderStepGrid();
+}
+
+function stepToTimeMs(step, loopLengthMs) {
+  return (step / stepGridSteps) * loopLengthMs;
+}
+
+function convertStepGridToLoopEvents() {
+  const loopLength = currentLoopLengthMs || getLoopLengthMs();
+
+  return stepGridEvents.map(ev => ({
+    degree: ev.degree,
+    instrument: ev.instrument,
+    timeMs: stepToTimeMs(ev.step, loopLength)
+  }));
+}
 function emitLoopState(action = "update", extra = {}) {
   socket.emit("player:loop-state", {
     roomId: roomCodeIn.value.trim().toUpperCase(),
@@ -604,7 +637,8 @@ function scheduleLoopCycle() {
   loopTimeouts.forEach(clearTimeout);
   loopTimeouts = [];
 
-  const sorted = [...loopEvents].sort((a, b) => a.timeMs - b.timeMs);
+ const sequencerEvents = convertStepGridToLoopEvents();
+const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.timeMs);
   for (const event of sorted) {
     const t = setTimeout(() => {
       if (!isLoopPlaying) return;

@@ -356,4 +356,42 @@ padding: 12px;
   outline: 2px solid #ffffff;
   box-shadow: 0 0 8px rgba(255,255,255,0.65);
 }
+.step-sequencer {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
+.step-row {
+  display: grid;
+  grid-template-columns: 56px repeat(16, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+
+.step-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.step-cell {
+  height: 18px;
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 5px;
+  background: rgba(255,255,255,0.06);
+  padding: 0;
+}
+
+.step-cell.active {
+  background: #ffc247;
+  border-color: #ffc247;
+  box-shadow: 0 0 8px rgba(255,194,71,0.45);
+}
+
+.step-cell.playhead {
+  outline: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.65);
+}

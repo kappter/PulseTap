@@ -340,6 +340,18 @@ function setConnected(ok) {
   connLabel.textContent = ok ? "Connected" : "Reconnecting…";
 }
 
+function emitLoopState(action = "update") {
+  socket.emit("player:loop-state", {
+    roomId: roomCodeIn.value.trim().toUpperCase(),
+    playerId,
+    playerName: playerNameIn.value.trim() || "Player",
+    role: selectedRole,
+    action,
+    loopLengthMs: currentLoopLengthMs,
+    events: loopEvents
+  });
+}
+
 loopLengthSelect?.addEventListener("change", () => {
   if (isLoopPlaying) {
     stopLoopPlayback();
@@ -505,6 +517,7 @@ function startLoopRecording() {
   stopLoopPlayback(); // already stops visuals too
 
   loopEvents = [];
+  emitLoopState("record-start");
   currentLoopLengthMs = getLoopLengthMs();
   loopStartMs = performance.now();
 
@@ -515,6 +528,7 @@ function startLoopRecording() {
 
 function stopLoopRecording() {
   isLoopRecording = false;
+  emitLoopState("record-stop");
   updateLoopUI();
 }
 
@@ -522,6 +536,7 @@ function clearLoop() {
   stopLoopPlayback();
   isLoopRecording = false;
   loopEvents = [];
+  emitLoopState("clear");
   updateLoopUI();
 }
 
@@ -629,7 +644,8 @@ function triggerTap(degree, instrument, options = {}) {
     if (rel >= loopLength) rel = 0;
 
     loopEvents.push({ degree, instrument, timeMs: rel });
-    updateLoopUI();
+updateLoopUI();
+emitLoopState("update");
   }
 
   // ── Relay to server ───────────────────────────────────

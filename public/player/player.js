@@ -123,6 +123,8 @@ function initAudio() {
 document.body.addEventListener("pointerdown", initAudio, { once: true });
 document.body.addEventListener("touchstart",  initAudio, { once: true, passive: true });
 
+
+
 // ─────────────────────────────────────────────────────────────
 //  Frequency helpers
 // ─────────────────────────────────────────────────────────────
@@ -643,9 +645,10 @@ function triggerTap(degree, instrument, options = {}) {
     rel = quantizeLoopTime(rel, loopLength);
     if (rel >= loopLength) rel = 0;
 
-    loopEvents.push({ degree, instrument, timeMs: rel });
-updateLoopUI();
-emitLoopState("update");
+   loopEvents.push({ degree, instrument, timeMs: rel });
+
+    updateLoopUI();
+    emitLoopState("update");
   }
 
   // ── Relay to server ───────────────────────────────────

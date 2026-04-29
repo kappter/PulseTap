@@ -59,6 +59,7 @@ let hostLoopMirrorAnimationId = null;
 // ─────────────────────────────────────────────────────────────
 //  State
 // ─────────────────────────────────────────────────────────────
+let globalLoopCountdownTimer = null;
 let metroBarZeroTime = null;
 let currentRoom   = null;
 let isRunning     = false;
@@ -181,6 +182,28 @@ copyRoomBtn.addEventListener("pointerdown", (e) => {
 // ─────────────────────────────────────────────────────────────
 //  Transport — settings broadcast
 // ─────────────────────────────────────────────────────────────
+function startGlobalLoopCountdown(startTime) {
+  clearInterval(globalLoopCountdownTimer);
+
+  function updateCountdown() {
+    const remainingMs = startTime - Date.now();
+    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+    startAllLoopsBtn.textContent = remainingSec > 0
+      ? `Starting in ${remainingSec}`
+      : "Launching...";
+
+    if (remainingMs <= 0) {
+      clearInterval(globalLoopCountdownTimer);
+      globalLoopCountdownTimer = null;
+
+      startAllLoopsBtn.textContent = "Start All Loops";
+    }
+  }
+
+  updateCountdown();
+  globalLoopCountdownTimer = setInterval(updateCountdown, 100);
+}
 function broadcastSettings() {
   if (!currentRoom) return;
   socket.emit("host:settings", {
@@ -223,8 +246,10 @@ startAllLoopsBtn.addEventListener("pointerdown", (e) => {
     action: "start",
     startTime
   });
+  startGlobalLoopCountdown(startTime);
 
   log("Global loop start queued for next bar", "system");
+  
 });
 
 // ─────────────────────────────────────────────────────────────

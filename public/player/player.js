@@ -486,15 +486,6 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
   }
 });
 
-socket.on("loop:transport", ({ action, startTime }) => {
-  if (action === "start") {
-    startLoopPlaybackSynced(startTime);
-  }
-
-  if (action === "stop") {
-    stopLoopPlayback();
-  }
-});
 
 function startLoopPlaybackSynced(startTime) {
   if (!loopEvents.length) return;

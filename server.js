@@ -230,6 +230,27 @@ io.on("connection", (socket) => {
     });
   });
 
+  // ── PLAYER: loop state update ─────────────────────────────
+socket.on("player:loop-state", (payload) => {
+  const { roomId } = payload;
+  if (!roomId) return;
+
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  const player = room.players.get(socket.id);
+  if (player) {
+    payload.playerName = player.playerName;
+    payload.role = player.role;
+    payload.playerId = player.playerId;
+  }
+
+  io.to(`${roomId}:host`).emit("host:loop-state", {
+    ...payload,
+    ts: Date.now()
+  });
+});
+
   // ── HOST: update session settings ─────────────────────────
   socket.on("host:settings", ({ roomId, bpm, key, mode, quantize }) => {
     const room = rooms.get(roomId);

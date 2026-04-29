@@ -377,7 +377,15 @@ socket.on("room:settings", (s) => {
   dispBpm.textContent      = s.bpm      || sessionSettings.bpm;
   dispQuantize.textContent = s.quantize === "none" ? "off" : (s.quantize || "off");
 });
+socket.on("loop:transport", ({ action, startTime }) => {
+  if (action === "start") {
+    startLoopPlaybackSynced(startTime);
+  }
 
+  if (action === "stop") {
+    stopLoopPlayback();
+  }
+});
 /** Metronome start from host */
 socket.on("metronome:start", (data) => {
   startMetronome(data);
@@ -414,6 +422,19 @@ socket.on("loop:transport", ({ action, startTime }) => {
     stopLoopPlayback();
   }
 });
+
+function startLoopPlaybackSynced(startTime) {
+  if (!loopEvents.length) return;
+
+  stopLoopPlayback();
+
+  const delay = Math.max(0, (startTime || Date.now()) - Date.now());
+
+  setTimeout(() => {
+    if (!loopEvents.length) return;
+    startLoopPlayback();
+  }, delay);
+}
 
 function startLoopVisuals(loopLengthMs) {
   if (loopVisualAnimationId !== null) return;

@@ -422,3 +422,8 @@ select {
   background: #ffc247;
   border-color: #ffc247;
 }
+
+.step-cell.row-trigger {
+  box-shadow: 0 0 10px rgba(101, 214, 206, 0.75);
+  border-color: #65d6ce;
+}

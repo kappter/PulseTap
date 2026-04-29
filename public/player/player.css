@@ -413,3 +413,12 @@ select {
   padding: 8px 10px;
   appearance: none;
 }
+.step-cell.accent-step {
+  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.1);
+}
+
+.step-cell.accent-step.active {
+  background: #ffc247;
+  border-color: #ffc247;
+}

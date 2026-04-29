@@ -215,13 +215,15 @@ startAllLoopsBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   if (!currentRoom) return;
 
+  const startTime = getNextBarStartTime();
+
   socket.emit("host:loop-transport", {
     roomId: currentRoom,
     action: "start",
-    startTime: Date.now() + 800
+    startTime
   });
 
-  log("Global loop start sent", "system");
+  log("Global loop start queued for next bar", "system");
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -249,6 +251,27 @@ recordBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   log("Record is a Phase 2 feature.", "system");
 });
+
+function getNextBarStartTime() {
+  const bpm = Number(bpmInput.value) || 120;
+  const beatsPerBar = Number(beatsPerBarSel.value) || 4;
+
+  const msPerBeat = 60000 / bpm;
+  const msPerBar = msPerBeat * beatsPerBar;
+
+  const now = Date.now();
+
+  // If metronome is running, use its current timing grid.
+  // Otherwise, give players a short lead-in and start cleanly.
+  if (!isRunning) {
+    return now + 1000;
+  }
+
+  const elapsed = now % msPerBar;
+  const untilNextBar = msPerBar - elapsed;
+
+  return now + untilNextBar;
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Metronome

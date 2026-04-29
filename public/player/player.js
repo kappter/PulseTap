@@ -52,6 +52,10 @@ const KEY_FREQ = {
 // ─────────────────────────────────────────────────────────────
 //  DOM references
 // ─────────────────────────────────────────────────────────────
+const loopLengthSelect = document.getElementById("loopLengthSelect");
+const quantizeSelect = document.getElementById("quantizeSelect");
+const loopPlayhead = document.getElementById("loopPlayhead");
+const currentStep = document.getElementById("currentStep");
 const setupScreen    = document.getElementById("setupScreen");
 const padScreen      = document.getElementById("padScreen");
 const playerNameIn   = document.getElementById("playerName");

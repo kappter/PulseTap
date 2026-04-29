@@ -46,7 +46,6 @@ const beatUnitSel    = document.getElementById("beatUnit");
 const keySelect      = document.getElementById("keySelect");
 const modeSelect     = document.getElementById("modeSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
-const startStopBtn   = document.getElementById("startStopBtn");
 const recordBtn      = document.getElementById("recordBtn");
 
 // Mixer

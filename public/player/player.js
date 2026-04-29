@@ -340,6 +340,17 @@ function setConnected(ok) {
   connLabel.textContent = ok ? "Connected" : "Reconnecting…";
 }
 
+loopLengthSelect?.addEventListener("change", () => {
+  if (isLoopPlaying) {
+    stopLoopPlayback();
+    startLoopPlayback();
+  }
+});
+
+quantizeSelect?.addEventListener("change", () => {
+  // affects future recording only — no restart needed
+});
+
 socket.on("connect",    () => setConnected(true));
 socket.on("disconnect", () => setConnected(false));
 
@@ -452,15 +463,20 @@ let currentLoopLengthMs = 2000;
 function getLoopLengthMs() {
   const bpm = Number(sessionSettings.bpm) || 120;
   const beatsPerBar = metroBeatsPerBar || 4;
-  return Math.round((60 / bpm) * 1000 * beatsPerBar);
+const bars = Number(loopLengthSelect?.value || 1);
+
+return Math.round((60 / bpm) * 1000 * beatsPerBar * bars);
 }
 
 function quantizeLoopTime(ms, loopLengthMs) {
-  const q = sessionSettings.quantize;
-  if (!q || q === "none") return ms;
-  // v1: snap to a 16th-note grid for any active quantize setting.
-  const grid = loopLengthMs / 16;
-  return Math.round(ms / grid) * grid;
+ const q = quantizeSelect?.value;
+
+if (!q || q === "off") return ms;
+
+const steps = Number(q); // 4, 8, 16, 32
+const grid = loopLengthMs / steps;
+
+return Math.round(ms / grid) * grid;
 }
 
 function updateLoopUI() {

@@ -380,10 +380,13 @@ socket.on("room:settings", (s) => {
 });
 socket.on("loop:transport", ({ action, startTime }) => {
   if (action === "start") {
+    startPlayerLoopCountdown(startTime);
     startLoopPlaybackSynced(startTime);
   }
 
   if (action === "stop") {
+    clearInterval(playerLoopCountdownTimer);
+    playerLoopCountdownTimer = null;
     stopLoopPlayback();
   }
 });

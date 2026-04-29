@@ -52,6 +52,7 @@ const KEY_FREQ = {
 // ─────────────────────────────────────────────────────────────
 //  DOM references
 // ─────────────────────────────────────────────────────────────
+const stepSequencer = document.getElementById("stepSequencer");
 const loopLengthSelect = document.getElementById("loopLengthSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
 const loopPlayhead = document.getElementById("loopPlayhead");
@@ -124,7 +125,42 @@ function initAudio() {
 document.body.addEventListener("pointerdown", initAudio, { once: true });
 document.body.addEventListener("touchstart",  initAudio, { once: true, passive: true });
 
+function renderStepGrid() {
+  if (!stepSequencer) return;
 
+  stepSequencer.innerHTML = "";
+
+  for (let degree = 0; degree < 8; degree++) {
+    const row = document.createElement("div");
+    row.className = "step-row";
+
+    const label = document.createElement("div");
+    label.className = "step-label";
+    label.textContent = `Pad ${degree + 1}`;
+    row.appendChild(label);
+
+    for (let step = 0; step < stepGridSteps; step++) {
+      const cell = document.createElement("button");
+      cell.className = "step-cell";
+      cell.type = "button";
+
+      const isActive = stepGridEvents.some(
+        ev => ev.degree === degree && ev.step === step
+      );
+
+      cell.classList.toggle("active", isActive);
+
+      cell.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        toggleStepEvent(degree, step);
+      });
+
+      row.appendChild(cell);
+    }
+
+    stepSequencer.appendChild(row);
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Frequency helpers
@@ -837,3 +873,4 @@ if (savedName) playerNameIn.value = savedName;
 playerNameIn.addEventListener("input", () => {
   localStorage.setItem("pt_player_name", playerNameIn.value.trim());
 });
+renderStepGrid();

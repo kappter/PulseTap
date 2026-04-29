@@ -695,8 +695,13 @@ function stopLoopRecording() {
 
 function clearLoop() {
   stopLoopPlayback();
+
   isLoopRecording = false;
   loopEvents = [];
+  stepGridEvents = [];
+
+  renderStepGrid();
+
   emitLoopState("clear");
   updateLoopUI();
 }

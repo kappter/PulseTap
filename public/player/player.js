@@ -409,7 +409,8 @@ function animateLoopVisuals() {
   }
 
   // 16-step counter
-  const step = Math.floor(progress * 16) + 1;
+ const totalSteps = 16 * Number(loopLengthSelect?.value || 1);
+const step = Math.floor(progress * totalSteps) + 1;
 
   if (currentStep) {
     currentStep.textContent = step;

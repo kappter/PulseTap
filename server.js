@@ -96,11 +96,13 @@ const rooms = new Map();
 
 /** Default session settings applied when a room is first created. */
 const DEFAULT_SETTINGS = {
-  bpm:      120,
-  key:      "C",
-  mode:     "major",
+  bpm: 120,
+  key: "C",
+  mode: "major",
   quantize: "none",
-  running:  false
+  running: false,
+  beatsPerBar: 4,
+  beatUnit: 4
 };
 
 /**
@@ -263,16 +265,19 @@ socket.on("player:loop-state", (payload) => {
 });
 
   // ── HOST: update session settings ─────────────────────────
-  socket.on("host:settings", ({ roomId, bpm, key, mode, quantize }) => {
-    const room = rooms.get(roomId);
-    if (!room) return;
-    if (bpm      !== undefined) room.settings.bpm      = bpm;
-    if (key      !== undefined) room.settings.key      = key;
-    if (mode     !== undefined) room.settings.mode     = mode;
-    if (quantize !== undefined) room.settings.quantize = quantize;
-    // Broadcast updated settings to all players in the room
-    io.to(roomId).emit("room:settings", room.settings);
-  });
+ socket.on("host:settings", ({ roomId, bpm, key, mode, quantize, beatsPerBar, beatUnit }) => {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  if (bpm !== undefined) room.settings.bpm = bpm;
+  if (key !== undefined) room.settings.key = key;
+  if (mode !== undefined) room.settings.mode = mode;
+  if (quantize !== undefined) room.settings.quantize = quantize;
+  if (beatsPerBar !== undefined) room.settings.beatsPerBar = beatsPerBar;
+  if (beatUnit !== undefined) room.settings.beatUnit = beatUnit;
+
+  io.to(roomId).emit("room:settings", room.settings);
+});
 
   // ── HOST: metronome start ─────────────────────────────────
   socket.on("host:metronome", ({ roomId, action, bpm, beatsPerBar, beatUnit, startTime }) => {
@@ -281,6 +286,8 @@ socket.on("player:loop-state", (payload) => {
     if (action === "start") {
       room.settings.bpm     = bpm     || room.settings.bpm;
       room.settings.running = true;
+      room.settings.beatsPerBar = beatsPerBar || room.settings.beatsPerBar || 4;
+room.settings.beatUnit = beatUnit || room.settings.beatUnit || 4;
       io.to(roomId).emit("metronome:start", {
         bpm:        room.settings.bpm,
         beatsPerBar: beatsPerBar || 4,

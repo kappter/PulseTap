@@ -124,6 +124,14 @@ function initAudio() {
 // Unlock audio on first touch (iOS Safari requirement)
 document.body.addEventListener("pointerdown", initAudio, { once: true });
 document.body.addEventListener("touchstart",  initAudio, { once: true, passive: true });
+function isAccentStep(step) {
+  const beatsPerBar = metroBeatsPerBar || 4;
+  const stepsPerBeat = stepGridSteps / beatsPerBar;
+
+  if (!Number.isInteger(stepsPerBeat)) return false;
+
+  return step % stepsPerBeat === 0;
+}
 
 function renderStepGrid() {
   if (!stepSequencer) return;
@@ -151,6 +159,7 @@ cell.dataset.step = step;
       );
 
       cell.classList.toggle("active", isActive);
+      cell.classList.toggle("accent-step", isAccentStep(step));
 
       cell.addEventListener("pointerdown", (e) => {
         e.preventDefault();

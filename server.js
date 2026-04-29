@@ -200,6 +200,17 @@ io.on("connection", (socket) => {
     console.log(`[player:join]  room=${roomId}  player=${playerName}  role=${role}`);
   });
 
+  // ── HOST: global loop transport ───────────────────────────
+socket.on("host:loop-transport", ({ roomId, action, startTime }) => {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  io.to(roomId).emit("loop:transport", {
+    action,
+    startTime: startTime || Date.now()
+  });
+});
+
   // ── PLAYER: tap event ─────────────────────────────────────
   socket.on("player:tap", (payload) => {
     const { roomId } = payload;

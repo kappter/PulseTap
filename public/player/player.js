@@ -85,6 +85,9 @@ const loopStatus    = document.getElementById("loopStatus");
 // ─────────────────────────────────────────────────────────────
 //  Session state
 // ─────────────────────────────────────────────────────────────
+let loopVisualAnimationId = null;
+let loopVisualStartMs = 0;
+let loopVisualLengthMs = 2000;
 let selectedRole = "Melody";
 let isMuted      = false;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
@@ -375,6 +378,62 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
     muteOverlay.classList.toggle("hidden", !muted);
   }
 });
+
+function startLoopVisuals(loopLengthMs) {
+  stopLoopVisuals();
+
+  loopVisualStartMs = millis();
+  loopVisualLengthMs = loopLengthMs;
+
+  animateLoopVisuals();
+}
+
+function animateLoopVisuals() {
+  const elapsed = (millis() - loopVisualStartMs) % loopVisualLengthMs;
+  const progress = elapsed / loopVisualLengthMs;
+
+  // Progress bar
+  if (loopPlayhead) {
+    loopPlayhead.style.width = `${progress * 100}%`;
+  }
+
+  // 16-step counter
+  const step = Math.floor(progress * 16) + 1;
+
+  if (currentStep) {
+    currentStep.textContent = step;
+  }
+
+  updateStepBoxes(step);
+
+  loopVisualAnimationId = requestAnimationFrame(animateLoopVisuals);
+}
+
+function stopLoopVisuals() {
+  if (loopVisualAnimationId !== null) {
+    cancelAnimationFrame(loopVisualAnimationId);
+    loopVisualAnimationId = null;
+  }
+
+  if (loopPlayhead) {
+    loopPlayhead.style.width = "0%";
+  }
+
+  if (currentStep) {
+    currentStep.textContent = "1";
+  }
+
+  updateStepBoxes(1);
+}
+
+function updateStepBoxes(activeStep) {
+  const boxes = document.querySelectorAll(".time-step");
+
+  boxes.forEach((box, index) => {
+    box.classList.toggle("active", index + 1 === activeStep);
+    box.classList.toggle("passed", index + 1 < activeStep);
+  });
+}
 
 
 // ─────────────────────────────────────────────────────────────

@@ -382,7 +382,7 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
 function startLoopVisuals(loopLengthMs) {
   if (loopVisualAnimationId !== null) return;
 
- loopVisualStartMs = performance.now();
+  loopVisualStartMs = performance.now();
   loopVisualLengthMs = loopLengthMs;
 
   animateLoopVisuals();

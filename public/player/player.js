@@ -142,7 +142,9 @@ function renderStepGrid() {
     for (let step = 0; step < stepGridSteps; step++) {
       const cell = document.createElement("button");
       cell.className = "step-cell";
-      cell.type = "button";
+cell.type = "button";
+cell.dataset.degree = degree;
+cell.dataset.step = step;
 
       const isActive = stepGridEvents.some(
         ev => ev.degree === degree && ev.step === step
@@ -526,6 +528,7 @@ const step = Math.floor(progress * totalSteps) + 1;
   }
 
   updateStepBoxes(step);
+  updateStepGridPlayhead(step);
 
   loopVisualAnimationId = requestAnimationFrame(animateLoopVisuals);
 }
@@ -545,6 +548,7 @@ function stopLoopVisuals() {
   }
 
   updateStepBoxes(1);
+  updateStepGridPlayhead(1);
 }
 
 function updateStepBoxes(activeStep) {
@@ -555,7 +559,14 @@ function updateStepBoxes(activeStep) {
     box.classList.toggle("passed", index + 1 < activeStep);
   });
 }
+function updateStepGridPlayhead(activeStep) {
+  const sequencerStep = (activeStep - 1) % stepGridSteps;
 
+  document.querySelectorAll(".step-cell").forEach((cell) => {
+    const cellStep = Number(cell.dataset.step);
+    cell.classList.toggle("playhead", cellStep === sequencerStep);
+  });
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Loop Mode v1

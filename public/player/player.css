@@ -252,3 +252,16 @@ padding: 12px;
   background: #ffc247;
   transform: translateX(0%);
 }
+.time-step {
+  opacity: 0.35;
+  transition: opacity 0.08s ease, transform 0.08s ease;
+}
+
+.time-step.active {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.time-step.passed {
+  opacity: 0.7;
+}

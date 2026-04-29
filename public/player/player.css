@@ -265,7 +265,36 @@ padding: 12px;
   opacity: 0.7;
 }
 
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+}
 
+.time-box {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  opacity: 0.35;
+  transition: opacity 0.08s ease, transform 0.08s ease, background 0.08s ease;
+}
 
+.time-box.active {
+  opacity: 1;
+  transform: scaleY(1.5);
+  background: #ffc247;
+}
+
+.time-box.passed {
+  opacity: 0.7;
+}
+
+.time-counter {
+  margin-top: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+}
 
 

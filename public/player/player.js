@@ -342,7 +342,7 @@ function setConnected(ok) {
   connLabel.textContent = ok ? "Connected" : "Reconnecting…";
 }
 
-function emitLoopState(action = "update") {
+function emitLoopState(action = "update", extra = {}) {
   socket.emit("player:loop-state", {
     roomId: roomCodeIn.value.trim().toUpperCase(),
     playerId,
@@ -350,7 +350,8 @@ function emitLoopState(action = "update") {
     role: selectedRole,
     action,
     loopLengthMs: currentLoopLengthMs,
-    events: loopEvents
+    events: loopEvents,
+    ...extra
   });
 }
 
@@ -568,10 +569,17 @@ function startLoopPlayback() {
   isLoopPlaying = true;
   currentLoopLengthMs = getLoopLengthMs();
 
-  startLoopVisuals(currentLoopLengthMs);
+  const startedAt = performance.now();
 
-  updateLoopUI();
-  scheduleLoopCycle();
+startLoopVisuals(currentLoopLengthMs);
+
+emitLoopState("play-start", {
+  startedAt,
+  loopLengthMs: currentLoopLengthMs
+});
+
+updateLoopUI();
+scheduleLoopCycle();
 }
 
 function stopLoopPlayback() {

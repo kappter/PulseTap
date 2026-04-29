@@ -460,10 +460,17 @@ socket.on("disconnect", () => setConnected(false));
 /** Host updated session settings */
 socket.on("room:settings", (s) => {
   sessionSettings = { ...sessionSettings, ...s };
-  dispKey.textContent      = s.key      || sessionSettings.key;
-  dispMode.textContent     = s.mode     || sessionSettings.mode;
-  dispBpm.textContent      = s.bpm      || sessionSettings.bpm;
+
+  dispKey.textContent = s.key || sessionSettings.key;
+  dispMode.textContent = s.mode || sessionSettings.mode;
+  dispBpm.textContent = s.bpm || sessionSettings.bpm;
   dispQuantize.textContent = s.quantize === "none" ? "off" : (s.quantize || "off");
+
+  if (s.beatsPerBar) {
+    metroBeatsPerBar = Number(s.beatsPerBar);
+    buildBeatDots(metroBeatsPerBar);
+    renderStepGrid();
+  }
 });
 socket.on("loop:transport", ({ action, startTime }) => {
   if (action === "start") {
@@ -858,7 +865,7 @@ joinBtn.addEventListener("pointerdown", (e) => {
   padScreen.classList.remove("hidden");
 
   // Build default beat dots
-  buildBeatDots(4);
+  buildBeatDots(metroBeatsPerBar || 4);
 });
 
 leaveBtn.addEventListener("pointerdown", (e) => {

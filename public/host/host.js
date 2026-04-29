@@ -299,9 +299,6 @@ function stopMetronome() {
 }
 
 function updateLoopMirror(loopState) {
-  const loopLength = loopState.loopLengthMs || 2000;
-  mirror.dataset.loopLengthMs = loopLength;
-mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
   const p = players.get(loopState.playerId);
   if (!p || !p.stripEl) return;
 
@@ -325,6 +322,10 @@ mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
   const events = loopState.events || [];
   const loopLength = loopState.loopLengthMs || 2000;
 
+  // ✅ set timing AFTER mirror exists
+  mirror.dataset.loopLengthMs = loopLength;
+  mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
+
   for (let i = 0; i < 16; i++) {
     const cell = document.createElement("div");
     cell.className = "loop-mirror-cell";
@@ -342,9 +343,10 @@ mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
   }
 
   mirror.dataset.action = loopState.action || "update";
+
   if (loopState.action === "clear") {
-  mirror.dataset.startedAt = performance.now();
-}
+    mirror.dataset.startedAt = performance.now();
+  }
 }
 
 function startHostLoopMirrorAnimation() {

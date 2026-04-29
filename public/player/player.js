@@ -87,6 +87,7 @@ const loopStatus    = document.getElementById("loopStatus");
 // ─────────────────────────────────────────────────────────────
 //  Session state
 // ─────────────────────────────────────────────────────────────
+let playerVolume = 1.0;
 let playerLoopCountdownTimer = null;
 let loopVisualAnimationId = null;
 let loopVisualStartMs = 0;
@@ -512,6 +513,14 @@ socket.on("host:mute:ack", ({ targetPlayerId, muted }) => {
   }
 });
 
+socket.on("host:volume:ack", ({ targetPlayerId, volume }) => {
+  if (targetPlayerId === playerId) {
+    playerVolume = Number(volume);
+    if (masterGain) {
+      masterGain.gain.value = playerVolume;
+    }
+  }
+});
 
 function startLoopPlaybackSynced(startTime) {
 if (!loopEvents.length && !stepGridEvents.length) return;

@@ -352,5 +352,8 @@ padding: 12px;
   font-weight: 800;
   color: white;
 }
-
+.step-cell.playhead {
+  outline: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.65);
+}
 

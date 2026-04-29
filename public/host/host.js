@@ -347,9 +347,14 @@ function startMetronome() {
 
   const intervalMs = (60 / bpm) * 1000;
 
-const elapsed = Date.now() - startTime;
-const phase = elapsed % intervalMs;
-const delay = phase > 0 ? intervalMs - phase : 0;
+const now = Date.now();
+let delay = Math.max(0, startTime - now);
+
+if (delay === 0) {
+  const elapsed = now - startTime;
+  const phase = elapsed % intervalMs;
+  delay = phase > 0 ? intervalMs - phase : 0;
+}
 
 function tick() {
   const beat = metroBeat % beatsPerBar;

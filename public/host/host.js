@@ -29,9 +29,12 @@ const roomDisplay    = document.getElementById("roomDisplay");
 const copyRoomBtn    = document.getElementById("copyRoomBtn");
 const hostConnDot    = document.getElementById("hostConnDot");
 const hostConnLabel  = document.getElementById("hostConnLabel");
+const startStopBtn = document.getElementById("startStopBtn");
+
 const startAllLoopsBtn = document.createElement("button");
 startAllLoopsBtn.className = "transport-btn start";
 startAllLoopsBtn.textContent = "Start All Loops";
+
 startStopBtn.insertAdjacentElement("afterend", startAllLoopsBtn);
 
 // Transport
@@ -137,11 +140,6 @@ socket.on("player:tap:meter", ({ playerId, role, padNumber }) => {
   log(`${p.playerName} · pad ${padNumber + 1}`, "remote");
 });
 
-socket.emit("host:loop-transport", {
-  roomId: currentRoom,
-  action: "start",
-  startTime: Date.now() + 800
-});
 
 // ─────────────────────────────────────────────────────────────
 //  Room setup

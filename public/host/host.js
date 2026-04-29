@@ -185,6 +185,8 @@ copyRoomBtn.addEventListener("pointerdown", (e) => {
 function startGlobalLoopCountdown(startTime) {
   clearInterval(globalLoopCountdownTimer);
 
+  startAllLoopsBtn.disabled = true;
+
   function updateCountdown() {
     const remainingMs = startTime - Date.now();
     const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -198,6 +200,7 @@ function startGlobalLoopCountdown(startTime) {
       globalLoopCountdownTimer = null;
 
       startAllLoopsBtn.textContent = "Start All Loops";
+      startAllLoopsBtn.disabled = false;
     }
   }
 

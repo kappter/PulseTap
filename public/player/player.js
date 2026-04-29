@@ -382,7 +382,13 @@ function setConnected(ok) {
 }
 
 let stepGridEvents = [];
-const stepGridSteps = 16;
+let stepGridSteps = 16;
+const stepResolutionSelect = document.getElementById("stepResolution");
+
+stepResolutionSelect?.addEventListener("change", () => {
+  stepGridSteps = Number(stepResolutionSelect.value);
+  renderStepGrid();
+});
 function toggleStepEvent(degree, step) {
   const existingIndex = stepGridEvents.findIndex(
     ev => ev.degree === degree && ev.step === step

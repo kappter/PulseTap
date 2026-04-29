@@ -85,6 +85,7 @@ const loopStatus    = document.getElementById("loopStatus");
 // ─────────────────────────────────────────────────────────────
 //  Session state
 // ─────────────────────────────────────────────────────────────
+let playerLoopCountdownTimer = null;
 let loopVisualAnimationId = null;
 let loopVisualStartMs = 0;
 let loopVisualLengthMs = 2000;
@@ -524,6 +525,26 @@ const steps = Number(q); // 4, 8, 16, 32
 const grid = loopLengthMs / steps;
 
 return Math.round(ms / grid) * grid;
+}
+
+function startPlayerLoopCountdown(startTime) {
+  clearInterval(playerLoopCountdownTimer);
+
+  function updateCountdown() {
+    const remainingMs = startTime - Date.now();
+    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+    if (remainingMs > 0) {
+      loopStatus.textContent = `Global start in ${remainingSec}...`;
+    } else {
+      clearInterval(playerLoopCountdownTimer);
+      playerLoopCountdownTimer = null;
+      loopStatus.textContent = "Launching...";
+    }
+  }
+
+  updateCountdown();
+  playerLoopCountdownTimer = setInterval(updateCountdown, 100);
 }
 
 function updateLoopUI() {

@@ -49,6 +49,7 @@ const emptyRoomCode  = document.getElementById("emptyRoomCode");
 const hostBeatBar    = document.getElementById("hostBeatBar");
 const hostLog        = document.getElementById("hostLog");
 
+let hostLoopMirrorAnimationId = null;
 // ─────────────────────────────────────────────────────────────
 //  State
 // ─────────────────────────────────────────────────────────────
@@ -283,6 +284,7 @@ function startMetronome() {
 
 socket.on("host:loop-state", (loopState) => {
   updateLoopMirror(loopState);
+  startHostLoopMirrorAnimation();
 });
 
 function stopMetronome() {
@@ -297,6 +299,9 @@ function stopMetronome() {
 }
 
 function updateLoopMirror(loopState) {
+  const loopLength = loopState.loopLengthMs || 2000;
+  mirror.dataset.loopLengthMs = loopLength;
+mirror.dataset.startedAt = mirror.dataset.startedAt || performance.now();
   const p = players.get(loopState.playerId);
   if (!p || !p.stripEl) return;
 
@@ -337,6 +342,36 @@ function updateLoopMirror(loopState) {
   }
 
   mirror.dataset.action = loopState.action || "update";
+  if (loopState.action === "clear") {
+  mirror.dataset.startedAt = performance.now();
+}
+}
+
+function startHostLoopMirrorAnimation() {
+  if (hostLoopMirrorAnimationId !== null) return;
+
+  animateHostLoopMirrors();
+}
+
+function animateHostLoopMirrors() {
+  const now = performance.now();
+
+  players.forEach((p) => {
+    const mirror = p.stripEl?.querySelector(".loop-mirror");
+    if (!mirror) return;
+
+    const loopLength = Number(mirror.dataset.loopLengthMs || 2000);
+    const startedAt = Number(mirror.dataset.startedAt || now);
+    const progress = ((now - startedAt) % loopLength) / loopLength;
+    const activeStep = Math.floor(progress * 16);
+
+    mirror.querySelectorAll(".loop-mirror-cell").forEach((cell, index) => {
+      cell.classList.toggle("mirror-active", index === activeStep);
+      cell.classList.toggle("mirror-passed", index < activeStep);
+    });
+  });
+
+  hostLoopMirrorAnimationId = requestAnimationFrame(animateHostLoopMirrors);
 }
 
 function restartMetronome() {

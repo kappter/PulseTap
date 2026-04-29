@@ -133,6 +133,12 @@ socket.on("player:tap:meter", ({ playerId, role, padNumber }) => {
   log(`${p.playerName} · pad ${padNumber + 1}`, "remote");
 });
 
+socket.emit("host:loop-transport", {
+  roomId: currentRoom,
+  action: "start",
+  startTime: Date.now() + 800
+});
+
 // ─────────────────────────────────────────────────────────────
 //  Room setup
 // ─────────────────────────────────────────────────────────────

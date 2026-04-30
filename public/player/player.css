@@ -534,3 +534,39 @@ select {
 .step-cell {
   min-width: 28px;
 }
+@media (min-width: 900px) {
+  .pad-screen {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-areas:
+      "topbar topbar"
+      "side main"
+      "side pads";
+    gap: 16px;
+    align-items: start;
+  }
+
+  .pad-topbar {
+    grid-area: topbar;
+  }
+
+  .settings-bar,
+  .instrument-row,
+  .solo-panel {
+    grid-column: 1;
+  }
+
+  .loop-panel {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  .pad-grid {
+    grid-area: pads;
+  }
+
+  .settings-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -517,3 +517,20 @@ select {
   border-color: #38bdf8;
   box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
 }
+
+.step-sequencer {
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 8px;
+}
+
+.step-row {
+  display: grid;
+  grid-template-columns: 64px repeat(var(--step-count, 16), minmax(28px, 1fr));
+  gap: 4px;
+  min-width: max-content;
+}
+
+.step-cell {
+  min-width: 28px;
+}

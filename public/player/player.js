@@ -175,6 +175,26 @@ cell.dataset.step = step;
   }
 }
 
+function getNextLocalBarStartTime() {
+  const bpm = Number(sessionSettings.bpm) || 120;
+  const beatsPerBar = metroBeatsPerBar || 4;
+
+  const msPerBeat = 60000 / bpm;
+  const msPerBar = msPerBeat * beatsPerBar;
+
+  const now = Date.now();
+
+  if (!metroStartEpoch) {
+    return now + 500;
+  }
+
+  const elapsedSinceStart = now - metroStartEpoch;
+  const phaseInBar = elapsedSinceStart % msPerBar;
+  const untilNextBar = msPerBar - phaseInBar;
+
+  return now + untilNextBar;
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Frequency helpers
 // ─────────────────────────────────────────────────────────────
@@ -778,8 +798,14 @@ recordLoopBtn.addEventListener("pointerdown", (e) => {
 
 playLoopBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  if (isLoopPlaying) stopLoopPlayback();
-  else startLoopPlayback();
+
+  if (isLoopPlaying) {
+    stopLoopPlayback();
+  } else {
+    const startTime = getNextLocalBarStartTime();
+    startPlayerLoopCountdown(startTime);
+    startLoopPlaybackSynced(startTime);
+  }
 });
 
 clearLoopBtn.addEventListener("pointerdown", (e) => {

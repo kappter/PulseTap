@@ -283,6 +283,7 @@ function padFrequency(degree) {
 }
 
 function getCurrentLoopData() {
+  stepResolution: stepResolutionSelect?.value || "16",
   return {
     version: 1,
     instrument: instrumentSel.value,
@@ -320,7 +321,9 @@ function applyLoopData(data) {
 
   // update UI controls (THIS is what you're currently missing)
   if (stepResolutionSelect) {
-    stepResolutionSelect.value = String(stepGridSteps);
+    if (stepResolutionSelect && data.stepResolution) {
+  stepResolutionSelect.value = String(data.stepResolution);
+}
   }
 
   // re-render visuals
@@ -330,24 +333,11 @@ function applyLoopData(data) {
 async function importLoopFromClipboard() {
   try {
     const text = await navigator.clipboard.readText();
-    const data = JSON.parse(atob(text));
+const data = JSON.parse(atob(text.trim()));
 
-    instrumentSel.value = data.instrument || "sine";
-    currentLoopLengthMs = data.loopLengthMs || 2000;
-    stepGridSteps = data.stepGridSteps || 16;
+applyLoopData(data);
 
-    loopEvents = data.loopEvents || [];
-    stepGridEvents = data.stepGridEvents || [];
-
-    sessionSettings = {
-      ...sessionSettings,
-      ...(data.settings || {})
-    };
-
-    renderStepGrid();
-    updateLoopUI();
-
-    loopStatus.textContent = "Loop imported";
+loopStatus.textContent = "Loop imported";
   } catch (e) {
     loopStatus.textContent = "Invalid loop data";
   }

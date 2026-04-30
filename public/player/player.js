@@ -53,7 +53,11 @@ const KEY_FREQ = {
 //  DOM references
 // ─────────────────────────────────────────────────────────────
 const stepSequencer = document.getElementById("stepSequencer");
-
+const soloModeToggle = document.getElementById("soloModeToggle");
+const soloControls = document.getElementById("soloControls");
+const soloBpm = document.getElementById("soloBpm");
+const soloKey = document.getElementById("soloKey");
+const soloMode = document.getElementById("soloMode");
 const loopLengthSelect = document.getElementById("loopLengthSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
 const loopPlayhead = document.getElementById("loopPlayhead");
@@ -87,6 +91,7 @@ const loopStatus    = document.getElementById("loopStatus");
 // ─────────────────────────────────────────────────────────────
 //  Session state
 // ─────────────────────────────────────────────────────────────
+let isSoloMode = false;
 let playerVolume = 1.0;
 let playerLoopCountdownTimer = null;
 let loopVisualAnimationId = null;
@@ -193,6 +198,35 @@ function getNextLocalBarStartTime() {
   const untilNextBar = msPerBar - phaseInBar;
 
   return now + untilNextBar;
+}
+
+soloModeToggle?.addEventListener("change", () => {
+  isSoloMode = soloModeToggle.checked;
+  soloControls?.classList.toggle("hidden", !isSoloMode);
+
+  if (isSoloMode) {
+    applySoloSettings();
+    loopStatus.textContent = "Solo Mode · local practice";
+  }
+});
+
+[soloBpm, soloKey, soloMode].forEach(el => {
+  el?.addEventListener("change", applySoloSettings);
+});
+
+function applySoloSettings() {
+  if (!isSoloMode) return;
+
+  sessionSettings = {
+    ...sessionSettings,
+    bpm: Number(soloBpm.value) || 120,
+    key: soloKey.value,
+    mode: soloMode.value
+  };
+
+  dispBpm.textContent = sessionSettings.bpm;
+  dispKey.textContent = sessionSettings.key;
+  dispMode.textContent = sessionSettings.mode;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -503,6 +537,7 @@ socket.on("disconnect", () => setConnected(false));
 
 /** Host updated session settings */
 socket.on("room:settings", (s) => {
+  if (isSoloMode) return;
   sessionSettings = { ...sessionSettings, ...s };
 
   dispKey.textContent = s.key || sessionSettings.key;
@@ -763,7 +798,11 @@ const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.t
   for (const event of sorted) {
     const t = setTimeout(() => {
       if (!isLoopPlaying) return;
-      triggerTap(event.degree, event.instrument, { fromLoop: true, record: false, emit: true });
+     triggerTap(event.degree, event.instrument, {
+  fromLoop: true,
+  record: false,
+  emit: !isSoloMode
+});
 flashStepRow(event.degree);
     }, Math.max(0, event.timeMs));
     loopTimeouts.push(t);
@@ -784,10 +823,12 @@ function startLoopPlayback() {
 
 startLoopVisuals(currentLoopLengthMs);
 
-emitLoopState("play-start", {
-  startedAt,
-  loopLengthMs: currentLoopLengthMs
-});
+if (!isSoloMode) {
+  emitLoopState("play-start", {
+    startedAt,
+    loopLengthMs: currentLoopLengthMs
+  });
+}
 
 updateLoopUI();
 scheduleLoopCycle();

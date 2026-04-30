@@ -427,3 +427,46 @@ select {
   box-shadow: 0 0 10px rgba(101, 214, 206, 0.75);
   border-color: #65d6ce;
 }
+
+.solo-panel {
+  margin: 8px 16px 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.solo-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.solo-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.solo-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.solo-controls input,
+.solo-controls select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 10px;
+  min-width: 90px;
+}

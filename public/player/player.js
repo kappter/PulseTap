@@ -580,8 +580,16 @@ let stepGridEvents = [];
 let stepGridSteps = 16;
 const stepResolutionSelect = document.getElementById("stepResolution");
 
+function getStepGridStepsFromResolution() {
+  const division = Number(stepResolutionSelect?.value || 16);
+  const beatsPerBar = Number(metroBeatsPerBar || 4);
+
+  // Assumes quarter-note beat for now: 4/4, 5/4, 3/4, etc.
+  return beatsPerBar * (division / 4);
+}
+
 stepResolutionSelect?.addEventListener("change", () => {
-  stepGridSteps = Number(stepResolutionSelect.value);
+  stepGridSteps = getStepGridStepsFromResolution();
   renderStepGrid();
 });
 function toggleStepEvent(degree, step) {
@@ -656,11 +664,12 @@ socket.on("room:settings", (s) => {
   dispBpm.textContent = s.bpm || sessionSettings.bpm;
   dispQuantize.textContent = s.quantize === "none" ? "off" : (s.quantize || "off");
 
-  if (s.beatsPerBar) {
-    metroBeatsPerBar = Number(s.beatsPerBar);
-    buildBeatDots(metroBeatsPerBar);
-    renderStepGrid();
-  }
+ if (s.beatsPerBar) {
+  metroBeatsPerBar = Number(s.beatsPerBar);
+  stepGridSteps = getStepGridStepsFromResolution();
+  buildBeatDots(metroBeatsPerBar);
+  renderStepGrid();
+}
 });
 socket.on("loop:transport", ({ action, startTime }) => {
   if (action === "start") {

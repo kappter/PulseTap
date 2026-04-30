@@ -156,6 +156,14 @@ slotButtons.forEach((btn) => {
       localStorage.setItem(key, JSON.stringify(data));
 
       btn.classList.add("saved");
+
+// ensure all saved slots stay marked
+document.querySelectorAll(".slot-btn").forEach(b => {
+  const key = `pulsetap_loop_slot_${b.dataset.slot}`;
+  if (localStorage.getItem(key)) {
+    b.classList.add("saved");
+  }
+});
       loopStatus.textContent = `Saved to slot ${slot}`;
     } else {
       try {

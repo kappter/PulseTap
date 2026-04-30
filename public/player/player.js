@@ -83,6 +83,7 @@ const padGrid        = document.getElementById("padGrid");
 const pads           = padGrid.querySelectorAll(".pad");
 const muteOverlay    = document.getElementById("muteOverlay");
 const leaveBtn       = document.getElementById("leaveBtn");
+const importLoopBtn = document.getElementById("importLoopBtn");
 const recordLoopBtn = document.getElementById("recordLoopBtn");
 const playLoopBtn   = document.getElementById("playLoopBtn");
 const clearLoopBtn  = document.getElementById("clearLoopBtn");
@@ -111,28 +112,20 @@ saveLoopBtn.addEventListener("click", () => {
 
 const loadLoopBtn = document.getElementById("loadLoopBtn");
 
-loadLoopBtn.addEventListener("click", () => {
-  const raw = localStorage.getItem("pulsetap_loop");
-  if (!raw) return;
+loadLoopBtn?.addEventListener("click", () => {
+  try {
+    const raw = localStorage.getItem("pulsetap_loop");
 
-  const data = JSON.parse(raw);
+    if (!raw) {
+      loopStatus.textContent = "No saved loop found";
+      return;
+    }
 
-  instrumentSel.value = data.instrument || "sine";
-  currentLoopLengthMs = data.loopLengthMs || 2000;
-
-  stepGridSteps = data.stepGridSteps || 16;
-  loopEvents = data.loopEvents || [];
-  stepGridEvents = data.stepGridEvents || [];
-
-  sessionSettings = {
-    ...sessionSettings,
-    ...(data.settings || {})
-  };
-
-  renderStepGrid();
-  updateLoopUI();
-
-  loopStatus.textContent = "Loop loaded";
+    applyLoopData(JSON.parse(raw));
+    loopStatus.textContent = "Loop loaded";
+  } catch (err) {
+    loopStatus.textContent = "Could not load loop";
+  }
 });
 
 const shareLoopBtn = document.getElementById("shareLoopBtn");
@@ -304,7 +297,35 @@ function getCurrentLoopData() {
     }
   };
 }
+function applyLoopData(data) {
+  if (!data) return;
 
+  // restore instrument
+  instrumentSel.value = data.instrument || "sine";
+
+  // restore loop timing (safe — does NOT change global clock)
+  currentLoopLengthMs = data.loopLengthMs || getLoopLengthMs();
+
+  // restore step grid
+  stepGridSteps = Number(data.stepGridSteps || 16);
+  loopEvents = Array.isArray(data.loopEvents) ? data.loopEvents : [];
+  stepGridEvents = Array.isArray(data.stepGridEvents) ? data.stepGridEvents : [];
+
+  // restore session settings locally (Solo-safe)
+  sessionSettings = {
+    ...sessionSettings,
+    ...(data.settings || {})
+  };
+
+  // update UI controls (THIS is what you're currently missing)
+  if (stepResolutionSelect) {
+    stepResolutionSelect.value = String(stepGridSteps);
+  }
+
+  // re-render visuals
+  renderStepGrid();
+  updateLoopUI();
+}
 async function importLoopFromClipboard() {
   try {
     const text = await navigator.clipboard.readText();

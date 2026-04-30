@@ -174,6 +174,47 @@ shareLoopBtn.addEventListener("click", async () => {
 });
 
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
+const slotButtons = document.querySelectorAll(".slot-btn");
+
+slotButtons.forEach((btn) => {
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+
+    const slot = btn.dataset.slot;
+    const key = `pulsetap_loop_slot_${slot}`;
+
+    // SHIFT + click = SAVE
+    if (e.shiftKey) {
+      const data = getCurrentLoopData();
+      localStorage.setItem(key, JSON.stringify(data));
+
+      btn.classList.add("saved");
+
+      loopStatus.textContent = `Saved to slot ${slot}`;
+    } 
+    // normal click = LOAD
+    else {
+      try {
+        const raw = localStorage.getItem(key);
+
+        if (!raw) {
+          loopStatus.textContent = `Slot ${slot} empty`;
+          return;
+        }
+
+        applyLoopData(JSON.parse(raw));
+
+        // highlight active slot
+        document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        loopStatus.textContent = `Loaded slot ${slot}`;
+      } catch {
+        loopStatus.textContent = `Error loading slot ${slot}`;
+      }
+    }
+  });
+});
 
 // Stable per-device ID stored in localStorage
 const playerId = (() => {

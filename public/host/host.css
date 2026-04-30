@@ -534,3 +534,43 @@
 .log-line { flex-shrink: 0; }
 .log-remote { color: var(--accent-2); }
 .log-system { color: var(--muted); }
+.join-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-left: 16px;
+}
+
+#joinQr {
+  width: 72px;
+  height: 72px;
+  background: white;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+#joinQr img,
+#joinQr canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.join-qr-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: #e5e7eb;
+}
+
+.join-qr-text span {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

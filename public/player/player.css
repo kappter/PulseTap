@@ -471,13 +471,6 @@ select {
   min-width: 90px;
 }
 
-.loop-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
 .loop-btn.small {
   padding: 7px 11px;
   font-size: 0.75rem;
@@ -486,8 +479,15 @@ select {
 .loop-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0;
+  margin-top: 6px;
+}
+
+.loop-actions button {
+  opacity: 0.85;
+}
+
+.loop-actions button:hover {
+  opacity: 1;
 }
 
 .loop-actions .loop-btn {

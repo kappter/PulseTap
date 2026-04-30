@@ -53,6 +53,14 @@
         <button id="copyRoomBtn" class="icon-btn" title="Copy room code">⎘</button>
       </div>
 
+      <div class="join-qr-card">
+  <div id="joinQr"></div>
+  <div class="join-qr-text">
+    <strong>Scan to join</strong>
+    <span id="joinUrlText"></span>
+  </div>
+</div>
+
       <div class="nav-conn">
         <span id="hostConnDot" class="conn-dot disconnected"></span>
         <span id="hostConnLabel" class="conn-label">Connecting…</span>
@@ -161,6 +169,8 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="host.js"></script>
   <script src="host.js"></script>
 </body>
 </html>

@@ -130,7 +130,7 @@ loadLoopBtn?.addEventListener("click", () => {
 
 const shareLoopBtn = document.getElementById("shareLoopBtn");
 
-shareLoopBtn.addEventListener("click", async () => {
+shareLoopBtn?.addEventListener("click", async () => {
   const data = getCurrentLoopData();
 
   const encoded = btoa(JSON.stringify(data));

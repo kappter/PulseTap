@@ -83,7 +83,6 @@ const padGrid        = document.getElementById("padGrid");
 const pads           = padGrid.querySelectorAll(".pad");
 const muteOverlay    = document.getElementById("muteOverlay");
 const leaveBtn       = document.getElementById("leaveBtn");
-const importLoopBtn = document.getElementById("importLoopBtn");
 const recordLoopBtn = document.getElementById("recordLoopBtn");
 const playLoopBtn   = document.getElementById("playLoopBtn");
 const clearLoopBtn  = document.getElementById("clearLoopBtn");
@@ -101,7 +100,7 @@ let loopVisualLengthMs = 2000;
 let selectedRole = "Melody";
 let isMuted      = false;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
-
+const importLoopBtn = document.getElementById("importLoopBtn");
 const saveLoopBtn = document.getElementById("saveLoopBtn");
 
 saveLoopBtn.addEventListener("click", () => {
@@ -139,6 +138,8 @@ shareLoopBtn.addEventListener("click", async () => {
 
   loopStatus.textContent = "Loop copied (share it!)";
 });
+
+importLoopBtn?.addEventListener("click", importLoopFromClipboard);
 
 // Stable per-device ID stored in localStorage
 const playerId = (() => {

@@ -101,6 +101,40 @@ let selectedRole = "Melody";
 let isMuted      = false;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
+
+const slotButtons = document.querySelectorAll(".slot-btn");
+
+slotButtons.forEach((btn) => {
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+
+    const slot = btn.dataset.slot;
+    const key = `pulsetap_loop_slot_${slot}`;
+
+    // SHIFT + click = SAVE
+    if (e.shiftKey) {
+      const data = getCurrentLoopData();
+      localStorage.setItem(key, JSON.stringify(data));
+      loopStatus.textContent = `Saved to slot ${slot}`;
+    } 
+    // normal click = LOAD
+    else {
+      try {
+        const raw = localStorage.getItem(key);
+
+        if (!raw) {
+          loopStatus.textContent = `Slot ${slot} empty`;
+          return;
+        }
+
+        applyLoopData(JSON.parse(raw));
+        loopStatus.textContent = `Loaded slot ${slot}`;
+      } catch {
+        loopStatus.textContent = `Error loading slot ${slot}`;
+      }
+    }
+  });
+});
 const saveLoopBtn = document.getElementById("saveLoopBtn");
 
 saveLoopBtn?.addEventListener("click", () => {

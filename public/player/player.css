@@ -470,3 +470,17 @@ select {
   padding: 8px 10px;
   min-width: 90px;
 }
+
+.loop-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.loop-btn.small {
+  padding: 7px 11px;
+  font-size: 0.75rem;
+}
+
+

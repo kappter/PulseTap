@@ -483,4 +483,14 @@ select {
   font-size: 0.75rem;
 }
 
+.loop-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
 
+.loop-actions .loop-btn {
+  padding: 7px 12px;
+  font-size: 0.75rem;
+}

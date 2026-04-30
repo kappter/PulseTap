@@ -134,6 +134,41 @@ socket.on("room:state", (state) => {
   refreshEmptyState();
 });
 
+const loopInboxList = document.getElementById("loopInboxList");
+
+socket.on("player:loop-state", (data) => {
+  if (!loopInboxList) return;
+
+  const {
+    playerName,
+    role,
+    action,
+    loopLengthMs,
+    events,
+    stepGridEvents
+  } = data;
+
+  const totalEvents =
+    (events?.length || 0) + (stepGridEvents?.length || 0);
+
+  const card = document.createElement("div");
+  card.className = "loop-card";
+
+  card.innerHTML = `
+    <strong>${playerName} · ${role}</strong>
+    <span>${action}</span>
+    <span>${totalEvents} events · ${Math.round(loopLengthMs)}ms</span>
+  `;
+
+  // newest on top
+  loopInboxList.prepend(card);
+
+  // limit list size
+  if (loopInboxList.children.length > 20) {
+    loopInboxList.removeChild(loopInboxList.lastChild);
+  }
+});
+
 /** A new player joined */
 socket.on("player:joined", (p) => {
   ensureStrip(p);

@@ -142,7 +142,10 @@ shareLoopBtn?.addEventListener("click", async () => {
 
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
 
-const slotButtons = document.querySelectorAll(".slot-btn");
+document.addEventListener("DOMContentLoaded", () => {
+  const slotButtons = document.querySelectorAll(".slot-btn");
+  ...
+});
 
 slotButtons.forEach((btn) => {
   btn.addEventListener("pointerdown", (e) => {

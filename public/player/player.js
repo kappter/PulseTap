@@ -103,7 +103,7 @@ let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
 const saveLoopBtn = document.getElementById("saveLoopBtn");
 
-saveLoopBtn.addEventListener("click", () => {
+saveLoopBtn?.addEventListener("click", () => {
   const data = getCurrentLoopData();
   localStorage.setItem("pulsetap_loop", JSON.stringify(data));
   loopStatus.textContent = "Loop saved";
@@ -283,12 +283,12 @@ function padFrequency(degree) {
 }
 
 function getCurrentLoopData() {
-  stepResolution: stepResolutionSelect?.value || "16",
   return {
     version: 1,
     instrument: instrumentSel.value,
     loopLengthMs: currentLoopLengthMs,
     stepGridSteps,
+    stepResolution: stepResolutionSelect?.value || "16",
     loopEvents,
     stepGridEvents,
     settings: {
@@ -320,11 +320,9 @@ function applyLoopData(data) {
   };
 
   // update UI controls (THIS is what you're currently missing)
-  if (stepResolutionSelect) {
-    if (stepResolutionSelect && data.stepResolution) {
+if (stepResolutionSelect && data.stepResolution) {
   stepResolutionSelect.value = String(data.stepResolution);
 }
-  }
 
   // re-render visuals
   renderStepGrid();

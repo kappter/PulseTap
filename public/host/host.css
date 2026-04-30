@@ -668,3 +668,17 @@
   color: #ff6b6b;
   border-color: rgba(255,107,107,0.3);
 }
+.song-section {
+  transition: all 0.15s ease;
+}
+
+.song-section:hover {
+  border-color: rgba(101,214,206,0.4);
+  background: rgba(30,41,59,0.6);
+}
+
+.song-section-grid:empty::after {
+  content: "Drop loops here";
+  font-size: 0.7rem;
+  opacity: 0.4;
+}

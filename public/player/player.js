@@ -151,17 +151,13 @@ slotButtons.forEach((btn) => {
     const slot = btn.dataset.slot;
     const key = `pulsetap_loop_slot_${slot}`;
 
-    // SHIFT + click = SAVE
     if (e.shiftKey) {
       const data = getCurrentLoopData();
       localStorage.setItem(key, JSON.stringify(data));
 
       btn.classList.add("saved");
-
       loopStatus.textContent = `Saved to slot ${slot}`;
-    } 
-    // normal click = LOAD
-    else {
+    } else {
       try {
         const raw = localStorage.getItem(key);
 
@@ -172,7 +168,6 @@ slotButtons.forEach((btn) => {
 
         applyLoopData(JSON.parse(raw));
 
-        // highlight active slot
         document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
 

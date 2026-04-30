@@ -151,7 +151,11 @@ socket.on("player:loop-state", (data) => {
   const totalEvents =
     (events?.length || 0) + (stepGridEvents?.length || 0);
 
-  const card = document.createElement("div");
+  const existing = loopInboxList.querySelector(`[data-player="${data.playerId}"]`);
+
+const card = existing || document.createElement("div");
+card.className = "loop-card";
+card.dataset.player = data.playerId;
   card.className = "loop-card";
 
   card.innerHTML = `
@@ -161,7 +165,9 @@ socket.on("player:loop-state", (data) => {
   `;
 
   // newest on top
+  if (!existing) {
   loopInboxList.prepend(card);
+}
 
   // limit list size
   if (loopInboxList.children.length > 20) {
@@ -461,11 +467,6 @@ setTimeout(() => {
 }, delay);
   log(`Metronome started · ${bpm} BPM · ${beatsPerBar}/${beatUnit}`, "system");
 }
-
-socket.on("host:loop-state", (loopState) => {
-  updateLoopMirror(loopState);
-  startHostLoopMirrorAnimation();
-});
 
 function stopMetronome() {
   clearInterval(metroTimer);

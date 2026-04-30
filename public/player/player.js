@@ -229,7 +229,8 @@ function isAccentStep(step) {
 function renderStepGrid() {
   if (!stepSequencer) return;
 
-  stepSequencer.innerHTML = "";
+ stepSequencer.innerHTML = "";
+stepSequencer.style.setProperty("--step-count", stepGridSteps);
 
   for (let degree = 0; degree < 8; degree++) {
     const row = document.createElement("div");

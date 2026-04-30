@@ -102,7 +102,6 @@ let isMuted      = false;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
 
-const slotButtons = document.querySelectorAll(".slot-btn");
 
 slotButtons.forEach((btn) => {
   btn.addEventListener("pointerdown", (e) => {
@@ -174,6 +173,8 @@ shareLoopBtn.addEventListener("click", async () => {
 });
 
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
+
+const slotButtons = document.querySelectorAll(".slot-btn");
 
 slotButtons.forEach((btn) => {
   btn.addEventListener("pointerdown", (e) => {

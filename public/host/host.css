@@ -682,3 +682,14 @@
   font-size: 0.7rem;
   opacity: 0.4;
 }
+.loop-card {
+  cursor: grab;
+}
+
+.loop-card:active {
+  cursor: grabbing;
+}
+
+.loop-card:hover {
+  border-color: rgba(101,214,206,0.5);
+}

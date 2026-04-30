@@ -183,6 +183,7 @@ openRoomBtn.addEventListener("pointerdown", (e) => {
   socket.emit("host:create", { roomId: code });
 
   roomDisplay.textContent  = code;
+  updateJoinQr();
   emptyRoomCode.textContent = code;
 
   setupScreen.classList.add("hidden");
@@ -293,6 +294,26 @@ startAllLoopsBtn.addEventListener("pointerdown", (e) => {
   log("Global loop start queued for next bar", "system");
   
 });
+
+function updateJoinQr() {
+  const qrEl = document.getElementById("joinQr");
+  const urlText = document.getElementById("joinUrlText");
+
+  if (!qrEl || !currentRoom) return;
+
+  const joinUrl = `${window.location.origin}/player?room=${encodeURIComponent(currentRoom)}`;
+
+  qrEl.innerHTML = "";
+
+  new QRCode(qrEl, {
+    text: joinUrl,
+    width: 72,
+    height: 72,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  if (urlText) urlText.textContent = joinUrl;
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Transport — start / stop

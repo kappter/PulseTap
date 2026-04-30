@@ -101,6 +101,52 @@ let selectedRole = "Melody";
 let isMuted      = false;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 
+const saveLoopBtn = document.getElementById("saveLoopBtn");
+
+saveLoopBtn.addEventListener("click", () => {
+  const data = getCurrentLoopData();
+  localStorage.setItem("pulsetap_loop", JSON.stringify(data));
+  loopStatus.textContent = "Loop saved";
+});
+
+const loadLoopBtn = document.getElementById("loadLoopBtn");
+
+loadLoopBtn.addEventListener("click", () => {
+  const raw = localStorage.getItem("pulsetap_loop");
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+  instrumentSel.value = data.instrument || "sine";
+  currentLoopLengthMs = data.loopLengthMs || 2000;
+
+  stepGridSteps = data.stepGridSteps || 16;
+  loopEvents = data.loopEvents || [];
+  stepGridEvents = data.stepGridEvents || [];
+
+  sessionSettings = {
+    ...sessionSettings,
+    ...(data.settings || {})
+  };
+
+  renderStepGrid();
+  updateLoopUI();
+
+  loopStatus.textContent = "Loop loaded";
+});
+
+const shareLoopBtn = document.getElementById("shareLoopBtn");
+
+shareLoopBtn.addEventListener("click", async () => {
+  const data = getCurrentLoopData();
+
+  const encoded = btoa(JSON.stringify(data));
+
+  await navigator.clipboard.writeText(encoded);
+
+  loopStatus.textContent = "Loop copied (share it!)";
+});
+
 // Stable per-device ID stored in localStorage
 const playerId = (() => {
   let id = localStorage.getItem("pt_player_id");
@@ -240,6 +286,49 @@ function padFrequency(degree) {
   const root  = KEY_FREQ[sessionSettings.key] || 261.63;
   const scale = SCALES[sessionSettings.mode]  || SCALES.major;
   return semitoneToHz(root, scale[degree] ?? 0);
+}
+
+function getCurrentLoopData() {
+  return {
+    version: 1,
+    instrument: instrumentSel.value,
+    loopLengthMs: currentLoopLengthMs,
+    stepGridSteps,
+    loopEvents,
+    stepGridEvents,
+    settings: {
+      key: sessionSettings.key,
+      mode: sessionSettings.mode,
+      bpm: sessionSettings.bpm,
+      quantize: sessionSettings.quantize
+    }
+  };
+}
+
+async function importLoopFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const data = JSON.parse(atob(text));
+
+    instrumentSel.value = data.instrument || "sine";
+    currentLoopLengthMs = data.loopLengthMs || 2000;
+    stepGridSteps = data.stepGridSteps || 16;
+
+    loopEvents = data.loopEvents || [];
+    stepGridEvents = data.stepGridEvents || [];
+
+    sessionSettings = {
+      ...sessionSettings,
+      ...(data.settings || {})
+    };
+
+    renderStepGrid();
+    updateLoopUI();
+
+    loopStatus.textContent = "Loop imported";
+  } catch (e) {
+    loopStatus.textContent = "Invalid loop data";
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

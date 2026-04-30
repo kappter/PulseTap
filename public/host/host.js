@@ -156,10 +156,9 @@ socket.on("player:loop-state", (data) => {
 const card = existing || document.createElement("div");
 card.className = "loop-card";
 card.dataset.player = data.playerId;
-  card.className = "loop-card";
 
-  card.innerHTML = `
-    <strong>${playerName} · ${role}</strong>
+ card.innerHTML = `
+  <strong>${escHtml(playerName)} · ${escHtml(role)}</strong>
     <span>${action}</span>
     <span>${totalEvents} events · ${Math.round(loopLengthMs)}ms</span>
   `;
@@ -769,3 +768,102 @@ saveSessionBtn.addEventListener("pointerdown", (e) => {
 
 
 
+// ── Song Board Logic ──
+const SONG_SECTIONS = ["Intro", "Verse", "Chorus", "Bridge"];
+let songBoardData = JSON.parse(localStorage.getItem("pulsetap_song_board") || "{}");
+
+function renderSongBoard() {
+  const container = document.getElementById("songBoardSections");
+  if (!container) return;
+  container.innerHTML = "";
+
+  SONG_SECTIONS.forEach(section => {
+    const sectionEl = document.createElement("div");
+    sectionEl.className = "song-section";
+    sectionEl.dataset.section = section;
+    
+    // Make section droppable
+    sectionEl.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      sectionEl.style.borderColor = "rgba(101,214,206,0.5)";
+    });
+    sectionEl.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      sectionEl.style.borderColor = "rgba(148,163,184,0.1)";
+    });
+    sectionEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      sectionEl.style.borderColor = "rgba(148,163,184,0.1)";
+      const loopId = e.dataTransfer.getData("text/plain");
+      const loopDataStr = e.dataTransfer.getData("application/json");
+      if (!loopDataStr) return;
+      const loopData = JSON.parse(loopDataStr);
+      
+      if (!songBoardData[section]) songBoardData[section] = [];
+      const exists = songBoardData[section].some(l => l.playerId === loopData.playerId);
+if (!exists) {
+  songBoardData[section].push({ id: loopId, ...loopData });
+}
+            saveSongBoard();
+      renderSongBoard();
+    });
+
+    const title = document.createElement("h4");
+    title.textContent = section;
+    
+    const grid = document.createElement("div");
+    grid.className = "song-section-grid";
+    
+    const loops = songBoardData[section] || [];
+    loops.forEach((loop, index) => {
+      const loopEl = document.createElement("div");
+      loopEl.className = "assigned-loop";
+      loopEl.textContent = `${loop.playerName} (${loop.role})`;
+      loopEl.title = "Click to remove";
+      loopEl.addEventListener("click", () => {
+        songBoardData[section].splice(index, 1);
+        saveSongBoard();
+        renderSongBoard();
+      });
+      grid.appendChild(loopEl);
+    });
+    
+    sectionEl.appendChild(title);
+    sectionEl.appendChild(grid);
+    container.appendChild(sectionEl);
+  });
+}
+
+function saveSongBoard() {
+  localStorage.setItem("pulsetap_song_board", JSON.stringify(songBoardData));
+}
+
+// Make inbox cards draggable
+function makeLoopCardsDraggable() {
+  document.querySelectorAll(".loop-card").forEach(card => {
+    if (card.dataset.draggableSet) return;
+    card.draggable = true;
+    card.addEventListener("dragstart", (e) => {
+      const playerId = card.dataset.player;
+      const playerName = card.querySelector("strong").textContent.split(" · ")[0];
+      const role = card.querySelector("strong").textContent.split(" · ")[1];
+      const loopId = `${playerId}-${Date.now()}`; // simple unique ID
+      
+      e.dataTransfer.setData("text/plain", loopId);
+      e.dataTransfer.setData("application/json", JSON.stringify({ playerId, playerName, role }));
+    });
+    card.dataset.draggableSet = "true";
+  });
+}
+
+// Initialize on load
+document.addEventListener("DOMContentLoaded", () => {
+  renderSongBoard();
+  // Set up an observer to make new inbox cards draggable
+  const inbox = document.getElementById("loopInboxList");
+  if (inbox) {
+    const observer = new MutationObserver(() => makeLoopCardsDraggable());
+    observer.observe(inbox, { childList: true });
+    makeLoopCardsDraggable();
+  }
+});

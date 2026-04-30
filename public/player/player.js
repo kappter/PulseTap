@@ -1120,6 +1120,13 @@ leaveBtn.addEventListener("pointerdown", (e) => {
   socket.connect();
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+const roomFromUrl = urlParams.get("room");
+
+if (roomFromUrl && roomCodeIn) {
+  roomCodeIn.value = roomFromUrl.trim().toUpperCase();
+}
+
 // Pre-fill name from localStorage if available
 const savedName = localStorage.getItem("pt_player_name");
 if (savedName) playerNameIn.value = savedName;

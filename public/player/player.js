@@ -312,11 +312,25 @@ function playSound(degree, instrument) {
     case "triangle": synthTone(freq, "triangle");  break;
     case "square":   synthTone(freq, "square");    break;
     case "sawtooth": synthTone(freq, "sawtooth");  break;
+      case "kit": playDrumKitSound(degree); break;
     case "kick":     synthKick();                  break;
     case "snare":    synthSnare();                 break;
     case "hi-hat":   synthHiHat();                 break;
     case "tom":      synthTom(freq);               break;
     default:         synthTone(freq, "sine");
+  }
+}
+function playDrumKitSound(degree) {
+  switch (degree) {
+    case 0: synthKick(); break;
+    case 1: synthSnare(); break;
+    case 2: synthHiHat(); break;
+    case 3: synthTom(220); break;
+    case 4: synthTom(180); break;
+    case 5: synthHiHat(); break;
+    case 6: synthSnare(); break;
+    case 7: synthKick(); break;
+    default: synthKick();
   }
 }
 

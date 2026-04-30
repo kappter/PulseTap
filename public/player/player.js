@@ -624,8 +624,19 @@ function getStepGridStepsFromResolution() {
 }
 
 stepResolutionSelect?.addEventListener("change", () => {
+  const wasPlaying = isLoopPlaying;
+
+  if (wasPlaying) {
+    stopLoopPlayback();
+  }
+
   stepGridSteps = getStepGridStepsFromResolution();
   renderStepGrid();
+  updateLoopUI();
+
+  if (wasPlaying) {
+    startLoopPlayback();
+  }
 });
 function toggleStepEvent(degree, step) {
   const existingIndex = stepGridEvents.findIndex(
@@ -700,10 +711,21 @@ socket.on("room:settings", (s) => {
   dispQuantize.textContent = s.quantize === "none" ? "off" : (s.quantize || "off");
 
  if (s.beatsPerBar) {
+  const wasPlaying = isLoopPlaying;
+
+  if (wasPlaying) {
+    stopLoopPlayback();
+  }
+
   metroBeatsPerBar = Number(s.beatsPerBar);
   stepGridSteps = getStepGridStepsFromResolution();
   buildBeatDots(metroBeatsPerBar);
   renderStepGrid();
+  updateLoopUI();
+
+  if (wasPlaying) {
+    startLoopPlayback();
+  }
 }
 });
 socket.on("loop:transport", ({ action, startTime }) => {
@@ -786,7 +808,8 @@ function animateLoopVisuals() {
   }
 
   // 16-step counter
- const totalSteps = 16 * Number(loopLengthSelect?.value || 1);
+ const bars = Number(loopLengthSelect?.value || 1);
+const totalSteps = stepGridSteps * bars;
 const step = Math.floor(progress * totalSteps) + 1;
 
   if (currentStep) {

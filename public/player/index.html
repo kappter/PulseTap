@@ -107,7 +107,43 @@
         <option value="tom">Tom</option>
       </select>
     </div>
-    
+
+    <div class="solo-panel">
+  <label class="solo-toggle">
+    <input id="soloModeToggle" type="checkbox" />
+    Solo Mode
+  </label>
+
+  <div id="soloControls" class="solo-controls hidden">
+    <label>
+      BPM
+      <input id="soloBpm" type="number" min="40" max="240" value="120" />
+    </label>
+
+    <label>
+      Key
+      <select id="soloKey">
+        <option>C</option><option>C#</option><option>D</option><option>D#</option>
+        <option>E</option><option>F</option><option>F#</option><option>G</option>
+        <option>G#</option><option>A</option><option>A#</option><option>B</option>
+      </select>
+    </label>
+
+    <label>
+      Mode
+      <select id="soloMode">
+        <option value="major">Major</option>
+        <option value="minor">Minor</option>
+        <option value="dorian">Dorian</option>
+        <option value="phrygian">Phrygian</option>
+        <option value="lydian">Lydian</option>
+        <option value="mixolydian">Mixolydian</option>
+        <option value="pentatonic">Pentatonic</option>
+        <option value="chromatic">Chromatic</option>
+      </select>
+    </label>
+  </div>
+</div>
 
     <!-- Loop controls -->
     <div class="loop-panel" aria-label="Loop Mode controls">

@@ -1165,3 +1165,12 @@ playerNameIn.addEventListener("input", () => {
   localStorage.setItem("pt_player_name", playerNameIn.value.trim());
 });
 renderStepGrid();
+// mark saved slots on load
+document.querySelectorAll(".slot-btn").forEach((btn) => {
+  const slot = btn.dataset.slot;
+  const key = `pulsetap_loop_slot_${slot}`;
+
+  if (localStorage.getItem(key)) {
+    btn.classList.add("saved");
+  }
+});

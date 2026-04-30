@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseTap | Music in Motion</title>
+
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --panel: #151a22;
+      --panel2: #202733;
+      --text: #f4f1ea;
+      --muted: #aeb6c2;
+      --accent: #f0b84d;
+      --accent2: #65d6ce;
+      --line: rgba(255, 255, 255, .12);
+      --shadow: 0 24px 80px rgba(0, 0, 0, .35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(101, 214, 206, .18), transparent 30%),
+        radial-gradient(circle at 90% 100%, rgba(240, 184, 77, .16), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(1500px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 850;
+    }
+
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid;
+      place-items: center;
+      color: #071014;
+      font-weight: 950;
+    }
+
+    nav {
+      display: flex;
+      gap: 22px;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    section {
+      padding: 76px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 72px;
+      align-items: center;
+      padding: 92px 0 112px;
+      border-top: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      color: var(--accent2);
+      background: rgba(101, 214, 206, .1);
+      border: 1px solid rgba(101, 214, 206, .25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: .88rem;
+      margin-bottom: 22px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: clamp(3.4rem, 8vw, 7.6rem);
+      line-height: .88;
+      letter-spacing: -.08em;
+      margin-bottom: 22px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .tagline {
+      font-size: 1rem;
+      color: var(--accent2);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.12rem;
+      max-width: 760px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #15100a;
+      border-color: transparent;
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, .06);
+    }
+
+    footer {
+      padding: 32px 0 48px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      font-size: .92rem;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="page">
+
+```
+<!-- HEADER -->
+<header>
+  <a href="/" class="logo">
+    <div class="logo-mark">P</div>
+    <div>PulseTap</div>
+  </a>
+
+  <nav>
+    <a href="#idea">Roadmap</a>
+    <a href="#inspiration">Origin</a>
+    <a href="#play-together">Together</a>
+    <a href="#host">Host</a>
+    <a href="./pulsetap-info/info.html">Vision</a>
+    <a href="#join">Launch</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="eyebrow">Walking instrument concept · live beta</div>
+    <h1>Music in <span>motion.</span></h1>
+
+    <p class="tagline">An instrument in every pocket.</p>
+
+    <p>
+      PulseTap is a pocket-friendly musical interface for people who hear ideas
+      while walking. Tap, sway, move, loop, and collaborate before the song disappears.
+    </p>
+
+    <div class="actions">
+      <a class="button primary" href="https://pulsetap.onrender.com/player/">Join Session Beta</a>
+      <a class="button secondary" href="https://pulsetap.onrender.com/host/">Open Host Board</a>
+      <a class="button secondary" href="./pulsetap-info/info.html">View Vision</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="join" class="cta">
+  <h2>Catch the song before it disappears.</h2>
+
+  <div class="actions">
+    <a class="button primary" href="https://pulsetap.onrender.com/player/">Join Session Beta</a>
+    <a class="button secondary" href="https://pulsetap.onrender.com/host/">Open Host Board</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>© <span id="year"></span> PulseTap</div>
+  <div>Tap · sway · hear · loop · record</div>
+</footer>
+```
+
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>

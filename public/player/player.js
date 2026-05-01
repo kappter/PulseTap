@@ -957,7 +957,7 @@ function startLoopRecording() {
   loopEvents = [];
   emitLoopState("record-start");
   currentLoopLengthMs = getLoopLengthMs();
-  loopStartMs = performance.now();
+  loopStartMs = Date.now();
 
   isLoopRecording = true;
 
@@ -1139,7 +1139,7 @@ function triggerTap(degree, instrument, options = {}) {
   // ── Record to one-bar loop if Loop Mode is recording ───
   if (record && isLoopRecording) {
     const loopLength = currentLoopLengthMs || getLoopLengthMs();
-    let rel = (performance.now() - loopStartMs) % loopLength;
+    let rel = (Date.now() - loopStartMs) % loopLength;
     rel = quantizeLoopTime(rel, loopLength);
     if (rel >= loopLength) rel = 0;
 

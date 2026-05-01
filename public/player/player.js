@@ -802,21 +802,21 @@ if (!loopEvents.length && !stepGridEvents.length) return;
 
  setTimeout(() => {
   if (!loopEvents.length && !stepGridEvents.length) return;
-  startLoopPlayback();
+  startLoopPlayback(startTime || Date.now());
 }, delay);
 }
 
-function startLoopVisuals(loopLengthMs) {
+function startLoopVisuals(loopLengthMs, anchorMs = Date.now()) {
   if (loopVisualAnimationId !== null) return;
 
-  loopVisualStartMs = performance.now();
+  loopVisualStartMs = anchorMs;
   loopVisualLengthMs = loopLengthMs;
 
   animateLoopVisuals();
 }
 
 function animateLoopVisuals() {
-  const elapsed = (performance.now() - loopVisualStartMs) % loopVisualLengthMs;
+  const elapsed = (Date.now() - loopVisualStartMs) % loopVisualLengthMs;
   const progress = elapsed / loopVisualLengthMs;
 
   // Progress bar
@@ -886,6 +886,7 @@ let isLoopPlaying = false;
 let loopStartMs = 0;
 let loopTimeouts = [];
 let currentLoopLengthMs = 2000;
+let loopPlaybackAnchorMs = 0;
 
 function getLoopLengthMs() {
   const bpm = Number(sessionSettings.bpm) || 120;
@@ -982,32 +983,55 @@ function clearLoop() {
   updateLoopUI();
 }
 
-function scheduleLoopCycle() {
+function scheduleLoopCycle(cycleIndex = 0) {
   if (!isLoopPlaying || (!loopEvents.length && !stepGridEvents.length)) return;
+
+  const now = Date.now();
+  const cycleStart = loopPlaybackAnchorMs + cycleIndex * currentLoopLengthMs;
+  const nextCycleStart = loopPlaybackAnchorMs + (cycleIndex + 1) * currentLoopLengthMs;
+
+  // If this cycle is already over, jump to the correct cycle.
+  if (nextCycleStart <= now) {
+    const correctedIndex = Math.floor((now - loopPlaybackAnchorMs) / currentLoopLengthMs);
+    scheduleLoopCycle(correctedIndex);
+    return;
+  }
 
   loopTimeouts.forEach(clearTimeout);
   loopTimeouts = [];
 
- const sequencerEvents = convertStepGridToLoopEvents();
-const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.timeMs);
+  const sequencerEvents = convertStepGridToLoopEvents();
+  const sorted = [...loopEvents, ...sequencerEvents].sort((a, b) => a.timeMs - b.timeMs);
+
   for (const event of sorted) {
+    const eventTime = cycleStart + event.timeMs;
+    const delay = eventTime - now;
+
+    if (delay < -30) continue;
+
     const t = setTimeout(() => {
       if (!isLoopPlaying) return;
-     triggerTap(event.degree, event.instrument, {
-  fromLoop: true,
-  record: false,
-  emit: !isSoloMode
-});
-flashStepRow(event.degree);
-    }, Math.max(0, event.timeMs));
+
+      triggerTap(event.degree, event.instrument, {
+        fromLoop: true,
+        record: false,
+        emit: !isSoloMode
+      });
+
+      flashStepRow(event.degree);
+    }, Math.max(0, delay));
+
     loopTimeouts.push(t);
   }
 
-  const next = setTimeout(scheduleLoopCycle, currentLoopLengthMs);
+  const next = setTimeout(() => {
+    scheduleLoopCycle(cycleIndex + 1);
+  }, Math.max(0, nextCycleStart - now));
+
   loopTimeouts.push(next);
 }
 
-function startLoopPlayback() {
+function startLoopPlayback(anchorMs = Date.now()) {
   if (!loopEvents.length && !stepGridEvents.length) return;
 
   isLoopRecording = false;
@@ -1016,7 +1040,8 @@ function startLoopPlayback() {
 
   const startedAt = performance.now();
 
-startLoopVisuals(currentLoopLengthMs);
+loopPlaybackAnchorMs = anchorMs;
+startLoopVisuals(currentLoopLengthMs, loopPlaybackAnchorMs);
 
 if (!isSoloMode) {
   emitLoopState("play-start", {

@@ -213,6 +213,20 @@ socket.on("host:loop-transport", ({ roomId, action, startTime }) => {
   });
 });
 
+  // ── HOST: section play ───────────────────────────────────
+  socket.on("host:section-play", ({ roomId, section, playerIds, startTime }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    // Relay to every player in the room; each player decides whether to
+    // start or stop based on whether their playerId is in the list.
+    io.to(roomId).emit("section:play", {
+      section,
+      playerIds: playerIds || [],
+      startTime: startTime || Date.now()
+    });
+    console.log(`[section:play]  room=${roomId}  section=${section}  players=${(playerIds||[]).join(",")}`);
+  });
+
   // ── PLAYER: tap event ─────────────────────────────────────
   socket.on("player:tap", (payload) => {
     const { roomId } = payload;

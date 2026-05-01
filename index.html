@@ -41,7 +41,44 @@
     .reference-strip{display:grid;grid-template-columns:1fr 300px;gap:36px;align-items:center}.reference-img{border-radius:28px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow)}
     .cta{text-align:center;padding:90px 0}.cta p{margin:16px auto 28px;max-width:760px;font-size:1.1rem}footer{padding:32px 0 48px;color:var(--muted);display:flex;justify-content:space-between;border-top:1px solid var(--line);font-size:.92rem}
     @media(max-width:900px){.page{width:min(100% - 32px,680px)}nav{display:none}.hero,.cards,.diagram-shell,.two-col,.two-col.reverse,.reference-strip{grid-template-columns:1fr}.hero{gap:34px;padding-top:48px}.device-card{min-height:0}.host-topbar{align-items:flex-start;flex-direction:column}.host-grid{grid-template-columns:repeat(6,140px)}.mode-grid{grid-template-columns:1fr 1fr}.dark-panel{padding:30px}footer{flex-direction:column;gap:10px}}
-    @media(max-width:560px){.mode-grid{grid-template-columns:1fr}.timeline-step{grid-template-columns:1fr}.section{padding:64px 0}h1{font-size:clamp(3rem,18vw,4.8rem)}}
+    @media(max-width:560px){.mode-grid{grid-template-columns:1fr}.timeline-step{grid-template-columns:1fr}.section{padding:64px 0}h1{font-size:clamp(3rem,18vw,4.8rem)}}.cube-section {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.cube-subtitle {
+  opacity: 0.8;
+  margin-bottom: 30px;
+}
+
+.cube-image {
+  width: 100%;
+  max-width: 1000px;
+  border-radius: 12px;
+  margin: 20px auto 40px;
+  display: block;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.cube-description {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.cube-description ul {
+  margin: 15px 0 25px 20px;
+}
+
+.cube-tagline {
+  text-align: center;
+  margin-top: 30px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
   </style>
 </head>
 <body>
@@ -89,6 +126,55 @@
           <article class="timeline-step"><div class="step-number">3</div><div><h3>Create the wireless instrument cube</h3><p>Six sides, customizable panels, motion control, programmable scales, waterproof durability, and wireless connection to the session.</p><span class="step-tag">Future: physical instrument</span></div></article>
         </div>
       </section>
+
+      <section id="cube-concept" class="cube-section">
+  <div class="container">
+
+    <h2>PulseTap Cube</h2>
+
+    <p class="cube-subtitle">
+  A modular, tactile instrument designed for real-time musical collaboration.
+  <br><strong>Tap. Swap. Perform.</strong>
+</p>
+
+    <img src="assets/pulsetap-cube-blueprint.png" alt="PulseTap Cube Blueprint" class="cube-image">
+
+    <div class="cube-description">
+      <p>
+        PulseTap began as a digital instrument — but it naturally evolved toward something physical.
+      </p>
+
+      <p>
+        A compact, rubber-encased instrument with <strong>14 interactive panels</strong>,
+        designed to be tapped, pressed, and played like a portable instrument.
+      </p>
+
+      <p>
+        Inspired by modular fidget systems, each panel can be removed and swapped:
+      </p>
+
+      <ul>
+        <li>Tap pads</li>
+        <li>Sliders</li>
+        <li>Buttons</li>
+        <li>Joysticks</li>
+        <li>Custom control modules</li>
+      </ul>
+
+      <p>
+        The outer rubber skin protects the device while allowing access to a flexible internal frame —
+        enabling users to reconfigure their instrument for different play styles and performances.
+      </p>
+
+     <div style="text-align:center; margin-top: 20px;">
+  <a class="button primary" href="https://docs.google.com/forms/d/e/1FAIpQLScB_XckaDX2P_OzP2riiRs7XMLmehlkkK5Omu_9-hjioWjqSg/viewform?usp=publish-editor" target="_blank">
+    Reserve Interest
+  </a>
+</div>
+    </div>
+
+  </div>
+</section>
 
       <section id="cube" class="two-col">
         <div>

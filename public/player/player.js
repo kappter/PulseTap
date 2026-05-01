@@ -740,6 +740,23 @@ socket.on("loop:transport", ({ action, startTime }) => {
     stopLoopPlayback();
   }
 });
+/** Section play from host — start loop if this player is in the section, stop if not */
+socket.on("section:play", ({ section, playerIds, startTime }) => {
+  const inSection = playerIds.includes(playerId);
+  if (inSection) {
+    // Reuse the same synced start path as "Start All Loops"
+    startPlayerLoopCountdown(startTime);
+    startLoopPlaybackSynced(startTime);
+    console.log(`[section:play] ${section}: loop starting at next bar`);
+  } else {
+    // Silence players not in this section
+    clearInterval(playerLoopCountdownTimer);
+    playerLoopCountdownTimer = null;
+    stopLoopPlayback();
+    console.log(`[section:play] ${section}: not in section — loop stopped`);
+  }
+});
+
 /** Metronome start from host */
 socket.on("metronome:start", (data) => {
   startMetronome(data);

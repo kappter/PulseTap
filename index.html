@@ -45,7 +45,46 @@
   padding: 80px 20px;
   text-align: center;
 }
+.concept-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+}
 
+.concept-thumb {
+  display: block;
+  background: rgba(255,255,255,.055);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+.concept-thumb:hover {
+  transform: translateY(-3px);
+  border-color: rgba(101,214,206,.45);
+}
+
+.concept-thumb img {
+  width: 100%;
+  border-radius: 18px;
+  margin-bottom: 12px;
+}
+
+.concept-thumb span {
+  display: block;
+  color: var(--accent2);
+  font-weight: 800;
+  font-size: .9rem;
+  letter-spacing: .04em;
+}
+
+@media(max-width:900px) {
+  .concept-thumbnails {
+    grid-template-columns: 1fr;
+  }
+}
 .cube-subtitle {
   opacity: 0.8;
   margin-bottom: 30px;
@@ -185,6 +224,29 @@
         </div>
         <figure class="glow-card"><img src="pulsetap-info/assets/cube-concept-board.png" alt="PulseTap instrument cube product concept board" /></figure>
       </section>
+
+      <section id="dock-concepts">
+  <div class="section-title">
+    <div class="section-label">Charging Dock + Accessory Hub</div>
+    <h2>The cube needs a home base.</h2>
+    <p>
+      These dock concepts explore how the PulseTap Cube could charge, sync, store settings,
+      organize swappable panels, and become a small studio hub when not being played.
+    </p>
+  </div>
+
+  <div class="concept-thumbnails">
+    <a href="pulsetap-info/assets/pulsetapbase01.png" target="_blank" class="concept-thumb">
+      <img src="pulsetap-info/assets/pulsetapbase01.png" alt="PulseTap charging dock and accessory hub concept 1">
+      <span>Dock Concept 01</span>
+    </a>
+
+    <a href="pulsetap-info/assets/pulsetapbase02.png" target="_blank" class="concept-thumb">
+      <img src="pulsetap-info/assets/pulsetapbase02.png" alt="PulseTap charging base and accessory dock concept 2">
+      <span>Dock Concept 02</span>
+    </a>
+  </div>
+</section>
 
       <section id="modes" class="dark-panel">
         <div class="section-label">PulseTap App</div>

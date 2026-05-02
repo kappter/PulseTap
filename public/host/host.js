@@ -828,35 +828,48 @@ if (!exists) {
       grid.appendChild(loopEl);
     });
     
-    // ── Play Section button ──────────────────────────────────
-    const playBtn = document.createElement("button");
-    playBtn.className = "btn-play-section";
-    playBtn.textContent = "▶ Play";
-    playBtn.title = `Start loops for ${section} at next bar`;
-    playBtn.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      if (!currentRoom) { log("Open a room first", "system"); return; }
-      const loops = songBoardData[section] || [];
-      if (!loops.length) { log(`${section} has no loops assigned`, "system"); return; }
-      const playerIds = loops.map(l => l.playerId);
-      const startTime = getNextBarStartTime();
-      socket.emit("host:section-play", {
-        roomId: currentRoom,
-        section,
-        playerIds,
-        startTime
-      });
-      log(`▶ ${section} → ${playerIds.length} player(s) at next bar`, "system");
-      // Visual feedback: highlight the active section
-      document.querySelectorAll(".song-section").forEach(el => {
-        el.classList.toggle("section-active", el.dataset.section === section);
-      });
-    });
+   // ── Queue Section button ─────────────────────────────────
+const queueBtn = document.createElement("button");
+queueBtn.className = "btn-queue-section";
+queueBtn.textContent = "⏭ Queue";
+queueBtn.title = `Queue ${section} to start at next bar`;
 
-    sectionEl.appendChild(title);
-    sectionEl.appendChild(grid);
-    sectionEl.appendChild(playBtn);
-    container.appendChild(sectionEl);
+queueBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+
+  if (!currentRoom) {
+    log("Open a room first", "system");
+    return;
+  }
+
+  const loops = songBoardData[section] || [];
+
+  if (!loops.length) {
+    log(`${section} has no loops assigned`, "system");
+    return;
+  }
+
+  const playerIds = loops.map(l => l.playerId);
+  const startTime = getNextBarStartTime();
+
+  socket.emit("host:section-play", {
+    roomId: currentRoom,
+    section,
+    playerIds,
+    startTime
+  });
+
+  log(`⏭ ${section} queued for next bar`, "system");
+
+  document.querySelectorAll(".song-section").forEach(el => {
+    el.classList.toggle("section-active", el.dataset.section === section);
+  });
+});
+
+sectionEl.appendChild(title);
+sectionEl.appendChild(grid);
+sectionEl.appendChild(queueBtn);
+container.appendChild(sectionEl);
   });
 }
 

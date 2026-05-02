@@ -1150,11 +1150,16 @@ const quantizeOn = quantizeSelect?.value && quantizeSelect.value !== "off";
 if (quantizeOn) {
   const step = Math.round((rel / loopLength) * stepGridSteps) % stepGridSteps;
 
-  const alreadyExists = stepGridEvents.some(
+  // toggle behavior: remove if exists, otherwise add
+  const exists = stepGridEvents.some(
     ev => ev.degree === degree && ev.step === step
   );
 
-  if (!alreadyExists) {
+  if (exists) {
+    stepGridEvents = stepGridEvents.filter(
+      ev => !(ev.degree === degree && ev.step === step)
+    );
+  } else {
     stepGridEvents.push({
       degree,
       step,

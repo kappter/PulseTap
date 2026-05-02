@@ -1143,9 +1143,29 @@ function triggerTap(degree, instrument, options = {}) {
     rel = quantizeLoopTime(rel, loopLength);
     if (rel >= loopLength) rel = 0;
 
-   loopEvents.push({ degree, instrument, timeMs: rel });
+   const recordedEvent = { degree, instrument, timeMs: rel };
 
-    renderStepGrid();
+const quantizeOn = quantizeSelect?.value && quantizeSelect.value !== "off";
+
+if (quantizeOn) {
+  const step = Math.round((rel / loopLength) * stepGridSteps) % stepGridSteps;
+
+  const alreadyExists = stepGridEvents.some(
+    ev => ev.degree === degree && ev.step === step
+  );
+
+  if (!alreadyExists) {
+    stepGridEvents.push({
+      degree,
+      step,
+      instrument
+    });
+  }
+} else {
+  loopEvents.push(recordedEvent);
+}
+
+renderStepGrid();
 updateLoopUI();
 emitLoopState("update");
   }

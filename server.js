@@ -161,14 +161,6 @@ io.on("connection", (socket) => {
     console.log(`[host:create]  room=${roomId}  host=${socket.id}`);
   });
 
-  socket.on("host:section-play", ({ roomId, section, playerIds, startTime }) => {
-  io.to(roomId).emit("section:play", {
-    section,
-    playerIds,
-    startTime
-  });
-});
-
   // ── HOST: rejoin an existing room (page reload) ───────────
   socket.on("host:join", ({ roomId }) => {
     if (!roomId) return socket.emit("error", { message: "roomId required" });

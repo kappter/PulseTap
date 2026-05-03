@@ -982,7 +982,24 @@ function startPlayerLoopCountdown(startTime) {
   updateCountdown();
   playerLoopCountdownTimer = setInterval(updateCountdown, 100);
 }
+function setLoopStatus(message, state = "") {
+  if (!loopStatus) return;
 
+  loopStatus.textContent = message;
+
+  loopStatus.classList.remove(
+    "status-recording",
+    "status-playing",
+    "status-queued",
+    "status-ready",
+    "status-empty",
+    "status-solo"
+  );
+
+  if (state) {
+    loopStatus.classList.add(`status-${state}`);
+  }
+}
 function updateLoopUI() {
   recordLoopBtn.classList.toggle("recording", isLoopRecording);
   playLoopBtn.classList.toggle("playing", isLoopPlaying);

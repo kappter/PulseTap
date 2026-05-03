@@ -53,222 +53,180 @@
   </div>
 
   <!-- ── PAD SCREEN ────────────────────────────────────────── -->
-  <div id="padScreen" class="screen pad-screen hidden">
+  
+ <div id="padScreen" class="screen pad-screen hidden">
+  <div class="player-layout">
 
-    <!-- Top bar -->
-    <div class="pad-topbar">
-      <div class="pad-session-info">
-        <span id="padRoomLabel" class="room-label"></span>
-        <span id="padPlayerLabel" class="player-label"></span>
-      </div>
-      <div class="pad-status-row">
-        <span id="connStatus" class="conn-dot disconnected" title="Connection status"></span>
-        <span id="connLabel" class="conn-label">Connecting…</span>
-      </div>
-    </div>
-
-    <!-- Session settings bar (read-only, set by host) -->
-    <div class="settings-bar">
-      <div class="setting-chip">
-        <span class="chip-label">KEY</span>
-        <span id="dispKey" class="chip-value">C</span>
-      </div>
-      <div class="setting-chip">
-        <span class="chip-label">MODE</span>
-        <span id="dispMode" class="chip-value">major</span>
-      </div>
-      <div class="setting-chip">
-        <span class="chip-label">BPM</span>
-        <span id="dispBpm" class="chip-value">120</span>
-      </div>
-      <div class="setting-chip">
-        <span class="chip-label">Q</span>
-        <span id="dispQuantize" class="chip-value">off</span>
-      </div>
-    </div>
-
-    <!-- Metronome beat indicator -->
-    <div id="beatBar" class="beat-bar" aria-hidden="true">
-      <!-- Beat dots injected by JS -->
-    </div>
-
-    <!-- Instrument selector -->
-    <div class="instrument-row">
-      <label for="instrumentSelect" class="sr-only">Instrument</label>
-      <select id="instrumentSelect" class="instrument-select">
-        <option value="sine">Sine</option>
-        <option value="triangle">Triangle</option>
-        <option value="square">Square</option>
-       <option value="sawtooth">Sawtooth</option>
-<option value="kit">Drum Kit</option>
-<option value="kick">Kick</option>
-        <option value="snare">Snare</option>
-        <option value="hi-hat">Hi-Hat</option>
-        <option value="tom">Tom</option>
-      </select>
-    </div>
-
-    <div class="solo-panel">
-  <label class="solo-toggle">
-    <input id="soloModeToggle" type="checkbox" />
-    Solo Mode
-  </label>
-
-  <div id="soloControls" class="solo-controls hidden">
-    <label>
-      BPM
-      <input id="soloBpm" type="number" min="40" max="240" value="120" />
-    </label>
-
-    <label>
-      Key
-      <select id="soloKey">
-        <option>C</option><option>C#</option><option>D</option><option>D#</option>
-        <option>E</option><option>F</option><option>F#</option><option>G</option>
-        <option>G#</option><option>A</option><option>A#</option><option>B</option>
-      </select>
-    </label>
-
-    <label>
-      Mode
-      <select id="soloMode">
-        <option value="major">Major</option>
-        <option value="minor">Minor</option>
-        <option value="dorian">Dorian</option>
-        <option value="phrygian">Phrygian</option>
-        <option value="lydian">Lydian</option>
-        <option value="mixolydian">Mixolydian</option>
-        <option value="pentatonic">Pentatonic</option>
-        <option value="chromatic">Chromatic</option>
-      </select>
-    </label>
-  </div>
-</div>
-
-    <!-- Loop controls -->
-    <div class="loop-panel" aria-label="Loop Mode controls">
-      <div class="loop-slots">
-  <button class="slot-btn" data-slot="1">1</button>
-  <button class="slot-btn" data-slot="2">2</button>
-  <button class="slot-btn" data-slot="3">3</button>
-  <button class="slot-btn" data-slot="4">4</button>
-  <button class="slot-btn" data-slot="5">5</button>
-  <button class="slot-btn" data-slot="6">6</button>
-  <button class="slot-btn" data-slot="7">7</button>
-  <button class="slot-btn" data-slot="8">8</button>
-</div>
-      <div class="slot-hint">Tap = Load · Shift+Tap = Save</div>
-
-      <div class="slot-hint">Tap = Load · Shift+Tap = Save</div>
-
-      
-      
-      <div class="loop-status">
-        <strong>Loop Mode</strong>
-        <span id="loopStatus">Empty · one-bar loop</span>
-      </div>
-
-      <div class="loop-buttons">
-        <button id="recordLoopBtn" class="loop-btn">Record Loop</button>
-        <button id="playLoopBtn" class="loop-btn" disabled>Play Loop</button>
-        <button id="clearLoopBtn" class="loop-btn" disabled>Clear</button>
-      </div>
-
-      <div class="loop-actions">
-  <button id="saveLoopBtn" class="loop-btn">Save</button>
-  <button id="loadLoopBtn" class="loop-btn">Load</button>
-  <button id="shareLoopBtn" class="loop-btn">Share</button>
-  <button id="importLoopBtn" class="loop-btn">Import</button>
-</div>
-
-      <div class="loop-options">
-        <label>
-          Loop Length
-          <select id="loopLengthSelect">
-            <option value="1">1 bar</option>
-            <option value="2">2 bars</option>
-            <option value="4">4 bars</option>
-          </select>
-        </label>
-
-        <label>
-          Quantize
-          <select id="quantizeSelect">
-            <option value="off">Off</option>
-            <option value="4">1/4</option>
-            <option value="8">1/8</option>
-            <option value="16">1/16</option>
-            <option value="32">1/32</option>
-          </select>
-        </label>
-
-         <label>
-    Step Resolution
-    <select id="stepResolution">
-      <option value="4">1/4</option>
-      <option value="8">1/8</option>
-      <option value="16" selected>1/16</option>
-      <option value="32">1/32</option>
-    </select>
-  </label>
-
-        
-      </div>
-
-      <!-- Loop progress bar -->
-      <div class="loop-progress" aria-label="Loop playback progress">
-        <div id="loopPlayhead" class="loop-playhead"></div>
-      </div>
-
-      <div id="stepSequencer" class="step-sequencer"></div>
-
-      <!-- Time divider / step counter -->
-      <div class="time-divider" aria-label="Loop time divider">
-        <div class="time-counter">
-          <span id="currentStep">1</span>
+    <section class="player-top-module">
+      <div class="pad-topbar">
+        <div class="pad-session-info">
+          <span id="padRoomLabel" class="room-label"></span>
+          <span id="padPlayerLabel" class="player-label"></span>
         </div>
-
-        <div class="time-grid" aria-label="16 step loop grid">
-          <div class="time-box" data-step="0"></div>
-          <div class="time-box" data-step="1"></div>
-          <div class="time-box" data-step="2"></div>
-          <div class="time-box" data-step="3"></div>
-          <div class="time-box" data-step="4"></div>
-          <div class="time-box" data-step="5"></div>
-          <div class="time-box" data-step="6"></div>
-          <div class="time-box" data-step="7"></div>
-          <div class="time-box" data-step="8"></div>
-          <div class="time-box" data-step="9"></div>
-          <div class="time-box" data-step="10"></div>
-          <div class="time-box" data-step="11"></div>
-          <div class="time-box" data-step="12"></div>
-          <div class="time-box" data-step="13"></div>
-          <div class="time-box" data-step="14"></div>
-          <div class="time-box" data-step="15"></div>
+        <div class="pad-status-row">
+          <span id="connStatus" class="conn-dot disconnected"></span>
+          <span id="connLabel" class="conn-label">Connecting…</span>
         </div>
       </div>
-    </div>
 
-    <!-- 8 tap pads -->
-    <div class="pad-grid" id="padGrid">
-      <button class="pad" data-degree="0" aria-label="Pad 1">1</button>
-      <button class="pad" data-degree="1" aria-label="Pad 2">2</button>
-      <button class="pad" data-degree="2" aria-label="Pad 3">3</button>
-      <button class="pad" data-degree="3" aria-label="Pad 4">4</button>
-      <button class="pad" data-degree="4" aria-label="Pad 5">5</button>
-      <button class="pad" data-degree="5" aria-label="Pad 6">6</button>
-      <button class="pad" data-degree="6" aria-label="Pad 7">7</button>
-      <button class="pad" data-degree="7" aria-label="Pad 8">8</button>
-    </div>
+      <div class="settings-bar">
+        <div class="setting-chip"><span class="chip-label">KEY</span><span id="dispKey" class="chip-value">C</span></div>
+        <div class="setting-chip"><span class="chip-label">MODE</span><span id="dispMode" class="chip-value">major</span></div>
+        <div class="setting-chip"><span class="chip-label">BPM</span><span id="dispBpm" class="chip-value">120</span></div>
+        <div class="setting-chip"><span class="chip-label">Q</span><span id="dispQuantize" class="chip-value">off</span></div>
+      </div>
 
-    <!-- Mute indicator (set by host) -->
-    <div id="muteOverlay" class="mute-overlay hidden">
-      <span>🔇 Muted by host</span>
-    </div>
+      <div id="beatBar" class="beat-bar" aria-hidden="true"></div>
 
-    <!-- Leave button -->
-    <button id="leaveBtn" class="btn-ghost leave-btn">Leave session</button>
+      <div class="instrument-row">
+        <label for="instrumentSelect" class="sr-only">Instrument</label>
+        <select id="instrumentSelect" class="instrument-select">
+          <option value="sine">Sine</option>
+          <option value="triangle">Triangle</option>
+          <option value="square">Square</option>
+          <option value="sawtooth">Sawtooth</option>
+          <option value="kit">Drum Kit</option>
+          <option value="kick">Kick</option>
+          <option value="snare">Snare</option>
+          <option value="hi-hat">Hi-Hat</option>
+          <option value="tom">Tom</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="grid-module">
+      <div class="loop-panel" aria-label="Loop Mode controls">
+        <div class="loop-slots">
+          <button class="slot-btn" data-slot="1">1</button>
+          <button class="slot-btn" data-slot="2">2</button>
+          <button class="slot-btn" data-slot="3">3</button>
+          <button class="slot-btn" data-slot="4">4</button>
+          <button class="slot-btn" data-slot="5">5</button>
+          <button class="slot-btn" data-slot="6">6</button>
+          <button class="slot-btn" data-slot="7">7</button>
+          <button class="slot-btn" data-slot="8">8</button>
+        </div>
+
+        <div class="slot-hint">Tap = Load · Shift+Tap = Save</div>
+
+        <div class="loop-status">
+          <strong>Loop Mode</strong>
+          <span id="loopStatus">Empty · one-bar loop</span>
+        </div>
+
+        <div class="loop-buttons">
+          <button id="recordLoopBtn" class="loop-btn">Record Loop</button>
+          <button id="playLoopBtn" class="loop-btn" disabled>Play Loop</button>
+          <button id="clearLoopBtn" class="loop-btn" disabled>Clear</button>
+        </div>
+
+        <div class="loop-actions">
+          <button id="saveLoopBtn" class="loop-btn">Save</button>
+          <button id="loadLoopBtn" class="loop-btn">Load</button>
+          <button id="shareLoopBtn" class="loop-btn">Share</button>
+          <button id="importLoopBtn" class="loop-btn">Import</button>
+        </div>
+
+        <div class="loop-options">
+          <label>Loop Length
+            <select id="loopLengthSelect">
+              <option value="1">1 bar</option>
+              <option value="2">2 bars</option>
+              <option value="4">4 bars</option>
+            </select>
+          </label>
+
+          <label>Quantize
+            <select id="quantizeSelect">
+              <option value="off">Off</option>
+              <option value="4">1/4</option>
+              <option value="8">1/8</option>
+              <option value="16">1/16</option>
+              <option value="32">1/32</option>
+            </select>
+          </label>
+
+          <label>Step Resolution
+            <select id="stepResolution">
+              <option value="4">1/4</option>
+              <option value="8">1/8</option>
+              <option value="16" selected>1/16</option>
+              <option value="32">1/32</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="loop-progress">
+          <div id="loopPlayhead" class="loop-playhead"></div>
+        </div>
+
+        <div id="stepSequencer" class="step-sequencer"></div>
+
+        <div class="time-divider">
+          <div class="time-counter"><span id="currentStep">1</span></div>
+          <div class="time-grid">
+            <div class="time-box"></div><div class="time-box"></div><div class="time-box"></div><div class="time-box"></div>
+            <div class="time-box"></div><div class="time-box"></div><div class="time-box"></div><div class="time-box"></div>
+            <div class="time-box"></div><div class="time-box"></div><div class="time-box"></div><div class="time-box"></div>
+            <div class="time-box"></div><div class="time-box"></div><div class="time-box"></div><div class="time-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="performance-module">
+      <div class="pad-grid" id="padGrid">
+        <button class="pad" data-degree="0">1</button>
+        <button class="pad" data-degree="1">2</button>
+        <button class="pad" data-degree="2">3</button>
+        <button class="pad" data-degree="3">4</button>
+        <button class="pad" data-degree="4">5</button>
+        <button class="pad" data-degree="5">6</button>
+        <button class="pad" data-degree="6">7</button>
+        <button class="pad" data-degree="7">8</button>
+      </div>
+    </section>
+
+    <section class="bottom-module">
+      <div class="solo-panel">
+        <label class="solo-toggle">
+          <input id="soloModeToggle" type="checkbox" />
+          Solo Mode
+        </label>
+
+        <div id="soloControls" class="solo-controls hidden">
+          <label>BPM <input id="soloBpm" type="number" min="40" max="240" value="120" /></label>
+          <label>Key
+            <select id="soloKey">
+              <option>C</option><option>C#</option><option>D</option><option>D#</option>
+              <option>E</option><option>F</option><option>F#</option><option>G</option>
+              <option>G#</option><option>A</option><option>A#</option><option>B</option>
+            </select>
+          </label>
+          <label>Mode
+            <select id="soloMode">
+              <option value="major">Major</option>
+              <option value="minor">Minor</option>
+              <option value="dorian">Dorian</option>
+              <option value="phrygian">Phrygian</option>
+              <option value="lydian">Lydian</option>
+              <option value="mixolydian">Mixolydian</option>
+              <option value="pentatonic">Pentatonic</option>
+              <option value="chromatic">Chromatic</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="muteOverlay" class="mute-overlay hidden">
+        <span>🔇 Muted by host</span>
+      </div>
+
+      <button id="leaveBtn" class="btn-ghost leave-btn">Leave session</button>
+    </section>
+
   </div>
+</div>
 
   <!-- Socket.IO client (served by the server automatically) -->
   <script src="/socket.io/socket.io.js"></script>

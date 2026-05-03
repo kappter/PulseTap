@@ -386,7 +386,7 @@ function padFrequency(degree) {
 function getCurrentLoopData() {
   return {
     version: 1,
-    instrument: instrumentSel.value,
+    instrument: instrumentSel.value || "sine",
     loopLengthMs: currentLoopLengthMs,
     stepGridSteps,
     stepResolution: stepResolutionSelect?.value || "16",
@@ -404,7 +404,9 @@ function applyLoopData(data) {
   if (!data) return;
 
   // restore instrument
-  instrumentSel.value = data.instrument || "sine";
+  if (data.instrument && [...instrumentSel.options].some(o => o.value === data.instrument)) {
+  instrumentSel.value = data.instrument;
+}
 
   // restore loop timing (safe — does NOT change global clock)
   currentLoopLengthMs = data.loopLengthMs || getLoopLengthMs();

@@ -33,8 +33,8 @@
 .mixer-screen {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow-y: auto;
 }
 
 /* ── Top nav ──────────────────────────────────────────────── */
@@ -253,15 +253,16 @@
 .mixer-body {
   flex: 1;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   padding: 16px 20px;
   position: relative;
+  min-height: 0;
 }
 
 .channel-strips {
   display: flex;
   gap: 12px;
-  height: 100%;
+  min-height: 100%;
   align-items: flex-start;
 }
 

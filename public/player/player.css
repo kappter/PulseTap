@@ -532,3 +532,70 @@ select {
   min-width: 28px;
 }
 
+.loop-panel {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas:
+    "slots buttons actions"
+    "status options options"
+    "hint hint hint"
+    "progress progress progress"
+    "grid grid grid"
+    "time time time";
+  gap: 12px;
+  align-items: center;
+}
+
+.loop-slots { grid-area: slots; }
+.slot-hint { grid-area: hint; }
+.loop-status { grid-area: status; }
+.loop-buttons { grid-area: buttons; }
+.loop-actions { grid-area: actions; }
+.loop-options { grid-area: options; }
+.loop-progress { grid-area: progress; }
+.step-sequencer { grid-area: grid; }
+.time-divider { grid-area: time; }
+
+.loop-status {
+  white-space: nowrap;
+}
+
+.loop-options {
+  justify-content: flex-end;
+}
+
+.loop-buttons,
+.loop-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.loop-options {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.loop-status {
+  min-width: 180px;
+}
+
+@media (max-width: 900px) {
+  .loop-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "slots"
+      "status"
+      "buttons"
+      "actions"
+      "options"
+      "hint"
+      "progress"
+      "grid"
+      "time";
+  }
+
+  .loop-status {
+    white-space: normal;
+  }
+}

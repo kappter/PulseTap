@@ -132,6 +132,22 @@ background: #151a22;
 color: white;
 }
 
+.performance-module {
+  display: block;
+}
+
+.performance-module .pad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .performance-module .pad-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .loop-status strong {
 font-size: 0.9rem;
 }
@@ -170,14 +186,6 @@ color: #071014;
 
 /* ── Loop visual polish ───────────────────────────────────── */
 
-.loop-progress {
-  position: relative;
-  height: 6px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 12px;
-}
 
 .loop-playhead {
   height: 100%;
@@ -198,12 +206,6 @@ color: #071014;
   font-weight: 800;
   color: white;
   text-align: left;
-}
-
-.time-grid {
-  display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  gap: 4px;
 }
 
 .time-box {
@@ -306,11 +308,6 @@ padding: 12px;
   background: #ffc247;
   border-radius: 4px;
   transition: width 0.03s linear;
-}
-
-.time-box {
-  opacity: 0.35;
-  transition: opacity 0.08s ease, transform 0.08s ease;
 }
 
 .time-box.active {
@@ -534,39 +531,4 @@ select {
 .step-cell {
   min-width: 28px;
 }
-@media (min-width: 900px) {
-  .pad-screen {
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    grid-template-areas:
-      "topbar topbar"
-      "side main"
-      "side pads";
-    gap: 16px;
-    align-items: start;
-  }
 
-  .pad-topbar {
-    grid-area: topbar;
-  }
-
-  .settings-bar,
-  .instrument-row,
-  .solo-panel {
-    grid-column: 1;
-  }
-
-  .loop-panel {
-    grid-area: main;
-    min-width: 0;
-  }
-
-  .pad-grid {
-    grid-area: pads;
-  }
-
-  .settings-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-}

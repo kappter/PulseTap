@@ -99,11 +99,47 @@ let loopVisualStartMs = 0;
 let loopVisualLengthMs = 2000;
 let selectedRole = "Melody";
 let isMuted      = false;
+let queuedLoopData = null;
+let queuedSlotNumber = null;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
 
 const saveLoopBtn = document.getElementById("saveLoopBtn");
+const duplicateLoopBtn = document.getElementById("duplicateLoopBtn");
+function queueLoopData(data, slot) {
+  queuedLoopData = data;
+  queuedSlotNumber = slot;
 
+  document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("queued"));
+  document.querySelector(`.slot-btn[data-slot="${slot}"]`)?.classList.add("queued");
+
+  loopStatus.textContent = `Queued slot ${slot} for next bar`;
+}
+duplicateLoopBtn?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+
+  const data = getCurrentLoopData();
+
+  const active = document.querySelector(".slot-btn.active");
+const start = active ? Number(active.dataset.slot) + 1 : 1;
+
+for (let i = 0; i < 8; i++) {
+  const n = ((start + i - 1) % 8) + 1;
+    const key = `pulsetap_loop_slot_${n}`;
+
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify(data));
+
+      const btn = document.querySelector(`.slot-btn[data-slot="${n}"]`);
+      btn?.classList.add("saved");
+
+      loopStatus.textContent = `Duplicated to slot ${n}`;
+      return;
+    }
+  }
+
+  loopStatus.textContent = "No empty slots";
+});
 saveLoopBtn?.addEventListener("click", () => {
   const data = getCurrentLoopData();
   localStorage.setItem("pulsetap_loop", JSON.stringify(data));
@@ -154,35 +190,35 @@ slotButtons.forEach((btn) => {
     if (e.shiftKey) {
       const data = getCurrentLoopData();
       localStorage.setItem(key, JSON.stringify(data));
-
       btn.classList.add("saved");
-
-// ensure all saved slots stay marked
-document.querySelectorAll(".slot-btn").forEach(b => {
-  const key = `pulsetap_loop_slot_${b.dataset.slot}`;
-  if (localStorage.getItem(key)) {
-    b.classList.add("saved");
-  }
-});
       loopStatus.textContent = `Saved to slot ${slot}`;
-    } else {
-      try {
-        const raw = localStorage.getItem(key);
+      return;
+    }
 
-        if (!raw) {
-          loopStatus.textContent = `Slot ${slot} empty`;
-          return;
-        }
+    try {
+      const raw = localStorage.getItem(key);
 
-        applyLoopData(JSON.parse(raw));
-
-        document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        loopStatus.textContent = `Loaded slot ${slot}`;
-      } catch {
-        loopStatus.textContent = `Error loading slot ${slot}`;
+      if (!raw) {
+        loopStatus.textContent = `Slot ${slot} empty`;
+        return;
       }
+
+      const data = JSON.parse(raw);
+
+      if (isLoopPlaying) {
+        queueLoopData(data, slot);
+      } else {
+        applyLoopData(data);
+
+        document.querySelectorAll(".slot-btn").forEach(b =>
+          b.classList.remove("active", "queued")
+        );
+
+        btn.classList.add("active");
+        loopStatus.textContent = `Loaded slot ${slot}`;
+      }
+    } catch {
+      loopStatus.textContent = `Error loading slot ${slot}`;
     }
   });
 });
@@ -1025,8 +1061,24 @@ function scheduleLoopCycle(cycleIndex = 0) {
   }
 
   const next = setTimeout(() => {
-    scheduleLoopCycle(cycleIndex + 1);
-  }, Math.max(0, nextCycleStart - now));
+  if (queuedLoopData) {
+    applyLoopData(queuedLoopData);
+
+    document.querySelectorAll(".slot-btn").forEach(b => {
+      b.classList.remove("queued", "active");
+    });
+
+    document.querySelector(`.slot-btn[data-slot="${queuedSlotNumber}"]`)?.classList.add("active");
+
+    queuedLoopData = null;
+    queuedSlotNumber = null;
+
+    startLoopPlayback(Date.now());
+    return;
+  }
+
+  scheduleLoopCycle(cycleIndex + 1);
+}, Math.max(0, nextCycleStart - now));
 
   loopTimeouts.push(next);
 }

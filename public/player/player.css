@@ -46,6 +46,7 @@ letter-spacing: -0.02em;
 color: var(--text);
 }
 
+
 /* ── Pad screen ───────────────────────────────────────────── */
 .pad-screen {
 display: flex;
@@ -61,7 +62,10 @@ justify-content: space-between;
 padding: 14px 20px 10px;
 border-bottom: 1px solid var(--line);
 }
-
+.slot-btn.queued {
+  border-color: #ffc247;
+  box-shadow: 0 0 8px rgba(255, 194, 71, 0.75);
+}
 .room-label {
 font-size: 0.88rem;
 font-weight: 800;

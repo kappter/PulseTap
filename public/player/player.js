@@ -230,7 +230,7 @@ document.querySelectorAll(".slot-btn").forEach(b =>
 );
 
 btn.classList.add("active");
-setLoopStatus(`✓ Slot ${slot} loaded · queued for next bar`, "queued");
+setLoopStatus(`✓ Slot ${slot} loaded · ready to play`, "ready");
       }
     } catch {
       setLoopStatus(`Slot ${slot} load error`, "empty");

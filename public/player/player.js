@@ -91,6 +91,7 @@ const loopStatus    = document.getElementById("loopStatus");
 // ─────────────────────────────────────────────────────────────
 //  Session state
 // ─────────────────────────────────────────────────────────────
+let currentLoopSlot = null;
 let isSoloMode = false;
 let playerVolume = 1.0;
 let playerLoopCountdownTimer = null;
@@ -188,12 +189,20 @@ slotButtons.forEach((btn) => {
     const key = `pulsetap_loop_slot_${slot}`;
 
     if (e.shiftKey) {
-      const data = getCurrentLoopData();
-      localStorage.setItem(key, JSON.stringify(data));
-      btn.classList.add("saved");
-      loopStatus.textContent = `Saved to slot ${slot}`;
-      return;
-    }
+  const data = getCurrentLoopData();
+  localStorage.setItem(key, JSON.stringify(data));
+
+  currentLoopSlot = Number(slot);
+
+  btn.classList.add("saved");
+  document.querySelectorAll(".slot-btn").forEach(b =>
+    b.classList.remove("active", "queued")
+  );
+  btn.classList.add("active");
+
+  loopStatus.textContent = `Saved to slot ${slot}`;
+  return;
+}
 
     try {
       const raw = localStorage.getItem(key);
@@ -210,12 +219,16 @@ slotButtons.forEach((btn) => {
       } else {
         applyLoopData(data);
 
-        document.querySelectorAll(".slot-btn").forEach(b =>
-          b.classList.remove("active", "queued")
-        );
+currentLoopSlot = Number(slot);
+queuedLoopData = null;
+queuedSlotNumber = null;
 
-        btn.classList.add("active");
-        loopStatus.textContent = `Loaded slot ${slot}`;
+document.querySelectorAll(".slot-btn").forEach(b =>
+  b.classList.remove("active", "queued")
+);
+
+btn.classList.add("active");
+loopStatus.textContent = `Loaded slot ${slot}`;
       }
     } catch {
       loopStatus.textContent = `Error loading slot ${slot}`;
@@ -1062,22 +1075,31 @@ function scheduleLoopCycle(cycleIndex = 0) {
 
   const next = setTimeout(() => {
   if (queuedLoopData) {
-    applyLoopData(queuedLoopData);
+  applyLoopData(queuedLoopData);
 
-    document.querySelectorAll(".slot-btn").forEach(b => {
-      b.classList.remove("queued", "active");
-    });
+  currentLoopSlot = Number(queuedSlotNumber);
 
-    document.querySelector(`.slot-btn[data-slot="${queuedSlotNumber}"]`)?.classList.add("active");
+  document.querySelectorAll(".slot-btn").forEach(b => {
+    b.classList.remove("queued", "active");
+  });
 
-    queuedLoopData = null;
-    queuedSlotNumber = null;
+  document
+    .querySelector(`.slot-btn[data-slot="${queuedSlotNumber}"]`)
+    ?.classList.add("active");
 
-    startLoopPlayback(Date.now());
-    return;
-  }
+  queuedLoopData = null;
+  queuedSlotNumber = null;
 
-  scheduleLoopCycle(cycleIndex + 1);
+  currentLoopLengthMs = getLoopLengthMs();
+loopPlaybackAnchorMs = nextCycleStart;
+loopVisualStartMs = nextCycleStart;
+loopVisualLengthMs = currentLoopLengthMs;
+
+scheduleLoopCycle(0);
+return;
+}
+
+scheduleLoopCycle(cycleIndex + 1);
 }, Math.max(0, nextCycleStart - now));
 
   loopTimeouts.push(next);
@@ -1113,6 +1135,13 @@ function stopLoopPlayback() {
   loopTimeouts = [];
 
   stopLoopVisuals();
+
+  queuedLoopData = null;
+  queuedSlotNumber = null;
+
+  document.querySelectorAll(".slot-btn").forEach(b =>
+    b.classList.remove("queued")
+  );
 
   updateLoopUI();
 }

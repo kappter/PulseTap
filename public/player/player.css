@@ -603,3 +603,186 @@ select {
     white-space: normal;
   }
 }
+
+/* ==========================================================================
+   PULSETAP UX ENHANCEMENT - Loop Slot States, Animations, Solo Mode
+   ========================================================================== */
+
+/* Slot button base - smooth transitions */
+.slot-btn {
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease, transform 0.08s ease;
+  overflow: hidden;
+}
+
+/* SAVED state - green dot + glow */
+.slot-btn.saved {
+  border-color: #22c55e;
+  color: #86efac;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.45);
+}
+.slot-btn.saved::after {
+  content: "";
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
+}
+
+/* ACTIVE state - cyan glow + scale pop */
+.slot-btn.active {
+  border-color: #38bdf8;
+  color: #e0f2fe;
+  background: rgba(56, 189, 248, 0.12);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  animation: slot-activate 0.18s ease forwards;
+}
+.slot-btn.active::after {
+  content: "";
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+@keyframes slot-activate {
+  0%   { transform: scale(1.0); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1.06); }
+}
+
+/* QUEUED state - gold pulse */
+.slot-btn.queued {
+  border-color: #ffc247;
+  color: #fef3c7;
+  background: rgba(255, 194, 71, 0.08);
+  animation: slot-queued-pulse 0.9s ease-in-out infinite;
+}
+.slot-btn.queued::after {
+  content: "";
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #ffc247;
+  box-shadow: 0 0 6px #ffc247;
+  animation: slot-dot-blink 0.9s ease-in-out infinite;
+}
+@keyframes slot-queued-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 194, 71, 0.35); }
+  50%       { box-shadow: 0 0 16px rgba(255, 194, 71, 0.75); }
+}
+@keyframes slot-dot-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* DUPLICATE button flash */
+.loop-btn.dup-flash {
+  background: rgba(34, 197, 94, 0.25) !important;
+  border-color: #22c55e !important;
+  color: #86efac !important;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.55) !important;
+}
+
+/* RECORD button pulse */
+.loop-btn.recording {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+  animation: rec-pulse 1s ease-in-out infinite;
+}
+@keyframes rec-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 18px rgba(239, 68, 68, 0.8); }
+}
+
+/* PLAY button active */
+.loop-btn.playing {
+  background: rgba(56, 189, 248, 0.18) !important;
+  border-color: #38bdf8 !important;
+  color: #e0f2fe !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+}
+
+/* Playhead glow */
+.loop-playhead {
+  box-shadow: 0 0 8px rgba(255, 194, 71, 0.7), 0 0 2px rgba(255,255,255,0.4);
+}
+
+/* Step cell playhead column */
+.step-cell.playhead {
+  outline: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 0 10px rgba(255,255,255,0.7), 0 0 4px rgba(255,194,71,0.5);
+  background: rgba(255,255,255,0.12) !important;
+}
+
+/* Beat-1 accent on time-grid */
+.time-box.beat-1 { background: rgba(255,255,255,0.28); }
+.time-box.beat-1.active {
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+/* Loop status colour coding */
+#loopStatus { transition: color 0.2s ease; }
+#loopStatus.status-recording { color: #fca5a5; }
+#loopStatus.status-playing   { color: #67e8f9; }
+#loopStatus.status-queued    { color: #fef3c7; }
+#loopStatus.status-ready     { color: #86efac; }
+#loopStatus.status-empty     { color: var(--muted, #94a3b8); }
+#loopStatus.status-solo      { color: #c4b5fd; }
+
+.loop-status {
+  transition: background 0.25s ease;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+.loop-status.status-bg-recording { background: rgba(239,68,68,0.08); }
+.loop-status.status-bg-playing   { background: rgba(56,189,248,0.08); }
+.loop-status.status-bg-queued    { background: rgba(255,194,71,0.08); }
+.loop-status.status-bg-ready     { background: rgba(34,197,94,0.06); }
+
+/* SOLO MODE visual separation */
+body.solo-active .solo-panel {
+  border-color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+  box-shadow: 0 0 18px rgba(167,139,250,0.2);
+}
+body.solo-active .solo-toggle { color: #c4b5fd; }
+
+body.solo-active .loop-panel {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.4);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+body:not(.solo-active) .loop-panel {
+  opacity: 1;
+  pointer-events: auto;
+  filter: none;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+body.solo-active .loop-panel::before {
+  content: "SOLO - loop sync paused";
+  display: block;
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a78bfa;
+  padding: 4px 0 2px;
+  opacity: 0.85;
+}
+
+body.solo-active .performance-module .pad {
+  border-color: rgba(167,139,250,0.5);
+  box-shadow: 0 0 12px rgba(167,139,250,0.2);
+}

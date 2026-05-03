@@ -114,7 +114,7 @@ function queueLoopData(data, slot) {
   document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("queued"));
   document.querySelector(`.slot-btn[data-slot="${slot}"]`)?.classList.add("queued");
 
-  loopStatus.textContent = `Queued slot ${slot} for next bar`;
+  setLoopStatus(`⏳ Slot ${slot} queued · fires at next bar`, "queued");
 }
 duplicateLoopBtn?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -133,18 +133,20 @@ for (let i = 0; i < 8; i++) {
 
       const btn = document.querySelector(`.slot-btn[data-slot="${n}"]`);
       btn?.classList.add("saved");
-
-      loopStatus.textContent = `Duplicated to slot ${n}`;
+      // UX: flash the duplicate button green briefly
+      duplicateLoopBtn?.classList.add("dup-flash");
+      setTimeout(() => duplicateLoopBtn?.classList.remove("dup-flash"), 420);
+      setLoopStatus(`✓ Copied to slot ${n}`, "ready");
       return;
     }
   }
 
-  loopStatus.textContent = "No empty slots";
+  setLoopStatus("All slots full · clear one first", "empty");
 });
 saveLoopBtn?.addEventListener("click", () => {
   const data = getCurrentLoopData();
   localStorage.setItem("pulsetap_loop", JSON.stringify(data));
-  loopStatus.textContent = "Loop saved";
+  setLoopStatus("✓ Loop saved to slot", "ready");
 });
 
 const loadLoopBtn = document.getElementById("loadLoopBtn");
@@ -154,14 +156,14 @@ loadLoopBtn?.addEventListener("click", () => {
     const raw = localStorage.getItem("pulsetap_loop");
 
     if (!raw) {
-      loopStatus.textContent = "No saved loop found";
+      setLoopStatus("Slot empty · record something first", "empty");
       return;
     }
 
     applyLoopData(JSON.parse(raw));
-    loopStatus.textContent = "Loop loaded";
+    setLoopStatus("✓ Loop loaded · ready to play", "ready");
   } catch (err) {
-    loopStatus.textContent = "Could not load loop";
+    setLoopStatus("Load failed · slot may be corrupt", "empty");
   }
 });
 
@@ -174,7 +176,7 @@ shareLoopBtn?.addEventListener("click", async () => {
 
   await navigator.clipboard.writeText(encoded);
 
-  loopStatus.textContent = "Loop copied (share it!)";
+  setLoopStatus("✓ Loop URL copied · share it!", "ready");
 });
 
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
@@ -200,7 +202,7 @@ slotButtons.forEach((btn) => {
   );
   btn.classList.add("active");
 
-  loopStatus.textContent = `Saved to slot ${slot}`;
+  setLoopStatus(`✓ Saved to slot ${slot}`, "ready");
   return;
 }
 
@@ -208,7 +210,7 @@ slotButtons.forEach((btn) => {
       const raw = localStorage.getItem(key);
 
       if (!raw) {
-        loopStatus.textContent = `Slot ${slot} empty`;
+        setLoopStatus(`Slot ${slot} empty · shift+tap to save`, "empty");
         return;
       }
 
@@ -228,10 +230,10 @@ document.querySelectorAll(".slot-btn").forEach(b =>
 );
 
 btn.classList.add("active");
-loopStatus.textContent = `Loaded slot ${slot}`;
+setLoopStatus(`✓ Slot ${slot} loaded · queued for next bar`, "queued");
       }
     } catch {
-      loopStatus.textContent = `Error loading slot ${slot}`;
+      setLoopStatus(`Slot ${slot} load error`, "empty");
     }
   });
 });
@@ -339,10 +341,13 @@ function getNextLocalBarStartTime() {
 soloModeToggle?.addEventListener("change", () => {
   isSoloMode = soloModeToggle.checked;
   soloControls?.classList.toggle("hidden", !isSoloMode);
-
+  // UX: toggle body class for Solo Mode visual separation
+  document.body.classList.toggle("solo-active", isSoloMode);
   if (isSoloMode) {
     applySoloSettings();
-    loopStatus.textContent = "Solo Mode · local practice";
+    setLoopStatus("Solo · local practice · loop sync paused", "solo");
+  } else {
+    updateLoopUI();
   }
 });
 
@@ -431,9 +436,9 @@ const data = JSON.parse(atob(text.trim()));
 
 applyLoopData(data);
 
-loopStatus.textContent = "Loop imported";
+setLoopStatus("✓ Loop imported · ready to play", "ready");
   } catch (e) {
-    loopStatus.textContent = "Invalid loop data";
+    setLoopStatus("Import failed · invalid loop data", "empty");
   }
 }
 
@@ -910,8 +915,10 @@ function updateStepBoxes(activeStep) {
   const boxes = document.querySelectorAll(".time-box");
 
   boxes.forEach((box, index) => {
-    box.classList.toggle("active", index + 1 === activeStep);
-    box.classList.toggle("passed", index + 1 < activeStep);
+    box.classList.toggle("active",  index + 1 === activeStep);
+    box.classList.toggle("passed",  index + 1 < activeStep);
+    // UX: accent beat-1 of each bar (every 4th box starting at 1)
+    box.classList.toggle("beat-1",  index % 4 === 0);
   });
 }
 function updateStepGridPlayhead(activeStep) {

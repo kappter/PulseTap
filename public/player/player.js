@@ -534,6 +534,62 @@ function synthTom(frequency) {
   osc.start(now);
   osc.stop(now + 0.28);
 }
+function synthBass(freq) {
+  synthTone(freq / 2, "sawtooth");
+}
+
+function synthPluck(freq) {
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, now);
+
+  gain.gain.setValueAtTime(0.6, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+  osc.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.14);
+}
+
+function synthBell(freq) {
+  synthTone(freq * 2, "sine");
+}
+
+function synthPad(freq) {
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, now);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.2);
+  gain.gain.linearRampToValueAtTime(0.0001, now + 1.0);
+
+  osc.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 1.1);
+}
+
+function synthLead(freq) {
+  synthTone(freq, "square");
+}
+
+function synthOrgan(freq) {
+  synthTone(freq, "triangle");
+}
+
+function synthChip(freq) {
+  synthTone(freq, "square");
+}
 
 /**
  * Plays a sound for the given pad degree and instrument type.
@@ -548,6 +604,13 @@ function playSound(degree, instrument) {
     case "triangle": synthTone(freq, "triangle");  break;
     case "square":   synthTone(freq, "square");    break;
     case "sawtooth": synthTone(freq, "sawtooth");  break;
+      case "bass":  synthBass(freq);  break;
+case "pluck": synthPluck(freq); break;
+case "bell":  synthBell(freq);  break;
+case "pad":   synthPad(freq);   break;
+case "lead":  synthLead(freq);  break;
+case "organ": synthOrgan(freq); break;
+case "chip":  synthChip(freq);  break;
       case "kit": playDrumKitSound(degree); break;
     case "kick":     synthKick();                  break;
     case "snare":    synthSnare();                 break;

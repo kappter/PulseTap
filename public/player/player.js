@@ -116,6 +116,49 @@ function queueLoopData(data, slot) {
 
   setLoopStatus(`⏳ Slot ${slot} queued · fires at next bar`, "queued");
 }
+// ─────────────────────────────────────────────────────────────
+//  Song Mode helper — used by slot buttons AND section buttons
+// ─────────────────────────────────────────────────────────────
+/**
+ * Load or queue a saved loop slot.
+ * - If a loop is currently playing: queues for next bar boundary.
+ * - If stopped: loads immediately and marks slot active.
+ * Returns true on success, false if slot is empty.
+ */
+function queueSlotForNextBar(slot) {
+  const key = `pulsetap_loop_slot_${slot}`;
+  const raw = localStorage.getItem(key);
+
+  if (!raw) {
+    setLoopStatus(`Slot ${slot} empty · shift+tap a slot to save first`, "empty");
+    return false;
+  }
+
+  try {
+    const data = JSON.parse(raw);
+
+    if (isLoopPlaying) {
+      queueLoopData(data, slot);
+    } else {
+      applyLoopData(data);
+      currentLoopSlot   = Number(slot);
+      queuedLoopData    = null;
+      queuedSlotNumber  = null;
+
+      document.querySelectorAll(".slot-btn").forEach(b =>
+        b.classList.remove("active", "queued")
+      );
+      document.querySelector(`.slot-btn[data-slot="${slot}"]`)
+        ?.classList.add("active");
+
+      setLoopStatus(`✓ Slot ${slot} loaded · ready to play`, "ready");
+    }
+    return true;
+  } catch {
+    setLoopStatus(`Slot ${slot} load error`, "empty");
+    return false;
+  }
+}
 duplicateLoopBtn?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
 
@@ -206,35 +249,8 @@ slotButtons.forEach((btn) => {
   return;
 }
 
-    try {
-      const raw = localStorage.getItem(key);
-
-      if (!raw) {
-        setLoopStatus(`Slot ${slot} empty · shift+tap to save`, "empty");
-        return;
-      }
-
-      const data = JSON.parse(raw);
-
-      if (isLoopPlaying) {
-        queueLoopData(data, slot);
-      } else {
-        applyLoopData(data);
-
-currentLoopSlot = Number(slot);
-queuedLoopData = null;
-queuedSlotNumber = null;
-
-document.querySelectorAll(".slot-btn").forEach(b =>
-  b.classList.remove("active", "queued")
-);
-
-btn.classList.add("active");
-setLoopStatus(`✓ Slot ${slot} loaded · ready to play`, "ready");
-      }
-    } catch {
-      setLoopStatus(`Slot ${slot} load error`, "empty");
-    }
+    // Delegate to shared helper (also used by Song Mode section buttons)
+    queueSlotForNextBar(slot);
   });
 });
 
@@ -456,7 +472,7 @@ function synthTone(freq, type = "sine") {
   osc.type = type;
   osc.frequency.setValueAtTime(freq, now);
 
- gain.gain.setValueAtTime(0.4 * velocity, now);
+  gain.gain.setValueAtTime(0.4, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
   osc.connect(gain);
@@ -992,8 +1008,7 @@ socket.on("metronome:stop", () => {
 /** Remote tap from another player */
 socket.on("tap:event", (event) => {
   // Play the sound locally using the event's instrument and degree
-  const vel = event.velocity || 1;
-playSound(event.padNumber, event.instrument || "sine", vel);
+  playSound(event.padNumber, event.instrument || "sine");
   // Flash the corresponding pad cyan (remote colour)
   const pad = padGrid.querySelector(`.pad[data-degree="${event.padNumber}"]`);
   if (pad) flashPad(pad, "active-remote");
@@ -1588,4 +1603,22 @@ document.querySelectorAll(".slot-btn").forEach((btn) => {
   if (localStorage.getItem(key)) {
     btn.classList.add("saved");
   }
+});
+
+// ─────────────────────────────────────────────────────────────
+//  Song Mode — section button listeners
+// ─────────────────────────────────────────────────────────────
+document.querySelectorAll(".song-section-btn").forEach((btn) => {
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const slot = Number(btn.dataset.slot);
+    const ok = queueSlotForNextBar(slot);
+    if (ok) {
+      // Highlight the active section button
+      document.querySelectorAll(".song-section-btn").forEach(b =>
+        b.classList.remove("section-active")
+      );
+      btn.classList.add("section-active");
+    }
+  });
 });

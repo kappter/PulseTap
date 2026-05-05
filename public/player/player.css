@@ -784,3 +784,112 @@ body.solo-active .performance-module .pad {
   border-color: rgba(167,139,250,0.5);
   box-shadow: 0 0 12px rgba(167,139,250,0.2);
 }
+
+/* =============================================================
+   SONG MODE PANEL
+   ============================================================= */
+
+.song-mode-module {
+  padding: 0 0.75rem;
+}
+
+.song-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.song-panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.song-panel-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffd700;
+}
+
+.song-panel-hint {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.04em;
+}
+
+.song-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.song-section-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.song-section-btn {
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: 9px;
+  color: #ffd700;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.song-section-btn:active {
+  transform: scale(0.96);
+  background: rgba(255, 215, 0, 0.18);
+}
+
+.song-section-btn.section-active {
+  background: rgba(255, 215, 0, 0.22);
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+  color: #fff;
+}
+
+.song-section-btn.section-queued {
+  border-color: rgba(255, 215, 0, 0.7);
+  animation: slot-queued-pulse 0.9s ease-in-out infinite;
+}
+
+.song-bars-select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  padding: 0.35rem 0.4rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+  min-width: 5.5rem;
+}
+
+.song-bars-select:focus {
+  outline: none;
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.song-slot-badge {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}

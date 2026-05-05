@@ -472,7 +472,7 @@ function synthTone(freq, type = "sine") {
   osc.type = type;
   osc.frequency.setValueAtTime(freq, now);
 
-  gain.gain.setValueAtTime(0.4, now);
+  gain.gain.setValueAtTime(0.4 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
   osc.connect(gain);
@@ -1008,7 +1008,8 @@ socket.on("metronome:stop", () => {
 /** Remote tap from another player */
 socket.on("tap:event", (event) => {
   // Play the sound locally using the event's instrument and degree
-  playSound(event.padNumber, event.instrument || "sine");
+  const vel = event.velocity || 1;
+playSound(event.padNumber, event.instrument || "sine", vel);
   // Flash the corresponding pad cyan (remote colour)
   const pad = padGrid.querySelector(`.pad[data-degree="${event.padNumber}"]`);
   if (pad) flashPad(pad, "active-remote");

@@ -1467,9 +1467,10 @@ if (!loopEvents.length && !stepGridEvents.length) return;
 }
 
 function startLoopVisuals(loopLengthMs, anchorMs = Date.now()) {
+  
   if (loopVisualAnimationId !== null) return;
 
-  loopVisualStartMs = anchorMs;
+  loopVisualStartMs = anchorMs || (performance.timeOrigin + performance.now());
   loopVisualLengthMs = loopLengthMs;
 
   animateLoopVisuals();

@@ -1727,7 +1727,7 @@ case "sawtooth": synthTone(freq, "sawtooth", velocity);  break;
     case "hi-hat": synthHiHat();             break;
     case "tom":    synthTom(freq);           break;
 
-    default: synthTone(freq, "sine");
+    default: synthTone(freq, "sine", velocity);
   }
 }
 

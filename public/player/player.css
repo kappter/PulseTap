@@ -893,3 +893,59 @@ body.solo-active .performance-module .pad {
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
+
+/* =============================================================
+   SAMPLE PACKS BAR
+   ============================================================= */
+
+.sample-packs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+}
+
+.sample-packs-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sample-packs-btns {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.sample-pack-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.32rem 0.7rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.sample-pack-btn:active {
+  transform: scale(0.94);
+  background: rgba(255, 215, 0, 0.14);
+}
+
+.sample-pack-btn.pack-active {
+  background: rgba(255, 215, 0, 0.18);
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.28);
+}

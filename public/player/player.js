@@ -50,6 +50,261 @@ const KEY_FREQ = {
 };
 
 // ─────────────────────────────────────────────────────────────
+//  Sample Packs  — predefined loop data for slots 1-5
+//  Format matches the applyLoopData / buildLoopObject schema.
+// ─────────────────────────────────────────────────────────────
+const SAMPLE_PACKS = {
+  "Lo-Fi": {
+    label: "Lo-Fi",
+    settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" },
+    slots: [
+      // Slot 1 — mellow bass line
+      {
+        instrument: "bass",
+        loopLengthMs: 3200,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "bass" },
+          { step: 4,  degree: 2, instrument: "bass" },
+          { step: 8,  degree: 0, instrument: "bass" },
+          { step: 12, degree: 4, instrument: "bass" }
+        ],
+        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+      },
+      // Slot 2 — lo-fi chord stabs
+      {
+        instrument: "pad",
+        loopLengthMs: 3200,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "pad" },
+          { step: 2,  degree: 2, instrument: "pad" },
+          { step: 8,  degree: 3, instrument: "pad" },
+          { step: 10, degree: 5, instrument: "pad" }
+        ],
+        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+      },
+      // Slot 3 — dusty kick pattern
+      {
+        instrument: "kick",
+        loopLengthMs: 3200,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "kick" },
+          { step: 6,  degree: 0, instrument: "kick" },
+          { step: 8,  degree: 0, instrument: "kick" },
+          { step: 14, degree: 0, instrument: "kick" }
+        ],
+        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+      },
+      // Slot 4 — snare on 2 and 4
+      {
+        instrument: "snare",
+        loopLengthMs: 3200,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 4,  degree: 0, instrument: "snare" },
+          { step: 12, degree: 0, instrument: "snare" }
+        ],
+        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+      },
+      // Slot 5 — pluck melody
+      {
+        instrument: "pluck",
+        loopLengthMs: 3200,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "pluck" },
+          { step: 3,  degree: 2, instrument: "pluck" },
+          { step: 6,  degree: 4, instrument: "pluck" },
+          { step: 9,  degree: 3, instrument: "pluck" },
+          { step: 12, degree: 5, instrument: "pluck" }
+        ],
+        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+      }
+    ]
+  },
+
+  "Synthwave": {
+    label: "Synthwave",
+    settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" },
+    slots: [
+      // Slot 1 — pulsing lead
+      {
+        instrument: "lead",
+        loopLengthMs: 2182,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "lead" },
+          { step: 2,  degree: 0, instrument: "lead" },
+          { step: 4,  degree: 3, instrument: "lead" },
+          { step: 6,  degree: 2, instrument: "lead" },
+          { step: 8,  degree: 0, instrument: "lead" },
+          { step: 10, degree: 0, instrument: "lead" },
+          { step: 12, degree: 5, instrument: "lead" },
+          { step: 14, degree: 4, instrument: "lead" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+      },
+      // Slot 2 — sawtooth bass
+      {
+        instrument: "sawtooth",
+        loopLengthMs: 2182,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "sawtooth" },
+          { step: 4,  degree: 0, instrument: "sawtooth" },
+          { step: 8,  degree: 3, instrument: "sawtooth" },
+          { step: 12, degree: 2, instrument: "sawtooth" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+      },
+      // Slot 3 — four-on-the-floor kick
+      {
+        instrument: "kick",
+        loopLengthMs: 2182,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "kick" },
+          { step: 4,  degree: 0, instrument: "kick" },
+          { step: 8,  degree: 0, instrument: "kick" },
+          { step: 12, degree: 0, instrument: "kick" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+      },
+      // Slot 4 — gated snare
+      {
+        instrument: "snare",
+        loopLengthMs: 2182,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 4,  degree: 0, instrument: "snare" },
+          { step: 12, degree: 0, instrument: "snare" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+      },
+      // Slot 5 — arpeggiated bell
+      {
+        instrument: "bell",
+        loopLengthMs: 2182,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "bell" },
+          { step: 2,  degree: 2, instrument: "bell" },
+          { step: 4,  degree: 4, instrument: "bell" },
+          { step: 6,  degree: 7, instrument: "bell" },
+          { step: 8,  degree: 4, instrument: "bell" },
+          { step: 10, degree: 2, instrument: "bell" },
+          { step: 12, degree: 0, instrument: "bell" },
+          { step: 14, degree: 5, instrument: "bell" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+      }
+    ]
+  },
+
+  "Ambient": {
+    label: "Ambient",
+    settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" },
+    slots: [
+      // Slot 1 — slow pad wash
+      {
+        instrument: "pad",
+        loopLengthMs: 4000,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "pad" },
+          { step: 8,  degree: 4, instrument: "pad" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+      },
+      // Slot 2 — sparse bell tones
+      {
+        instrument: "bell",
+        loopLengthMs: 4000,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 2, instrument: "bell" },
+          { step: 5,  degree: 4, instrument: "bell" },
+          { step: 11, degree: 7, instrument: "bell" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+      },
+      // Slot 3 — sine drone
+      {
+        instrument: "sine",
+        loopLengthMs: 4000,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "sine" },
+          { step: 4,  degree: 0, instrument: "sine" },
+          { step: 8,  degree: 3, instrument: "sine" },
+          { step: 12, degree: 0, instrument: "sine" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+      },
+      // Slot 4 — soft hi-hat texture
+      {
+        instrument: "hi-hat",
+        loopLengthMs: 4000,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 2,  degree: 0, instrument: "hi-hat" },
+          { step: 6,  degree: 0, instrument: "hi-hat" },
+          { step: 10, degree: 0, instrument: "hi-hat" },
+          { step: 14, degree: 0, instrument: "hi-hat" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+      },
+      // Slot 5 — pluck melody
+      {
+        instrument: "pluck",
+        loopLengthMs: 4000,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "pluck" },
+          { step: 4,  degree: 2, instrument: "pluck" },
+          { step: 8,  degree: 4, instrument: "pluck" },
+          { step: 12, degree: 3, instrument: "pluck" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+      }
+    ]
+  }
+};
+
+
+// ─────────────────────────────────────────────────────────────
 //  DOM references
 // ─────────────────────────────────────────────────────────────
 const stepSequencer = document.getElementById("stepSequencer");
@@ -1685,3 +1940,38 @@ document.querySelectorAll(".song-section-btn").forEach((btn) => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────
+//  Sample Packs — load predefined loops into slots 1-5
+// ─────────────────────────────────────────────────────────────
+document.querySelectorAll(".sample-pack-btn").forEach((btn) => {
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+
+    const packName = btn.dataset.pack;
+    const pack = SAMPLE_PACKS[packName];
+    if (!pack) return;
+
+    pack.slots.forEach((loopData, i) => {
+      const slot = i + 1;                                   // slots 1-5
+      const key  = `pulsetap_loop_slot_${slot}`;
+      localStorage.setItem(key, JSON.stringify(loopData));
+
+      // Mark the corresponding slot button as saved
+      const slotBtn = document.querySelector(`.slot-btn[data-slot="${slot}"]`);
+      if (slotBtn) {
+        slotBtn.classList.remove("active", "queued");
+        slotBtn.classList.add("saved");
+      }
+    });
+
+    // Visual feedback on the pack buttons
+    document.querySelectorAll(".sample-pack-btn").forEach(b =>
+      b.classList.remove("pack-active")
+    );
+    btn.classList.add("pack-active");
+
+    setLoopStatus(`✓ Loaded ${pack.label} · tap a slot to play`, "ready");
+  });
+});
+

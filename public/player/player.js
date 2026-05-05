@@ -443,11 +443,129 @@ setLoopStatus("✓ Loop imported · ready to play", "ready");
     setLoopStatus("Import failed · invalid loop data", "empty");
   }
 }
+// ─────────────────────────────────────────────────────────────
+//  Base synth + drums (REQUIRED)
+// ─────────────────────────────────────────────────────────────
 
+function synthTone(freq, type = "sine") {
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+
+  gain.gain.setValueAtTime(0.4, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+  osc.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
+function synthKick() {
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+
+  gain.gain.setValueAtTime(1.0, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+  osc.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.13);
+}
+
+function synthSnare() {
+  const now = audioCtx.currentTime;
+
+  const noise = audioCtx.createBufferSource();
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.value = 1000;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.7, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  noise.start(now);
+  noise.stop(now + 0.2);
+}
+
+function synthHiHat() {
+  const now = audioCtx.currentTime;
+
+  const noise = audioCtx.createBufferSource();
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.value = 5000;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  noise.start(now);
+  noise.stop(now + 0.05);
+}
+
+function synthTom(freq) {
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, now);
+
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+  osc.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
 // ─────────────────────────────────────────────────────────────
 //  Audio synthesis
 // ─────────────────────────────────────────────────────────────
-function synthBass(freq) {
+function synthBass(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -458,9 +576,9 @@ function synthBass(freq) {
   osc.frequency.setValueAtTime(freq / 2, now);
 
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(600, now);
+  filter.frequency.setValueAtTime(400 + velocity * 800, now);
 
-  gain.gain.setValueAtTime(0.6, now);
+  gain.gain.setValueAtTime(0.6 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
 
   osc.connect(filter);
@@ -1247,6 +1365,51 @@ updateLoopUI();
 // ─────────────────────────────────────────────────────────────
 //  Pad interaction
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Pad interaction
+// ─────────────────────────────────────────────────────────────
+function playSound(degree, instrument, velocity = 1) {
+  if (!audioCtx) initAudio();
+  const freq = padFrequency(degree);
+
+  switch (instrument) {
+    case "sine":     synthTone(freq, "sine");      break;
+    case "triangle": synthTone(freq, "triangle");  break;
+    case "square":   synthTone(freq, "square");    break;
+    case "sawtooth": synthTone(freq, "sawtooth");  break;
+
+    case "bass":  synthBass(freq, velocity);  break;
+    case "pluck": synthPluck(freq, velocity); break;
+    case "bell":  synthBell(freq, velocity);  break;
+    case "pad":   synthPad(freq, velocity);   break;
+    case "lead":  synthLead(freq, velocity);  break;
+    case "organ": synthOrgan(freq, velocity); break;
+    case "chip":  synthChip(freq, velocity);  break;
+
+    case "kit":    playDrumKitSound(degree); break;
+    case "kick":   synthKick();              break;
+    case "snare":  synthSnare();             break;
+    case "hi-hat": synthHiHat();             break;
+    case "tom":    synthTom(freq);           break;
+
+    default: synthTone(freq, "sine");
+  }
+}
+
+function playDrumKitSound(degree) {
+  switch (degree) {
+    case 0: synthKick(); break;
+    case 1: synthSnare(); break;
+    case 2: synthHiHat(); break;
+    case 3: synthTom(220); break;
+    case 4: synthTom(180); break;
+    case 5: synthHiHat(); break;
+    case 6: synthSnare(); break;
+    case 7: synthKick(); break;
+    default: synthKick();
+  }
+}
+
 function flashPad(pad, cls) {
   pad.classList.add(cls);
   setTimeout(() => pad.classList.remove(cls), 130);
@@ -1266,15 +1429,15 @@ function flashStepRow(degree) {
 
 function emitTapEvent(degree, instrument, source = "live") {
   socket.emit("player:tap", {
-    roomId:     roomCodeIn.value.trim().toUpperCase(),
+    roomId: roomCodeIn.value.trim().toUpperCase(),
     playerId,
     playerName: playerNameIn.value.trim() || "Player",
-    role:       selectedRole,
-    padNumber:  degree,
-    timestamp:  Date.now(),
-    soundType:  sessionSettings.mode,
+    role: selectedRole,
+    padNumber: degree,
+    timestamp: Date.now(),
+    soundType: sessionSettings.mode,
     instrument,
-    frequency:  padFrequency(degree),
+    frequency: padFrequency(degree),
     source
   });
 }
@@ -1282,56 +1445,53 @@ function emitTapEvent(degree, instrument, source = "live") {
 function triggerTap(degree, instrument, options = {}) {
   const { fromLoop = false, record = true, emit = true } = options;
   if (isMuted) return;
+
   initAudio();
 
   // ── IMMEDIATE local playback ──────────────────────────
- const velocity = 0.6 + Math.random() * 0.4; // temporary variation
-function playSound(degree, instrument, velocity = 1) {
-  // ── IMMEDIATE local playback ──────────────────────────
-const velocity = 0.6 + Math.random() * 0.4;
-playSound(degree, instrument, velocity);
+  const vel = 0.6 + Math.random() * 0.4;
+  playSound(degree, instrument, vel);
 
-const pad = padGrid.querySelector(`.pad[data-degree="${degree}"]`);
-if (pad) flashPad(pad, fromLoop ? "active-remote" : "active-local");
-if (!fromLoop && navigator.vibrate) navigator.vibrate(10);
+  const pad = padGrid.querySelector(`.pad[data-degree="${degree}"]`);
+  if (pad) flashPad(pad, fromLoop ? "active-remote" : "active-local");
+  if (!fromLoop && navigator.vibrate) navigator.vibrate(10);
 
   // ── Record to one-bar loop if Loop Mode is recording ───
   if (record && isLoopRecording) {
     const loopLength = currentLoopLengthMs || getLoopLengthMs();
     let rel = (Date.now() - loopStartMs) % loopLength;
+
     rel = quantizeLoopTime(rel, loopLength);
     if (rel >= loopLength) rel = 0;
 
-   const recordedEvent = { degree, instrument, timeMs: rel };
+    const recordedEvent = { degree, instrument, timeMs: rel };
+    const quantizeOn = quantizeSelect?.value && quantizeSelect.value !== "off";
 
-const quantizeOn = quantizeSelect?.value && quantizeSelect.value !== "off";
+    if (quantizeOn) {
+      const step = Math.round((rel / loopLength) * stepGridSteps) % stepGridSteps;
 
-if (quantizeOn) {
-  const step = Math.round((rel / loopLength) * stepGridSteps) % stepGridSteps;
+      const exists = stepGridEvents.some(
+        ev => ev.degree === degree && ev.step === step
+      );
 
-  // toggle behavior: remove if exists, otherwise add
-  const exists = stepGridEvents.some(
-    ev => ev.degree === degree && ev.step === step
-  );
+      if (exists) {
+        stepGridEvents = stepGridEvents.filter(
+          ev => !(ev.degree === degree && ev.step === step)
+        );
+      } else {
+        stepGridEvents.push({
+          degree,
+          step,
+          instrument
+        });
+      }
+    } else {
+      loopEvents.push(recordedEvent);
+    }
 
-  if (exists) {
-    stepGridEvents = stepGridEvents.filter(
-      ev => !(ev.degree === degree && ev.step === step)
-    );
-  } else {
-    stepGridEvents.push({
-      degree,
-      step,
-      instrument
-    });
-  }
-} else {
-  loopEvents.push(recordedEvent);
-}
-
-renderStepGrid();
-updateLoopUI();
-emitLoopState("update");
+    renderStepGrid();
+    updateLoopUI();
+    emitLoopState("update");
   }
 
   // ── Relay to server ───────────────────────────────────
@@ -1343,11 +1503,15 @@ emitLoopState("update");
 pads.forEach((pad) => {
   pad.addEventListener("pointerdown", (e) => {
     e.preventDefault();
+
     const degree = Number(pad.dataset.degree);
-    triggerTap(degree, instrumentSel.value, { fromLoop: false, record: true, emit: true });
+    triggerTap(degree, instrumentSel.value, {
+      fromLoop: false,
+      record: true,
+      emit: true
+    });
   });
 });
-
 // ─────────────────────────────────────────────────────────────
 //  Role selector
 // ─────────────────────────────────────────────────────────────

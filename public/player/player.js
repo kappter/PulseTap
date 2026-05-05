@@ -360,6 +360,10 @@ let queuedSlotNumber = null;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
 const exportMidiBtn = document.getElementById("exportMidiBtn");
+const playBankBtn = document.getElementById("playBankBtn");
+let isBankPlaying = false;
+let bankTimeouts = [];
+let bankPlaybackAnchorMs = 0;
 let songModeActive = false;
 let songSections = [];
 let songIndex = 0;
@@ -1326,6 +1330,121 @@ socket.on("host:volume:ack", ({ targetPlayerId, volume }) => {
   }
 });
 
+function getSavedBankLoops() {
+  const loops = [];
+
+  for (let slot = 1; slot <= 8; slot++) {
+    const raw = localStorage.getItem(`pulsetap_loop_slot_${slot}`);
+    if (!raw) continue;
+
+    try {
+      const data = JSON.parse(raw);
+      loops.push({ slot, data });
+    } catch {
+      console.warn(`Bad loop data in slot ${slot}`);
+    }
+  }
+
+  return loops;
+}
+
+function getLoopEventsFromData(data) {
+  const loopLength = data.loopLengthMs || getLoopLengthMs();
+  const steps = data.stepGridSteps || 16;
+
+  const freeEvents = Array.isArray(data.loopEvents) ? data.loopEvents : [];
+
+  const stepEvents = Array.isArray(data.stepGridEvents)
+    ? data.stepGridEvents.map(ev => ({
+        degree: ev.degree,
+        instrument: ev.instrument || data.instrument || "sine",
+        timeMs: (ev.step / steps) * loopLength
+      }))
+    : [];
+
+  return [...freeEvents, ...stepEvents];
+}
+
+function startBankPlayback(anchorMs = Date.now()) {
+  const bankLoops = getSavedBankLoops();
+
+  if (!bankLoops.length) {
+    setLoopStatus("No saved slots to play", "empty");
+    return;
+  }
+
+  stopBankPlayback();
+
+  isBankPlaying = true;
+  bankPlaybackAnchorMs = anchorMs;
+
+  playBankBtn?.classList.add("playing");
+  playBankBtn.textContent = "Stop Bank";
+
+  setLoopStatus(`Playing bank · ${bankLoops.length} slot${bankLoops.length === 1 ? "" : "s"}`, "playing");
+
+  scheduleBankCycle(0);
+}
+
+function scheduleBankCycle(cycleIndex = 0) {
+  if (!isBankPlaying) return;
+
+  const bankLoops = getSavedBankLoops();
+  if (!bankLoops.length) {
+    stopBankPlayback();
+    return;
+  }
+
+  const loopLength = getLoopLengthMs();
+  const now = Date.now();
+  const cycleStart = bankPlaybackAnchorMs + cycleIndex * loopLength;
+  const nextCycleStart = bankPlaybackAnchorMs + (cycleIndex + 1) * loopLength;
+
+  bankTimeouts.forEach(clearTimeout);
+  bankTimeouts = [];
+
+  for (const { slot, data } of bankLoops) {
+    const events = getLoopEventsFromData(data);
+
+    for (const event of events) {
+      const eventTime = cycleStart + event.timeMs;
+      const delay = eventTime - now;
+
+      if (delay < -30) continue;
+
+      const t = setTimeout(() => {
+        if (!isBankPlaying) return;
+
+        triggerTap(event.degree, event.instrument || data.instrument || "sine", {
+          fromLoop: true,
+          record: false,
+          emit: !isSoloMode
+        });
+      }, Math.max(0, delay));
+
+      bankTimeouts.push(t);
+    }
+  }
+
+  const next = setTimeout(() => {
+    scheduleBankCycle(cycleIndex + 1);
+  }, Math.max(0, nextCycleStart - now));
+
+  bankTimeouts.push(next);
+}
+
+function stopBankPlayback() {
+  isBankPlaying = false;
+
+  bankTimeouts.forEach(clearTimeout);
+  bankTimeouts = [];
+
+  playBankBtn?.classList.remove("playing");
+  if (playBankBtn) playBankBtn.textContent = "Play Bank";
+
+  updateLoopUI();
+}
+
 function startLoopPlaybackSynced(startTime) {
 if (!loopEvents.length && !stepGridEvents.length) return;
   stopLoopPlayback();
@@ -1674,6 +1793,17 @@ function stopLoopPlayback() {
 
   updateLoopUI();
 }
+
+playBankBtn?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+
+  if (isBankPlaying) {
+    stopBankPlayback();
+  } else {
+    const startTime = getNextLocalBarStartTime();
+    startBankPlayback(startTime);
+  }
+});
 
 recordLoopBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();

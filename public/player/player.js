@@ -1366,6 +1366,7 @@ function getLoopEventsFromData(data) {
 }
 
 function startBankPlayback(anchorMs = Date.now()) {
+
   const bankLoops = getSavedBankLoops();
 
   if (!bankLoops.length) {
@@ -1373,7 +1374,15 @@ function startBankPlayback(anchorMs = Date.now()) {
     return;
   }
 
+  const lengths = bankLoops.map(l => l.data.loopLengthMs);
+  const mismatch = lengths.some(l => l !== lengths[0]);
+
+  if (mismatch) {
+    setLoopStatus("Mixed loop lengths in bank", "queued");
+  }
+
   stopBankPlayback();
+  stopLoopPlayback();
 
   isBankPlaying = true;
   bankPlaybackAnchorMs = anchorMs;

@@ -447,190 +447,174 @@ setLoopStatus("✓ Loop imported · ready to play", "ready");
 // ─────────────────────────────────────────────────────────────
 //  Audio synthesis
 // ─────────────────────────────────────────────────────────────
-function makeNoiseBuffer(dur) {
-  const n    = Math.floor(audioCtx.sampleRate * dur);
-  const buf  = audioCtx.createBuffer(1, n, audioCtx.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
-  return buf;
-}
-
-function synthTone(frequency, type) {
-  const now  = audioCtx.currentTime;
-  const osc  = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(frequency, now);
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.40, now + 0.006);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start(now);
-  osc.stop(now + 0.25);
-}
-
-function synthKick() {
-  const now  = audioCtx.currentTime;
-  const osc  = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(130, now);
-  osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
-  gain.gain.setValueAtTime(0.9, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start(now);
-  osc.stop(now + 0.25);
-}
-
-function synthSnare() {
-  const now    = audioCtx.currentTime;
-  const noise  = audioCtx.createBufferSource();
-  const filter = audioCtx.createBiquadFilter();
-  const gain   = audioCtx.createGain();
-  noise.buffer       = makeNoiseBuffer(0.18);
-  filter.type        = "bandpass";
-  filter.frequency.value = 1800;
-  filter.Q.value     = 0.8;
-  gain.gain.setValueAtTime(0.50, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-  noise.start(now);
-  noise.stop(now + 0.18);
-}
-
-function synthHiHat() {
-  const now    = audioCtx.currentTime;
-  const noise  = audioCtx.createBufferSource();
-  const filter = audioCtx.createBiquadFilter();
-  const gain   = audioCtx.createGain();
-  noise.buffer           = makeNoiseBuffer(0.08);
-  filter.type            = "highpass";
-  filter.frequency.value = 7000;
-  gain.gain.setValueAtTime(0.30, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-  noise.start(now);
-  noise.stop(now + 0.08);
-}
-
-function synthTom(frequency) {
-  const now  = audioCtx.currentTime;
-  const osc  = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(frequency * 0.5, now);
-  osc.frequency.exponentialRampToValueAtTime(frequency * 0.25, now + 0.18);
-  gain.gain.setValueAtTime(0.60, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start(now);
-  osc.stop(now + 0.28);
-}
 function synthBass(freq) {
-  synthTone(freq / 2, "sawtooth");
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
+  const gain = audioCtx.createGain();
+
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(freq / 2, now);
+
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(600, now);
+
+  gain.gain.setValueAtTime(0.6, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.3);
 }
 
 function synthPluck(freq) {
   const now = audioCtx.currentTime;
+
   const osc = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
   const gain = audioCtx.createGain();
 
   osc.type = "triangle";
   osc.frequency.setValueAtTime(freq, now);
 
-  gain.gain.setValueAtTime(0.6, now);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(1200, now);
 
-  osc.connect(gain);
+  gain.gain.setValueAtTime(0.7, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+
+  osc.connect(filter);
+  filter.connect(gain);
   gain.connect(masterGain);
 
   osc.start(now);
-  osc.stop(now + 0.14);
+  osc.stop(now + 0.12);
 }
 
 function synthBell(freq) {
-  synthTone(freq * 2, "sine");
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc1.type = "sine";
+  osc2.type = "sine";
+
+  osc1.frequency.setValueAtTime(freq, now);
+  osc2.frequency.setValueAtTime(freq * 2.01, now);
+
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+
+  osc1.stop(now + 1.3);
+  osc2.stop(now + 1.3);
 }
 
 function synthPad(freq) {
   const now = audioCtx.currentTime;
+
   const osc = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
   const gain = audioCtx.createGain();
 
   osc.type = "sine";
   osc.frequency.setValueAtTime(freq, now);
 
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(1500, now);
+
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.2);
-  gain.gain.linearRampToValueAtTime(0.0001, now + 1.0);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.3);
+  gain.gain.linearRampToValueAtTime(0.0001, now + 1.5);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 1.6);
+}
+
+function synthLead(freq) {
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
+  const gain = audioCtx.createGain();
+
+  osc.type = "square";
+  osc.frequency.setValueAtTime(freq, now);
+
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(freq * 2, now);
+
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(now);
+  osc.stop(now + 0.35);
+}
+
+function synthOrgan(freq) {
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc1.type = "triangle";
+  osc2.type = "triangle";
+
+  osc1.frequency.setValueAtTime(freq, now);
+  osc2.frequency.setValueAtTime(freq * 2, now);
+
+  gain.gain.setValueAtTime(0.4, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+
+  osc1.stop(now + 0.9);
+  osc2.stop(now + 0.9);
+}
+
+function synthChip(freq) {
+  const now = audioCtx.currentTime;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "square";
+  osc.frequency.setValueAtTime(freq, now);
+
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
 
   osc.connect(gain);
   gain.connect(masterGain);
 
   osc.start(now);
-  osc.stop(now + 1.1);
-}
-
-function synthLead(freq) {
-  synthTone(freq, "square");
-}
-
-function synthOrgan(freq) {
-  synthTone(freq, "triangle");
-}
-
-function synthChip(freq) {
-  synthTone(freq, "square");
-}
-
-/**
- * Plays a sound for the given pad degree and instrument type.
- * @param {number} degree  - Scale degree (0–7)
- * @param {string} instrument
- */
-function playSound(degree, instrument) {
-  if (!audioCtx) initAudio();
-  const freq = padFrequency(degree);
-  switch (instrument) {
-    case "sine":     synthTone(freq, "sine");      break;
-    case "triangle": synthTone(freq, "triangle");  break;
-    case "square":   synthTone(freq, "square");    break;
-    case "sawtooth": synthTone(freq, "sawtooth");  break;
-      case "bass":  synthBass(freq);  break;
-case "pluck": synthPluck(freq); break;
-case "bell":  synthBell(freq);  break;
-case "pad":   synthPad(freq);   break;
-case "lead":  synthLead(freq);  break;
-case "organ": synthOrgan(freq); break;
-case "chip":  synthChip(freq);  break;
-      case "kit": playDrumKitSound(degree); break;
-    case "kick":     synthKick();                  break;
-    case "snare":    synthSnare();                 break;
-    case "hi-hat":   synthHiHat();                 break;
-    case "tom":      synthTom(freq);               break;
-    default:         synthTone(freq, "sine");
-  }
-}
-function playDrumKitSound(degree) {
-  switch (degree) {
-    case 0: synthKick(); break;
-    case 1: synthSnare(); break;
-    case 2: synthHiHat(); break;
-    case 3: synthTom(220); break;
-    case 4: synthTom(180); break;
-    case 5: synthHiHat(); break;
-    case 6: synthSnare(); break;
-    case 7: synthKick(); break;
-    default: synthKick();
-  }
+  osc.stop(now + 0.1);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1301,10 +1285,15 @@ function triggerTap(degree, instrument, options = {}) {
   initAudio();
 
   // ── IMMEDIATE local playback ──────────────────────────
-  playSound(degree, instrument);
-  const pad = padGrid.querySelector(`.pad[data-degree="${degree}"]`);
-  if (pad) flashPad(pad, fromLoop ? "active-remote" : "active-local");
-  if (!fromLoop && navigator.vibrate) navigator.vibrate(10);
+ const velocity = 0.6 + Math.random() * 0.4; // temporary variation
+function playSound(degree, instrument, velocity = 1) {
+  // ── IMMEDIATE local playback ──────────────────────────
+const velocity = 0.6 + Math.random() * 0.4;
+playSound(degree, instrument, velocity);
+
+const pad = padGrid.querySelector(`.pad[data-degree="${degree}"]`);
+if (pad) flashPad(pad, fromLoop ? "active-remote" : "active-local");
+if (!fromLoop && navigator.vibrate) navigator.vibrate(10);
 
   // ── Record to one-bar loop if Loop Mode is recording ───
   if (record && isLoopRecording) {

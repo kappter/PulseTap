@@ -359,6 +359,7 @@ let queuedLoopData = null;
 let queuedSlotNumber = null;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
+const exportMidiBtn = document.getElementById("exportMidiBtn");
 let songModeActive = false;
 let songSections = [];
 let songIndex = 0;
@@ -482,6 +483,7 @@ shareLoopBtn?.addEventListener("click", async () => {
 });
 
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
+exportMidiBtn?.addEventListener("pointerdown", (e) => { e.preventDefault(); exportMidi(); });
 
 const slotButtons = document.querySelectorAll(".slot-btn");
 
@@ -1977,3 +1979,223 @@ document.querySelectorAll(".sample-pack-btn").forEach((btn) => {
   });
 });
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MIDI EXPORT  — pure inline encoder, no external library
+//  Converts the currently loaded loop to a standard MIDI Type-0 file.
+//
+//  Key mapping:
+//    KEY_MIDI_ROOT maps each key name to the MIDI note number of that note
+//    at octave 4 (e.g. C4 = 60, A4 = 69).
+//    SCALES[mode] gives semitone offsets from the root for each pad degree.
+//    degreeToMidi(degree) = KEY_MIDI_ROOT[key] + SCALES[mode][degree]
+//
+//  Event sources (priority: stepGridEvents > loopEvents):
+//    stepGridEvents: { step, degree, instrument }
+//      → time = (step / stepGridSteps) * loopLengthMs
+//    loopEvents:     { degree, instrument, timeMs }
+//      → time = timeMs
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** MIDI note numbers for each key at octave 4 (C4 = 60) */
+const KEY_MIDI_ROOT = {
+  C: 60, "C#": 61, D: 62, "D#": 63,
+  E: 64, F: 65, "F#": 66, G: 67,
+  "G#": 68, A: 69, "A#": 70, B: 71
+};
+
+/**
+ * Convert a pad degree to a MIDI note number using current session settings.
+ * Percussion instruments (kick, snare, hi-hat, tom) are mapped to GM drum
+ * channel notes on channel 10 (0-indexed: 9).
+ */
+const DRUM_NOTES = {
+  kick:    36,   // Bass Drum 1
+  snare:   38,   // Acoustic Snare
+  "hi-hat": 42,  // Closed Hi-Hat
+  tom:     45    // Low Floor Tom
+};
+
+const MELODIC_INSTRUMENTS = new Set([
+  "sine", "triangle", "square", "sawtooth",
+  "bass", "pluck", "bell", "pad", "lead", "organ", "chip"
+]);
+
+function degreeToMidi(degree, instrument, key, mode) {
+  if (DRUM_NOTES[instrument] !== undefined) {
+    return { note: DRUM_NOTES[instrument], channel: 9 };
+  }
+  const root   = KEY_MIDI_ROOT[key] ?? 60;
+  const scale  = SCALES[mode] ?? SCALES.major;
+  const offset = scale[Math.min(degree, scale.length - 1)] ?? 0;
+  return { note: Math.min(127, root + offset), channel: 0 };
+}
+
+// ─── Low-level MIDI byte helpers ─────────────────────────────────────────
+
+/** Encode a variable-length quantity (delta time) as MIDI VLQ bytes */
+function vlq(value) {
+  if (value < 0) value = 0;
+  const bytes = [];
+  bytes.unshift(value & 0x7F);
+  value >>= 7;
+  while (value > 0) {
+    bytes.unshift((value & 0x7F) | 0x80);
+    value >>= 7;
+  }
+  return bytes;
+}
+
+/** Write a 4-byte big-endian unsigned integer */
+function uint32be(n) {
+  return [(n >>> 24) & 0xFF, (n >>> 16) & 0xFF, (n >>> 8) & 0xFF, n & 0xFF];
+}
+
+/** Write a 2-byte big-endian unsigned integer */
+function uint16be(n) {
+  return [(n >>> 8) & 0xFF, n & 0xFF];
+}
+
+// ─── MIDI file builder ───────────────────────────────────────────────────
+
+/**
+ * Build a MIDI Type-0 file from an array of note events.
+ *
+ * @param {Array<{timeMs: number, note: number, channel: number, velocity: number, durationMs: number}>} notes
+ * @param {number} bpm
+ * @param {number} loopLengthMs
+ * @returns {Uint8Array}
+ */
+function buildMidiFile(notes, bpm, loopLengthMs) {
+  const TICKS_PER_BEAT = 480;
+  const usPerBeat      = Math.round(60_000_000 / bpm);   // microseconds per beat
+  const msPerTick      = (usPerBeat / 1000) / TICKS_PER_BEAT;
+
+  function msToTicks(ms) {
+    return Math.max(0, Math.round(ms / msPerTick));
+  }
+
+  // Build list of raw MIDI events: [tickAbsolute, bytes[]]
+  const rawEvents = [];
+
+  // Tempo event at tick 0
+  rawEvents.push([0, [0xFF, 0x51, 0x03,
+    (usPerBeat >>> 16) & 0xFF,
+    (usPerBeat >>>  8) & 0xFF,
+     usPerBeat        & 0xFF
+  ]]);
+
+  // Time signature: 4/4
+  rawEvents.push([0, [0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]]);
+
+  // Note on/off pairs
+  for (const ev of notes) {
+    const t0   = msToTicks(ev.timeMs);
+    const t1   = msToTicks(ev.timeMs + ev.durationMs);
+    const vel  = Math.min(127, Math.max(1, Math.round((ev.velocity ?? 0.8) * 100)));
+    const ch   = ev.channel & 0x0F;
+
+    rawEvents.push([t0, [0x90 | ch, ev.note & 0x7F, vel]]);         // note on
+    rawEvents.push([t1, [0x80 | ch, ev.note & 0x7F, 0]]);           // note off
+  }
+
+  // End-of-track marker at loop length
+  rawEvents.push([msToTicks(loopLengthMs), [0xFF, 0x2F, 0x00]]);
+
+  // Sort by tick, then note-off before note-on at same tick
+  rawEvents.sort((a, b) => {
+    if (a[0] !== b[0]) return a[0] - b[0];
+    const aOff = (a[1][0] & 0xF0) === 0x80 ? 0 : 1;
+    const bOff = (b[1][0] & 0xF0) === 0x80 ? 0 : 1;
+    return aOff - bOff;
+  });
+
+  // Convert to delta-time track bytes
+  const trackBytes = [];
+  let prevTick = 0;
+  for (const [tick, bytes] of rawEvents) {
+    const delta = tick - prevTick;
+    prevTick = tick;
+    trackBytes.push(...vlq(delta), ...bytes);
+  }
+
+  // MIDI header chunk: MThd
+  const header = [
+    0x4D, 0x54, 0x68, 0x64,   // "MThd"
+    ...uint32be(6),             // chunk length = 6
+    ...uint16be(0),             // format 0 (single track)
+    ...uint16be(1),             // 1 track
+    ...uint16be(TICKS_PER_BEAT) // ticks per quarter note
+  ];
+
+  // MIDI track chunk: MTrk
+  const track = [
+    0x4D, 0x54, 0x72, 0x6B,   // "MTrk"
+    ...uint32be(trackBytes.length),
+    ...trackBytes
+  ];
+
+  return new Uint8Array([...header, ...track]);
+}
+
+// ─── exportMidi() — main entry point ────────────────────────────────────
+
+function exportMidi() {
+  const data = getCurrentLoopData();
+
+  const key        = data.settings?.key  || sessionSettings.key  || "C";
+  const mode       = data.settings?.mode || sessionSettings.mode || "major";
+  const bpm        = data.settings?.bpm  || sessionSettings.bpm  || 120;
+  const loopMs     = data.loopLengthMs   || currentLoopLengthMs  || 2000;
+  const steps      = data.stepGridSteps  || stepGridSteps        || 16;
+  const resolution = parseInt(data.stepResolution || "16", 10);
+
+  const notes = [];
+  const noteDurationMs = Math.max(60, (loopMs / resolution) * 0.8); // 80% of step width
+
+  // ── stepGridEvents (primary source) ──────────────────────────────────
+  if (data.stepGridEvents && data.stepGridEvents.length > 0) {
+    for (const ev of data.stepGridEvents) {
+      const timeMs = (ev.step / steps) * loopMs;
+      const { note, channel } = degreeToMidi(
+        ev.degree ?? 0,
+        ev.instrument || data.instrument || "sine",
+        key, mode
+      );
+      notes.push({ timeMs, note, channel, velocity: 0.8, durationMs: noteDurationMs });
+    }
+  }
+
+  // ── loopEvents (free-time fallback / supplement) ──────────────────────
+  if (data.loopEvents && data.loopEvents.length > 0) {
+    for (const ev of data.loopEvents) {
+      const timeMs = ev.timeMs ?? 0;
+      const { note, channel } = degreeToMidi(
+        ev.degree ?? 0,
+        ev.instrument || data.instrument || "sine",
+        key, mode
+      );
+      notes.push({ timeMs, note, channel, velocity: 0.75, durationMs: noteDurationMs });
+    }
+  }
+
+  if (notes.length === 0) {
+    setLoopStatus("Nothing to export · record a loop first", "empty");
+    return;
+  }
+
+  const midiBytes = buildMidiFile(notes, bpm, loopMs);
+
+  // Trigger browser download
+  const blob = new Blob([midiBytes], { type: "audio/midi" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `pulsetap-loop-${key}-${mode}-${bpm}bpm.mid`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  setLoopStatus(`\u2193 MIDI exported \u00b7 ${notes.length} note${notes.length === 1 ? "" : "s"} \u00b7 ${bpm} BPM`, "ready");
+}

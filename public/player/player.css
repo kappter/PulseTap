@@ -949,3 +949,26 @@ body.solo-active .performance-module .pad {
   color: #ffd700;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.28);
 }
+
+/* =============================================================
+   EXPORT MIDI BUTTON
+   ============================================================= */
+
+.loop-btn--midi {
+  background: rgba(0, 200, 160, 0.10);
+  border-color: rgba(0, 200, 160, 0.35);
+  color: #00c8a0;
+  letter-spacing: 0.06em;
+}
+
+.loop-btn--midi:hover,
+.loop-btn--midi:focus-visible {
+  background: rgba(0, 200, 160, 0.20);
+  border-color: #00c8a0;
+  box-shadow: 0 0 8px rgba(0, 200, 160, 0.30);
+}
+
+.loop-btn--midi:active {
+  transform: scale(0.93);
+  background: rgba(0, 200, 160, 0.28);
+}

@@ -104,6 +104,10 @@ let queuedLoopData = null;
 let queuedSlotNumber = null;
 let sessionSettings = { key: "C", mode: "major", bpm: 120, quantize: "none" };
 const importLoopBtn = document.getElementById("importLoopBtn");
+let songModeActive = false;
+let songSections = [];
+let songIndex = 0;
+let songBarsRemaining = 0;
 
 const saveLoopBtn = document.getElementById("saveLoopBtn");
 const duplicateLoopBtn = document.getElementById("duplicateLoopBtn");
@@ -264,6 +268,26 @@ const playerId = (() => {
   return id;
 })();
 
+function buildSongSectionsFromUI() {
+  const sections = [];
+
+  document.querySelectorAll(".song-section-row").forEach((row) => {
+    const btn = row.querySelector(".song-section-btn");
+    const select = row.querySelector(".song-bars-select");
+
+    const slot = Number(btn.dataset.slot);
+    const bars = Number(select.value);
+
+    sections.push({
+      slot,
+      bars,
+      name: btn.textContent.trim()
+    });
+  });
+
+  return sections;
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Audio context
 // ─────────────────────────────────────────────────────────────
@@ -384,6 +408,19 @@ function applySoloSettings() {
   dispBpm.textContent = sessionSettings.bpm;
   dispKey.textContent = sessionSettings.key;
   dispMode.textContent = sessionSettings.mode;
+}
+
+function startSongMode() {
+  songSections = buildSongSectionsFromUI();
+  if (!songSections.length) return;
+
+  songModeActive = true;
+  songIndex = 0;
+
+  const first = songSections[0];
+  songBarsRemaining = first.bars;
+
+  queueSlotForNextBar(first.slot);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1282,6 +1319,31 @@ function scheduleLoopCycle(cycleIndex = 0) {
   }
 
   const next = setTimeout(() => {
+    if (songModeActive) {
+  songBarsRemaining--;
+
+  if (songBarsRemaining <= 0) {
+    songIndex++;
+
+    if (songIndex >= songSections.length) {
+      songModeActive = false;
+      return;
+    }
+
+    const nextSection = songSections[songIndex];
+    queueSlotForNextBar(nextSection.slot);
+    songBarsRemaining = nextSection.bars;
+
+    // update UI highlight
+    document.querySelectorAll(".song-section-btn").forEach(b =>
+      b.classList.remove("section-active")
+    );
+
+    document
+      .querySelector(`.song-section-btn[data-slot="${nextSection.slot}"]`)
+      ?.classList.add("section-active");
+  }
+}
   if (queuedLoopData) {
   applyLoopData(queuedLoopData);
 

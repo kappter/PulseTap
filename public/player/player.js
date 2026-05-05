@@ -755,7 +755,7 @@ setLoopStatus("✓ Loop imported · ready to play", "ready");
 //  Base synth + drums (REQUIRED)
 // ─────────────────────────────────────────────────────────────
 
-function synthTone(freq, type = "sine") {
+function synthTone(freq, type = "sine", velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -1581,9 +1581,11 @@ function scheduleLoopCycle(cycleIndex = 0) {
     songIndex++;
 
     if (songIndex >= songSections.length) {
-      songModeActive = false;
-      return;
-    }
+  songModeActive = false;
+  stopLoopPlayback();
+  setLoopStatus("Song complete", "ready");
+  return;
+}
 
     const nextSection = songSections[songIndex];
     queueSlotForNextBar(nextSection.slot);
@@ -1704,10 +1706,10 @@ function playSound(degree, instrument, velocity = 1) {
   const freq = padFrequency(degree);
 
   switch (instrument) {
-    case "sine":     synthTone(freq, "sine");      break;
-    case "triangle": synthTone(freq, "triangle");  break;
-    case "square":   synthTone(freq, "square");    break;
-    case "sawtooth": synthTone(freq, "sawtooth");  break;
+    case "sine":     synthTone(freq, "sine", velocity);      break;
+case "triangle": synthTone(freq, "triangle", velocity);  break;
+case "square":   synthTone(freq, "square", velocity);    break;
+case "sawtooth": synthTone(freq, "sawtooth", velocity);  break;
 
     case "bass":  synthBass(freq, velocity);  break;
     case "pluck": synthPluck(freq, velocity); break;

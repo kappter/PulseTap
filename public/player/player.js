@@ -589,7 +589,7 @@ function synthBass(freq, velocity = 1) {
   osc.stop(now + 0.3);
 }
 
-function synthPluck(freq) {
+function synthPluck(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -600,9 +600,9 @@ function synthPluck(freq) {
   osc.frequency.setValueAtTime(freq, now);
 
   filter.type = "highpass";
-  filter.frequency.setValueAtTime(1200, now);
+  filter.frequency.setValueAtTime(800 + velocity * 800, now);
 
-  gain.gain.setValueAtTime(0.7, now);
+  gain.gain.setValueAtTime(0.7 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
 
   osc.connect(filter);
@@ -613,7 +613,7 @@ function synthPluck(freq) {
   osc.stop(now + 0.12);
 }
 
-function synthBell(freq) {
+function synthBell(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc1 = audioCtx.createOscillator();
@@ -626,7 +626,7 @@ function synthBell(freq) {
   osc1.frequency.setValueAtTime(freq, now);
   osc2.frequency.setValueAtTime(freq * 2.01, now);
 
-  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.setValueAtTime(0.5 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
 
   osc1.connect(gain);
@@ -640,7 +640,7 @@ function synthBell(freq) {
   osc2.stop(now + 1.3);
 }
 
-function synthPad(freq) {
+function synthPad(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -651,10 +651,10 @@ function synthPad(freq) {
   osc.frequency.setValueAtTime(freq, now);
 
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(1500, now);
+  filter.frequency.setValueAtTime(800 + velocity * 1200, now);
 
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.3);
+  gain.gain.linearRampToValueAtTime(0.3 * velocity, now + 0.3);
   gain.gain.linearRampToValueAtTime(0.0001, now + 1.5);
 
   osc.connect(filter);
@@ -665,7 +665,7 @@ function synthPad(freq) {
   osc.stop(now + 1.6);
 }
 
-function synthLead(freq) {
+function synthLead(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -676,9 +676,9 @@ function synthLead(freq) {
   osc.frequency.setValueAtTime(freq, now);
 
   filter.type = "bandpass";
-  filter.frequency.setValueAtTime(freq * 2, now);
+  filter.frequency.setValueAtTime(freq * (1.5 + velocity), now);
 
-  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.setValueAtTime(0.5 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
 
   osc.connect(filter);
@@ -689,7 +689,7 @@ function synthLead(freq) {
   osc.stop(now + 0.35);
 }
 
-function synthOrgan(freq) {
+function synthOrgan(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc1 = audioCtx.createOscillator();
@@ -702,7 +702,7 @@ function synthOrgan(freq) {
   osc1.frequency.setValueAtTime(freq, now);
   osc2.frequency.setValueAtTime(freq * 2, now);
 
-  gain.gain.setValueAtTime(0.4, now);
+  gain.gain.setValueAtTime(0.4 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
 
   osc1.connect(gain);
@@ -716,7 +716,7 @@ function synthOrgan(freq) {
   osc2.stop(now + 0.9);
 }
 
-function synthChip(freq) {
+function synthChip(freq, velocity = 1) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
@@ -725,7 +725,7 @@ function synthChip(freq) {
   osc.type = "square";
   osc.frequency.setValueAtTime(freq, now);
 
-  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.setValueAtTime(0.5 * velocity, now);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
 
   osc.connect(gain);
@@ -1362,9 +1362,6 @@ clearLoopBtn.addEventListener("pointerdown", (e) => {
 
 updateLoopUI();
 
-// ─────────────────────────────────────────────────────────────
-//  Pad interaction
-// ─────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────
 //  Pad interaction
 // ─────────────────────────────────────────────────────────────

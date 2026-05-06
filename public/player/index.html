@@ -193,72 +193,133 @@
       </div>
     </section>
 
-    <section class="song-mode-module">
-      <div class="song-panel" aria-label="Song Mode section launcher">
-        <div class="song-panel-header">
-          <span class="song-panel-title">Song Mode</span>
-          <span class="song-panel-hint">Tap = load or queue at next bar</span>
-        </div>
-        <div class="song-sections">
+<section class="song-mode-module">
+  <div class="song-panel" aria-label="Song Mode section launcher">
+    <div class="song-panel-header">
+      <span class="song-panel-title">Song Mode</span>
+      <span class="song-panel-hint">Tap = load or queue at next bar</span>
+    </div>
 
-          <div class="song-section-row">
-            <button class="song-section-btn" data-slot="1">Intro</button>
-            <select class="song-bars-select" data-section="intro" title="Intro bar count">
-              <option value="2">2 bars</option>
-              <option value="4" selected>4 bars</option>
-              <option value="8">8 bars</option>
-              <option value="16">16 bars</option>
-            </select>
-            <span class="song-slot-badge">Slot 1</span>
-          </div>
+    <div class="song-sections">
 
-          <div class="song-section-row">
-            <button class="song-section-btn" data-slot="2">Verse</button>
-            <select class="song-bars-select" data-section="verse" title="Verse bar count">
-              <option value="2">2 bars</option>
-              <option value="4">4 bars</option>
-              <option value="8" selected>8 bars</option>
-              <option value="16">16 bars</option>
-            </select>
-            <span class="song-slot-badge">Slot 2</span>
-          </div>
+      <div class="song-section-row">
+        <button
+          class="song-section-btn"
+          data-section="Intro"
+          data-slot="1"
+        >
+          Intro
+        </button>
 
-          <div class="song-section-row">
-            <button class="song-section-btn" data-slot="3">Chorus</button>
-            <select class="song-bars-select" data-section="chorus" title="Chorus bar count">
-              <option value="2">2 bars</option>
-              <option value="4">4 bars</option>
-              <option value="8" selected>8 bars</option>
-              <option value="16">16 bars</option>
-            </select>
-            <span class="song-slot-badge">Slot 3</span>
-          </div>
+        <select
+          class="song-bars-select"
+          data-section="intro"
+          title="Intro bar count"
+        >
+          <option value="2">2 bars</option>
+          <option value="4" selected>4 bars</option>
+          <option value="8">8 bars</option>
+          <option value="16">16 bars</option>
+        </select>
 
-          <div class="song-section-row">
-            <button class="song-section-btn" data-slot="4">Bridge</button>
-            <select class="song-bars-select" data-section="bridge" title="Bridge bar count">
-              <option value="2">2 bars</option>
-              <option value="4" selected>4 bars</option>
-              <option value="8">8 bars</option>
-              <option value="16">16 bars</option>
-            </select>
-            <span class="song-slot-badge">Slot 4</span>
-          </div>
-
-          <div class="song-section-row">
-            <button class="song-section-btn" data-slot="5">Outro</button>
-            <select class="song-bars-select" data-section="outro" title="Outro bar count">
-              <option value="2">2 bars</option>
-              <option value="4" selected>4 bars</option>
-              <option value="8">8 bars</option>
-              <option value="16">16 bars</option>
-            </select>
-            <span class="song-slot-badge">Slot 5</span>
-          </div>
-
-        </div>
+        <span class="song-slot-badge">Slot 1</span>
       </div>
-    </section>
+
+      <div class="song-section-row">
+        <button
+          class="song-section-btn"
+          data-section="Verse"
+          data-slot="2"
+        >
+          Verse
+        </button>
+
+        <select
+          class="song-bars-select"
+          data-section="verse"
+          title="Verse bar count"
+        >
+          <option value="2">2 bars</option>
+          <option value="4">4 bars</option>
+          <option value="8" selected>8 bars</option>
+          <option value="16">16 bars</option>
+        </select>
+
+        <span class="song-slot-badge">Slot 2</span>
+      </div>
+
+      <div class="song-section-row">
+        <button
+          class="song-section-btn"
+          data-section="Chorus"
+          data-slot="3"
+        >
+          Chorus
+        </button>
+
+        <select
+          class="song-bars-select"
+          data-section="chorus"
+          title="Chorus bar count"
+        >
+          <option value="2">2 bars</option>
+          <option value="4">4 bars</option>
+          <option value="8" selected>8 bars</option>
+          <option value="16">16 bars</option>
+        </select>
+
+        <span class="song-slot-badge">Slot 3</span>
+      </div>
+
+      <div class="song-section-row">
+        <button
+          class="song-section-btn"
+          data-section="Bridge"
+          data-slot="4"
+        >
+          Bridge
+        </button>
+
+        <select
+          class="song-bars-select"
+          data-section="bridge"
+          title="Bridge bar count"
+        >
+          <option value="2">2 bars</option>
+          <option value="4" selected>4 bars</option>
+          <option value="8">8 bars</option>
+          <option value="16">16 bars</option>
+        </select>
+
+        <span class="song-slot-badge">Slot 4</span>
+      </div>
+
+      <div class="song-section-row">
+        <button
+          class="song-section-btn"
+          data-section="Outro"
+          data-slot="5"
+        >
+          Outro
+        </button>
+
+        <select
+          class="song-bars-select"
+          data-section="outro"
+          title="Outro bar count"
+        >
+          <option value="2">2 bars</option>
+          <option value="4" selected>4 bars</option>
+          <option value="8">8 bars</option>
+          <option value="16">16 bars</option>
+        </select>
+
+        <span class="song-slot-badge">Slot 5</span>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 
     <section class="song-context-module" id="songContextModule">

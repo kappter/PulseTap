@@ -342,6 +342,8 @@ const recordLoopBtn = document.getElementById("recordLoopBtn");
 const playLoopBtn   = document.getElementById("playLoopBtn");
 const clearLoopBtn  = document.getElementById("clearLoopBtn");
 const loopStatus    = document.getElementById("loopStatus");
+const clearBankBtn = document.getElementById("clearBankBtn");
+const soloBeatsPerBar = document.getElementById("soloBeatsPerBar");
 
 // ─────────────────────────────────────────────────────────────
 //  Session state

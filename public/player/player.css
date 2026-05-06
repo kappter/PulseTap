@@ -972,3 +972,115 @@ body.solo-active .performance-module .pad {
   transform: scale(0.93);
   background: rgba(0, 200, 160, 0.28);
 }
+
+/* ════════════════════════════════════════════════════════════
+   Song Context Panel
+   ════════════════════════════════════════════════════════════ */
+.song-context-module {
+  padding: 0 12px 10px;
+}
+
+.song-ctx-panel {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.song-ctx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #181818;
+  border-bottom: 1px solid #222;
+}
+
+.song-ctx-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold, #d4a843);
+}
+
+.song-ctx-toggle {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.song-ctx-toggle:hover { color: var(--cyan, #00e5ff); }
+
+.song-ctx-body {
+  padding: 10px 14px 12px;
+}
+
+.song-ctx-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 600px) {
+  .song-ctx-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ctx-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ctx-label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
+}
+
+.ctx-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#ctxSongPart { color: var(--gold, #d4a843); }
+#ctxBankStatus { color: var(--cyan, #00e5ff); }
+#ctxQueuedSlot { color: #a0a0a0; }
+
+.ctx-notes-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ctx-notes {
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  color: #c0c0c0;
+  font-size: 0.78rem;
+  font-family: inherit;
+  padding: 7px 10px;
+  resize: vertical;
+  min-height: 52px;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ctx-notes:focus {
+  outline: none;
+  border-color: var(--gold, #d4a843);
+}
+.ctx-notes::placeholder { color: #3a3a3a; }

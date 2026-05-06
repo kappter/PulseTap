@@ -381,6 +381,7 @@ function queueLoopData(data, slot) {
   document.querySelector(`.slot-btn[data-slot="${slot}"]`)?.classList.add("queued");
 
   setLoopStatus(`⏳ Slot ${slot} queued · fires at next bar`, "queued");
+  updateSongContext({ queued: `Slot ${slot}` });
 }
 // ─────────────────────────────────────────────────────────────
 //  Song Mode helper — used by slot buttons AND section buttons
@@ -418,6 +419,7 @@ function queueSlotForNextBar(slot) {
         ?.classList.add("active");
 
       setLoopStatus(`✓ Slot ${slot} loaded · ready to play`, "ready");
+      updateSongContext({ active: `Slot ${slot}`, queued: "—" });
     }
     return true;
   } catch {
@@ -1271,6 +1273,7 @@ socket.on("room:settings", (s) => {
   dispKey.textContent = s.key || sessionSettings.key;
   dispMode.textContent = s.mode || sessionSettings.mode;
   dispBpm.textContent = s.bpm || sessionSettings.bpm;
+  updateSongContext({ key: s.key || sessionSettings.key, mode: s.mode || sessionSettings.mode, bpm: s.bpm || sessionSettings.bpm });
   dispQuantize.textContent = s.quantize === "none" ? "off" : (s.quantize || "off");
 
  if (s.beatsPerBar) {
@@ -1419,6 +1422,7 @@ function startBankPlayback(anchorMs = Date.now()) {
   playBankBtn.textContent = "Stop Bank";
 
   setLoopStatus(`Playing bank · ${bankLoops.length} slot${bankLoops.length === 1 ? "" : "s"}`, "playing");
+  updateSongContext({ bank: "Playing" });
 
   scheduleBankCycle(0);
 }
@@ -1478,6 +1482,7 @@ function stopBankPlayback() {
 
   playBankBtn?.classList.remove("playing");
   if (playBankBtn) playBankBtn.textContent = "Play Bank";
+  updateSongContext({ bank: "Stopped" });
 
   updateLoopUI();
 }
@@ -1617,6 +1622,60 @@ function startPlayerLoopCountdown(startTime) {
   updateCountdown();
   playerLoopCountdownTimer = setInterval(updateCountdown, 100);
 }
+// ─────────────────────────────────────────────────────────────
+//  Song Context Panel — update display
+// ─────────────────────────────────────────────────────────────
+let ctxCurrentSection = null;  // tracks the active section name for notes
+
+function updateSongContext(overrides = {}) {
+  const settings = sessionSettings || {};
+  const key      = overrides.key      ?? settings.key     ?? (dispKey?.textContent)  ?? "—";
+  const mode     = overrides.mode     ?? settings.mode    ?? (dispMode?.textContent) ?? "—";
+  const bpm      = overrides.bpm      ?? settings.bpm     ?? (dispBpm?.textContent)  ?? "—";
+  const timeSig  = overrides.timeSig  ?? (metroBeatsPerBar || 4) + "/4";
+  const active   = overrides.active   ?? (currentLoopSlot ? `Slot ${currentLoopSlot}` : "—");
+  const queued   = overrides.queued   ?? (queuedSlotNumber ? `Slot ${queuedSlotNumber}` : "—");
+  const bank     = overrides.bank     ?? (isBankPlaying ? "Playing" : "Stopped");
+  const part     = overrides.part     ?? ctxCurrentSection ?? "—";
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set("ctxSongPart",    part);
+  set("ctxKey",         key);
+  set("ctxMode",        mode);
+  set("ctxBpm",         bpm);
+  set("ctxTimeSig",     timeSig);
+  set("ctxActiveSlot",  active);
+  set("ctxQueuedSlot",  queued);
+  set("ctxBankStatus",  bank);
+}
+
+function ctxLoadSectionNotes(sectionName) {
+  const ta = document.getElementById("ctxSectionNotes");
+  if (!ta) return;
+  const key = sectionName ? `pulsetap_section_notes_${sectionName}` : null;
+  ta.value = key ? (localStorage.getItem(key) || "") : "";
+  ta.dataset.sectionKey = key || "";
+}
+
+function ctxInitNotesSave() {
+  const ta = document.getElementById("ctxSectionNotes");
+  if (!ta) return;
+  ta.addEventListener("input", () => {
+    if (ta.dataset.sectionKey) {
+      localStorage.setItem(ta.dataset.sectionKey, ta.value);
+    }
+  });
+}
+
+function ctxToggleCollapse() {
+  const body   = document.getElementById("songCtxBody");
+  const toggle = document.getElementById("songCtxToggle");
+  if (!body || !toggle) return;
+  const collapsed = body.style.display === "none";
+  body.style.display   = collapsed ? "" : "none";
+  toggle.textContent   = collapsed ? "▲" : "▼";
+}
+
 function setLoopStatus(message, state = "") {
   if (!loopStatus) return;
 
@@ -1861,6 +1920,7 @@ clearBankBtn?.addEventListener("pointerdown", (e) => {
   queuedLoopData   = null;
   queuedSlotNumber = null;
   setLoopStatus("Bank cleared", "ready");
+  updateSongContext({ active: "—", queued: "—", bank: "Stopped" });
 });
 
 recordLoopBtn.addEventListener("pointerdown", (e) => {
@@ -2078,6 +2138,13 @@ joinBtn.addEventListener("pointerdown", (e) => {
 
   // Build default beat dots
   buildBeatDots(metroBeatsPerBar || 4);
+  // Song Context panel init
+  ctxInitNotesSave();
+  document.getElementById("songCtxToggle")?.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    ctxToggleCollapse();
+  });
+  updateSongContext();
 });
 
 leaveBtn.addEventListener("pointerdown", (e) => {
@@ -2129,6 +2196,9 @@ document.querySelectorAll(".song-section-btn").forEach((btn) => {
         b.classList.remove("section-active")
       );
       btn.classList.add("section-active");
+      ctxCurrentSection = btn.dataset.section || btn.textContent.trim().split("\n")[0].trim();
+      updateSongContext({ part: ctxCurrentSection });
+      ctxLoadSectionNotes(ctxCurrentSection);
     }
   });
 });

@@ -260,6 +260,57 @@
       </div>
     </section>
 
+
+    <section class="song-context-module" id="songContextModule">
+      <div class="song-ctx-panel">
+        <div class="song-ctx-header">
+          <span class="song-ctx-title">Song Context</span>
+          <button class="song-ctx-toggle" id="songCtxToggle" title="Collapse">▲</button>
+        </div>
+        <div class="song-ctx-body" id="songCtxBody">
+          <div class="song-ctx-grid">
+            <div class="ctx-item">
+              <span class="ctx-label">Song Part</span>
+              <span class="ctx-value" id="ctxSongPart">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Key</span>
+              <span class="ctx-value" id="ctxKey">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Mode</span>
+              <span class="ctx-value" id="ctxMode">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">BPM</span>
+              <span class="ctx-value" id="ctxBpm">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Time Sig</span>
+              <span class="ctx-value" id="ctxTimeSig">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Active Slot</span>
+              <span class="ctx-value" id="ctxActiveSlot">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Queued Slot</span>
+              <span class="ctx-value" id="ctxQueuedSlot">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Bank</span>
+              <span class="ctx-value" id="ctxBankStatus">Stopped</span>
+            </div>
+          </div>
+          <div class="ctx-notes-row">
+            <label class="ctx-label" for="ctxSectionNotes">Section Notes</label>
+            <textarea id="ctxSectionNotes" class="ctx-notes"
+                      placeholder="Lyrics sketch, chord ideas, cues…"
+                      rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="performance-module">
       <div class="pad-grid" id="padGrid">
         <button class="pad" data-degree="0">1</button>

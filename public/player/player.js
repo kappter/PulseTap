@@ -682,6 +682,11 @@ function startSongMode() {
   songBarsRemaining = first.bars;
 
   queueSlotForNextBar(first.slot);
+  metroBeatsPerBar = Number(soloBeatsPerBar.value);
+stepGridSteps = getStepGridStepsFromResolution();
+buildBeatDots(metroBeatsPerBar);
+renderStepGrid();
+updateLoopUI();
 }
 
 // ─────────────────────────────────────────────────────────────

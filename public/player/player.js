@@ -344,6 +344,7 @@ const clearLoopBtn  = document.getElementById("clearLoopBtn");
 const loopStatus    = document.getElementById("loopStatus");
 const clearBankBtn = document.getElementById("clearBankBtn");
 const soloBeatsPerBar = document.getElementById("soloBeatsPerBar");
+const startSongBtn = document.getElementById("startSongBtn");
 
 // ─────────────────────────────────────────────────────────────
 //  Session state
@@ -2180,6 +2181,11 @@ document.querySelectorAll(".slot-btn").forEach((btn) => {
   if (localStorage.getItem(key)) {
     btn.classList.add("saved");
   }
+});
+
+startSongBtn?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  startSongMode();
 });
 
 // ─────────────────────────────────────────────────────────────

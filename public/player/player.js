@@ -609,9 +609,28 @@ cell.dataset.step = step;
       cell.classList.toggle("active", isActive);
       cell.classList.toggle("accent-step", isAccentStep(step));
 
+      // Scroll-guard: only toggle if pointer moved < 8px (prevents
+      // accidental step edits while horizontally scrolling on mobile)
       cell.addEventListener("pointerdown", (e) => {
         e.preventDefault();
-        toggleStepEvent(degree, step);
+        const startX = e.clientX;
+        const startY = e.clientY;
+        let moved = false;
+        const onMove = (me) => {
+          if (Math.abs(me.clientX - startX) > 8 || Math.abs(me.clientY - startY) > 8) {
+            moved = true;
+            cell.removeEventListener("pointermove", onMove);
+          }
+        };
+        const onUp = () => {
+          cell.removeEventListener("pointermove", onMove);
+          cell.removeEventListener("pointerup",   onUp);
+          cell.removeEventListener("pointercancel", onUp);
+          if (!moved) toggleStepEvent(degree, step);
+        };
+        cell.addEventListener("pointermove",   onMove);
+        cell.addEventListener("pointerup",     onUp);
+        cell.addEventListener("pointercancel", onUp);
       });
 
       row.appendChild(cell);
@@ -654,7 +673,7 @@ soloModeToggle?.addEventListener("change", () => {
   }
 });
 
-[soloBpm, soloKey, soloMode].forEach(el => {
+[soloBpm, soloKey, soloMode, soloBeatsPerBar].forEach(el => {
   el?.addEventListener("change", applySoloSettings);
 });
 
@@ -671,6 +690,14 @@ function applySoloSettings() {
   dispBpm.textContent = sessionSettings.bpm;
   dispKey.textContent = sessionSettings.key;
   dispMode.textContent = sessionSettings.mode;
+  // Wire Solo time signature into the shared metro/grid state
+  if (soloBeatsPerBar) {
+    metroBeatsPerBar = Number(soloBeatsPerBar.value) || 4;
+    stepGridSteps    = getStepGridStepsFromResolution();
+    buildBeatDots(metroBeatsPerBar);
+    renderStepGrid();
+    updateLoopUI();
+  }
 }
 
 function startSongMode() {
@@ -1820,6 +1847,26 @@ playBankBtn?.addEventListener("pointerdown", (e) => {
     const startTime = getNextLocalBarStartTime();
     startBankPlayback(startTime);
   }
+});
+
+clearBankBtn?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!confirm("Clear all 8 loop slots? This cannot be undone.")) return;
+  // Stop any active playback first
+  stopBankPlayback();
+  stopLoopPlayback();
+  // Remove all 8 slots from localStorage
+  for (let i = 1; i <= 8; i++) {
+    localStorage.removeItem(`pulsetap_loop_slot_${i}`);
+  }
+  // Clear visual state on all slot buttons
+  document.querySelectorAll(".slot-btn").forEach(btn => {
+    btn.classList.remove("saved", "active", "queued");
+  });
+  // Clear queued slot state
+  queuedLoopData   = null;
+  queuedSlotNumber = null;
+  setLoopStatus("Bank cleared", "ready");
 });
 
 recordLoopBtn.addEventListener("pointerdown", (e) => {

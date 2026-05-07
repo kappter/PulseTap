@@ -1084,3 +1084,40 @@ body.solo-active .performance-module .pad {
   border-color: var(--gold, #d4a843);
 }
 .ctx-notes::placeholder { color: #3a3a3a; }
+
+/* ─────────────────────────────────────────────────────────────
+   Editing Banner — above step sequencer
+───────────────────────────────────────────────────────────── */
+.editing-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #c0c0c0;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+#editingSlotLabel {
+  color: var(--cyan, #00e5ff);
+  flex: 1;
+}
+.editing-unsaved {
+  font-size: 0.70rem;
+  font-weight: 500;
+  color: var(--gold, #d4a843);
+  background: rgba(212,168,67,0.12);
+  border: 1px solid rgba(212,168,67,0.30);
+  border-radius: 5px;
+  padding: 2px 7px;
+  letter-spacing: 0.03em;
+  transition: opacity 0.2s;
+}
+.editing-unsaved.hidden {
+  display: none;
+}

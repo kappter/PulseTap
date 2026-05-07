@@ -421,6 +421,7 @@ function queueSlotForNextBar(slot) {
 
       setLoopStatus(`✓ Slot ${slot} loaded · ready to play`, "ready");
       updateSongContext({ active: `Slot ${slot}`, queued: "—" });
+      updateEditingBanner(Number(slot));
     }
     return true;
   } catch {
@@ -516,6 +517,7 @@ slotButtons.forEach((btn) => {
   btn.classList.add("active");
 
   setLoopStatus(`✓ Saved to slot ${slot}`, "ready");
+  clearUnsaved();
   return;
 }
 
@@ -1221,6 +1223,7 @@ function toggleStepEvent(degree, step) {
 
   renderStepGrid();
 updateLoopUI();
+markUnsaved();
 emitLoopState("update");
 }
 
@@ -1677,7 +1680,31 @@ function ctxToggleCollapse() {
   toggle.textContent   = collapsed ? "▲" : "▼";
 }
 
+// ─────────────────────────────────────────────────────────────
+//  Editing Banner — shows which slot is being edited
+// ─────────────────────────────────────────────────────────────
+function updateEditingBanner(slotNumber) {
+  const label   = document.getElementById("editingSlotLabel");
+  const unsaved = document.getElementById("editingUnsaved");
+  if (!label) return;
+  if (slotNumber != null) {
+    label.textContent = `Editing: Slot ${slotNumber}`;
+  } else {
+    label.textContent = "Editing: Unsaved Loop";
+  }
+  // Clear unsaved indicator whenever banner label changes
+  if (unsaved) unsaved.classList.add("hidden");
+}
+function markUnsaved() {
+  const unsaved = document.getElementById("editingUnsaved");
+  if (unsaved) unsaved.classList.remove("hidden");
+}
+function clearUnsaved() {
+  const unsaved = document.getElementById("editingUnsaved");
+  if (unsaved) unsaved.classList.add("hidden");
+}
 function setLoopStatus(message, state = "") {
+
   if (!loopStatus) return;
 
   loopStatus.textContent = message;
@@ -1736,6 +1763,7 @@ function stopLoopRecording() {
   isLoopRecording = false;
   emitLoopState("record-stop");
   updateLoopUI();
+  markUnsaved();
 }
 
 function clearLoop() {
@@ -1749,6 +1777,8 @@ function clearLoop() {
 
   emitLoopState("clear");
   updateLoopUI();
+  updateEditingBanner(null);
+  clearUnsaved();
 }
 
 function scheduleLoopCycle(cycleIndex = 0) {
@@ -1835,6 +1865,7 @@ function scheduleLoopCycle(cycleIndex = 0) {
 
   queuedLoopData = null;
   queuedSlotNumber = null;
+  updateEditingBanner(currentLoopSlot);
 
   currentLoopLengthMs = getLoopLengthMs();
 loopPlaybackAnchorMs = nextCycleStart;
@@ -2146,6 +2177,7 @@ joinBtn.addEventListener("pointerdown", (e) => {
     ctxToggleCollapse();
   });
   updateSongContext();
+  updateEditingBanner(currentLoopSlot);
 });
 
 leaveBtn.addEventListener("pointerdown", (e) => {
@@ -2240,6 +2272,7 @@ document.querySelectorAll(".sample-pack-btn").forEach((btn) => {
     btn.classList.add("pack-active");
 
     setLoopStatus(`✓ Loaded ${pack.label} · tap a slot to play`, "ready");
+    updateEditingBanner(null);
   });
 });
 

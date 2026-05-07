@@ -325,7 +325,7 @@ padding: 12px;
 
 .time-grid {
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
+  grid-template-columns: repeat(var(--time-box-count, 16), 1fr);
   gap: 4px;
   margin-top: 10px;
 }

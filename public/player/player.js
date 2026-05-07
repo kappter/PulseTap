@@ -707,15 +707,57 @@ function applySoloSettings() {
 
 function startSongMode() {
   songSections = buildSongSectionsFromUI();
-  if (!songSections.length) return;
-
+  if (!songSections.length) {
+    setLoopStatus("Song Mode: no sections configured", "empty");
+    return;
+  }
+  // Validate that the first slot has content
+  const firstKey = `pulsetap_loop_slot_${songSections[0].slot}`;
+  if (!localStorage.getItem(firstKey)) {
+    setLoopStatus(`Song Mode: Slot ${songSections[0].slot} is empty`, "empty");
+    return;
+  }
   songModeActive = true;
   songIndex = 0;
-
   const first = songSections[0];
   songBarsRemaining = first.bars;
-
-  queueSlotForNextBar(first.slot);
+  ctxCurrentSection = first.name;
+  // Highlight the first section button
+  document.querySelectorAll(".song-section-btn").forEach(b =>
+    b.classList.remove("section-active")
+  );
+  document.querySelector(`.song-section-btn[data-slot="${first.slot}"]`)
+    ?.classList.add("section-active");
+  // Start Song button → Stop Song
+  const startBtn = document.getElementById("startSongBtn");
+  if (startBtn) { startBtn.textContent = "Stop Song"; startBtn.dataset.songRunning = "1"; }
+  // Start playback if not already playing
+  if (!isLoopPlaying) {
+    const ok = queueSlotForNextBar(first.slot);
+    if (!ok) { songModeActive = false; return; }
+    const startTime = getNextLocalBarStartTime();
+    startPlayerLoopCountdown(startTime);
+    startLoopPlaybackSynced(startTime);
+  } else {
+    queueSlotForNextBar(first.slot);
+  }
+  setLoopStatus(`Song running · ${first.name} · ${first.bars} bars`, "playing");
+  const upcoming0 = songSections.length > 1 ? songSections[1].name : "End";
+  updateSongContext({ part: first.name, barsLeft: first.bars, upcoming: upcoming0 });
+  ctxLoadSectionNotes(first.name);
+}
+function stopSongMode() {
+  songModeActive = false;
+  songIndex = 0;
+  songBarsRemaining = 0;
+  stopLoopPlayback();
+  const startBtn = document.getElementById("startSongBtn");
+  if (startBtn) { startBtn.textContent = "Start Song"; delete startBtn.dataset.songRunning; }
+  document.querySelectorAll(".song-section-btn").forEach(b =>
+    b.classList.remove("section-active")
+  );
+  setLoopStatus("Song stopped", "ready");
+  updateSongContext({ part: "—", barsLeft: "—", upcoming: "—", queued: "—" });
 }
 // ─────────────────────────────────────────────────────────────
 //  Frequency helpers
@@ -1643,6 +1685,13 @@ function updateSongContext(overrides = {}) {
   const part     = overrides.part     ?? ctxCurrentSection ?? "—";
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  // Song Flow Engine fields
+  const upcoming = overrides.upcoming ?? (() => {
+    if (!songModeActive) return "—";
+    const nextIdx = songIndex + 1;
+    return nextIdx < songSections.length ? songSections[nextIdx].name : "End";
+  })();
+  const barsLeft = overrides.barsLeft ?? (songModeActive ? songBarsRemaining : "—");
   set("ctxSongPart",    part);
   set("ctxKey",         key);
   set("ctxMode",        mode);
@@ -1651,6 +1700,18 @@ function updateSongContext(overrides = {}) {
   set("ctxActiveSlot",  active);
   set("ctxQueuedSlot",  queued);
   set("ctxBankStatus",  bank);
+  set("ctxUpcoming",    upcoming);
+  set("ctxBarsLeft",    barsLeft);
+  // Bars Remaining inline display (in song-panel-header)
+  const barsEl = document.getElementById("songBarsRemainingDisplay");
+  if (barsEl) {
+    if (songModeActive) {
+      barsEl.textContent = `Bars Remaining: ${songBarsRemaining}`;
+      barsEl.classList.remove("hidden");
+    } else {
+      barsEl.classList.add("hidden");
+    }
+  }
 }
 
 function ctxLoadSectionNotes(sectionName) {
@@ -1830,24 +1891,41 @@ function scheduleLoopCycle(cycleIndex = 0) {
     songIndex++;
 
     if (songIndex >= songSections.length) {
-  songModeActive = false;
-  stopLoopPlayback();
-  setLoopStatus("Song complete", "ready");
-  return;
-}
+      // ── Song complete ──
+      songModeActive = false;
+      const startBtnC = document.getElementById("startSongBtn");
+      if (startBtnC) { startBtnC.textContent = "Start Song"; delete startBtnC.dataset.songRunning; }
+      document.querySelectorAll(".song-section-btn").forEach(b =>
+        b.classList.remove("section-active")
+      );
+      stopLoopPlayback();
+      setLoopStatus("Song complete", "ready");
+      updateSongContext({ part: "—", barsLeft: "—", upcoming: "—", queued: "—" });
+      return;
+    }
 
     const nextSection = songSections[songIndex];
     queueSlotForNextBar(nextSection.slot);
     songBarsRemaining = nextSection.bars;
+    ctxCurrentSection = nextSection.name;
 
     // update UI highlight
     document.querySelectorAll(".song-section-btn").forEach(b =>
       b.classList.remove("section-active")
     );
-
     document
       .querySelector(`.song-section-btn[data-slot="${nextSection.slot}"]`)
       ?.classList.add("section-active");
+
+    // Sync Song Context
+    const afterNext = songIndex + 1 < songSections.length
+      ? songSections[songIndex + 1].name : "End";
+    updateSongContext({ part: nextSection.name, barsLeft: nextSection.bars, upcoming: afterNext });
+    ctxLoadSectionNotes(nextSection.name);
+    setLoopStatus(`Song running · ${nextSection.name} · ${nextSection.bars} bars`, "playing");
+  } else {
+    // Still in current section — update bars remaining
+    updateSongContext({ barsLeft: songBarsRemaining });
   }
 }
   if (queuedLoopData) {
@@ -1907,19 +1985,25 @@ scheduleLoopCycle();
 
 function stopLoopPlayback() {
   isLoopPlaying = false;
-
   loopTimeouts.forEach(clearTimeout);
   loopTimeouts = [];
-
   stopLoopVisuals();
-
   queuedLoopData = null;
   queuedSlotNumber = null;
-
   document.querySelectorAll(".slot-btn").forEach(b =>
     b.classList.remove("queued")
   );
-
+  // If song mode was running, reset it cleanly
+  if (songModeActive) {
+    songModeActive = false;
+    const startBtnS = document.getElementById("startSongBtn");
+    if (startBtnS) { startBtnS.textContent = "Start Song"; delete startBtnS.dataset.songRunning; }
+    document.querySelectorAll(".song-section-btn").forEach(b =>
+      b.classList.remove("section-active")
+    );
+    const barsEl = document.getElementById("songBarsRemainingDisplay");
+    if (barsEl) barsEl.classList.add("hidden");
+  }
   updateLoopUI();
 }
 
@@ -2217,7 +2301,11 @@ document.querySelectorAll(".slot-btn").forEach((btn) => {
 
 startSongBtn?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  startSongMode();
+  if (startSongBtn.dataset.songRunning) {
+    stopSongMode();
+  } else {
+    startSongMode();
+  }
 });
 
 // ─────────────────────────────────────────────────────────────

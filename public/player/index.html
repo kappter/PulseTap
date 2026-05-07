@@ -240,6 +240,14 @@
               <span class="ctx-label">Bank</span>
               <span class="ctx-value" id="ctxBankStatus">Stopped</span>
             </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Up Next</span>
+              <span class="ctx-value" id="ctxUpcoming">—</span>
+            </div>
+            <div class="ctx-item">
+              <span class="ctx-label">Bars Left</span>
+              <span class="ctx-value" id="ctxBarsLeft">—</span>
+            </div>
           </div>
           <div class="ctx-notes-row">
             <label class="ctx-label" for="ctxSectionNotes">Section Notes</label>
@@ -258,6 +266,7 @@
       <div class="song-panel-actions">
   <span class="song-panel-hint">Tap = load or queue at next bar</span>
   <button id="startSongBtn" class="loop-btn small" type="button">Start Song</button>
+  <span id="songBarsRemainingDisplay" class="song-bars-remaining hidden">Bars Remaining: —</span>
 </div>
     </div>
 

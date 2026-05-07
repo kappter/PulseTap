@@ -1121,3 +1121,31 @@ body.solo-active .performance-module .pad {
 .editing-unsaved.hidden {
   display: none;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Song Flow Engine Phase 1
+───────────────────────────────────────────────────────────── */
+.song-bars-remaining {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--gold, #d4a843);
+  background: rgba(212,168,67,0.10);
+  border: 1px solid rgba(212,168,67,0.28);
+  border-radius: 6px;
+  padding: 2px 8px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.song-bars-remaining.hidden { display: none; }
+/* Start Song button turns red while song is running */
+#startSongBtn[data-song-running] {
+  background: rgba(255,80,80,0.18);
+  border-color: rgba(255,80,80,0.55);
+  color: #ff8080;
+}
+#startSongBtn[data-song-running]:hover {
+  background: rgba(255,80,80,0.28);
+}
+/* Song Context: Up Next / Bars Left */
+#ctxUpcoming { color: rgba(255,255,255,0.55); }
+#ctxBarsLeft { color: var(--gold, #d4a843); font-variant-numeric: tabular-nums; }

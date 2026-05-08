@@ -701,7 +701,8 @@ function applySoloSettings() {
     stepGridSteps    = getStepGridStepsFromResolution();
     buildBeatDots(metroBeatsPerBar);
     renderStepGrid();
-    updateLoopUI();
+renderTimeGrid();
+updateLoopUI();
   }
 }
 
@@ -823,7 +824,8 @@ if (stepResolutionSelect && data.stepResolution) {
 
   // re-render visuals
   renderStepGrid();
-  updateLoopUI();
+renderTimeGrid();
+updateLoopUI();
 }
 async function importLoopFromClipboard() {
   try {
@@ -1229,7 +1231,40 @@ function setConnected(ok) {
 let stepGridEvents = [];
 let stepGridSteps = 16;
 const stepResolutionSelect = document.getElementById("stepResolution");
+// ─────────────────────────────────────────────────────────────
+//  Dynamic Time Grid
+// ─────────────────────────────────────────────────────────────
+function renderTimeGrid() {
+  const timeGrid = document.getElementById("timeGrid");
+  if (!timeGrid) return;
 
+  const bars = Number(loopLengthSelect?.value || 1);
+  const totalBoxes = stepGridSteps * bars;
+
+  if (timeGrid.children.length === totalBoxes) {
+    applyTimeGridAccents(timeGrid);
+    return;
+  }
+
+  timeGrid.innerHTML = "";
+
+  for (let i = 0; i < totalBoxes; i++) {
+    const box = document.createElement("div");
+    box.className = "time-box";
+    timeGrid.appendChild(box);
+  }
+
+  timeGrid.style.setProperty("--time-box-count", totalBoxes);
+  applyTimeGridAccents(timeGrid);
+}
+
+function applyTimeGridAccents(timeGrid) {
+  const stepsPerBeat = Math.max(1, stepGridSteps / (metroBeatsPerBar || 4));
+
+  Array.from(timeGrid.children).forEach((box, i) => {
+    box.classList.toggle("beat-1", i % stepsPerBeat === 0);
+  });
+}
 function getStepGridStepsFromResolution() {
   const division = Number(stepResolutionSelect?.value || 16);
   const beatsPerBar = Number(metroBeatsPerBar || 4);
@@ -1247,7 +1282,8 @@ stepResolutionSelect?.addEventListener("change", () => {
 
   stepGridSteps = getStepGridStepsFromResolution();
   renderStepGrid();
-  updateLoopUI();
+renderTimeGrid();
+updateLoopUI();
 
   if (wasPlaying) {
     startLoopPlayback();
@@ -1377,11 +1413,13 @@ socket.on("section:play", ({ section, playerIds, startTime }) => {
 /** Metronome start from host */
 socket.on("metronome:start", (data) => {
   startMetronome(data);
-  renderStepGrid(); // 🔥 ADD THIS
+  renderStepGrid();
+  renderTimeGrid();
 });
 
 /** Metronome stop from host */
 socket.on("metronome:stop", () => {
+  stopMetronome();
   renderStepGrid();
   renderTimeGrid();
 });
@@ -2325,6 +2363,7 @@ playerNameIn.addEventListener("input", () => {
   localStorage.setItem("pt_player_name", playerNameIn.value.trim());
 });
 renderStepGrid();
+renderTimeGrid();
 // mark saved slots on load
 document.querySelectorAll(".slot-btn").forEach((btn) => {
   const slot = btn.dataset.slot;

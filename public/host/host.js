@@ -196,6 +196,14 @@ socket.on("player:tap:meter", ({ playerId, role, padNumber }) => {
   log(`${p.playerName} · pad ${padNumber + 1}`, "remote");
 });
 
+// ── Song Board: subscribe to live song state from player ──
+// player.js emits "player:viz-state" → server relays as "viz:state"
+// to all room members including the host.
+socket.on("viz:state", (payload) => {
+  sbHandleVizState(payload);
+});
+
+
 loadSessionBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   loadSavedSession();
@@ -768,137 +776,192 @@ saveSessionBtn.addEventListener("pointerdown", (e) => {
 
 
 
-// ── Song Board Logic ──
-const SONG_SECTIONS = ["Intro", "Verse", "Chorus", "Bridge"];
+// ═══════════════════════════════════════════════════════════════
+//  Song Board Phase 1
+//  Read-only sync from player Song Mode via viz:state events.
+//  Provides: section cards, live highlighting, transport controls,
+//  status strip (BPM / key / mode / bars remaining).
+// ═══════════════════════════════════════════════════════════════
+
+const SB_SECTIONS = ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
+
+// Live state received from player
+let sbState = {
+  section:    null,   // current section name
+  upcoming:   null,   // next section name
+  barsLeft:   null,   // bars remaining in current section
+  slot:       null,   // active slot number
+  bpm:        null,
+  key:        null,
+  mode:       null,
+  timeSig:    null,
+  songActive: false
+};
+
+// Legacy drag-and-drop data (preserved from Phase 0)
 let songBoardData = JSON.parse(localStorage.getItem("pulsetap_song_board") || "{}");
 
-function renderSongBoard() {
+// ── Render section cards ──────────────────────────────────────
+function sbRenderCards() {
   const container = document.getElementById("songBoardSections");
   if (!container) return;
   container.innerHTML = "";
 
-  SONG_SECTIONS.forEach(section => {
-    const sectionEl = document.createElement("div");
-    sectionEl.className = "song-section";
-    sectionEl.dataset.section = section;
-    
-    // Make section droppable
-    sectionEl.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      sectionEl.style.borderColor = "rgba(101,214,206,0.5)";
-    });
-    sectionEl.addEventListener("dragleave", (e) => {
-      e.preventDefault();
-      sectionEl.style.borderColor = "rgba(148,163,184,0.1)";
-    });
-    sectionEl.addEventListener("drop", (e) => {
-      e.preventDefault();
-      sectionEl.style.borderColor = "rgba(148,163,184,0.1)";
-      const loopId = e.dataTransfer.getData("text/plain");
-      const loopDataStr = e.dataTransfer.getData("application/json");
-      if (!loopDataStr) return;
-      const loopData = JSON.parse(loopDataStr);
-      
-      if (!songBoardData[section]) songBoardData[section] = [];
-      const exists = songBoardData[section].some(l => l.playerId === loopData.playerId);
-if (!exists) {
-  songBoardData[section].push({ id: loopId, ...loopData });
+  SB_SECTIONS.forEach((section, idx) => {
+    const card = document.createElement("div");
+    card.className = "sb-card";
+    card.dataset.section = section;
+
+    // Slot badge (slot index = section index + 1 by convention)
+    const slotNum = idx + 1;
+    const slotBadge = document.createElement("div");
+    slotBadge.className = "sb-card-slot";
+    slotBadge.textContent = `Slot ${slotNum}`;
+
+    // Section name
+    const nameEl = document.createElement("div");
+    nameEl.className = "sb-card-name";
+    nameEl.textContent = section;
+
+    // Bars label (default 4 bars, updated from viz:state)
+    const barsEl = document.createElement("div");
+    barsEl.className = "sb-card-bars";
+    barsEl.id = `sbCardBars_${section}`;
+    barsEl.textContent = "4 bars";
+
+    // Notes preview
+    const notesEl = document.createElement("div");
+    notesEl.className = "sb-card-notes";
+    notesEl.id = `sbCardNotes_${section}`;
+    const savedNotes = localStorage.getItem(`pulsetap_section_notes_${section}`) || "";
+    notesEl.textContent = savedNotes
+      ? savedNotes.split("\n")[0].slice(0, 60)
+      : "";
+
+    // Active/next indicator pill
+    const pillEl = document.createElement("div");
+    pillEl.className = "sb-card-pill";
+    pillEl.id = `sbCardPill_${section}`;
+
+    card.appendChild(slotBadge);
+    card.appendChild(nameEl);
+    card.appendChild(barsEl);
+    card.appendChild(notesEl);
+    card.appendChild(pillEl);
+    container.appendChild(card);
+  });
 }
-            saveSongBoard();
-      renderSongBoard();
-    });
 
-    const title = document.createElement("h4");
-    title.textContent = section;
-    
-    const grid = document.createElement("div");
-    grid.className = "song-section-grid";
-    
-    const loops = songBoardData[section] || [];
-    loops.forEach((loop, index) => {
-      const loopEl = document.createElement("div");
-      loopEl.className = "assigned-loop";
-      loopEl.textContent = `${loop.playerName} (${loop.role})`;
-      loopEl.title = "Click to remove";
-      loopEl.addEventListener("click", () => {
-        songBoardData[section].splice(index, 1);
-        saveSongBoard();
-        renderSongBoard();
-      });
-      grid.appendChild(loopEl);
-    });
-    
-   // ── Queue Section button ─────────────────────────────────
-const queueBtn = document.createElement("button");
-queueBtn.className = "btn-queue-section";
-queueBtn.textContent = "⏭ Queue";
-queueBtn.title = `Queue ${section} to start at next bar`;
+// ── Highlight current and next section ───────────────────────
+function sbHighlight(currentSection, nextSection) {
+  document.querySelectorAll(".sb-card").forEach(card => {
+    const s = card.dataset.section;
+    card.classList.toggle("sb-card--active", s === currentSection);
+    card.classList.toggle("sb-card--next",   s === nextSection && s !== currentSection);
+    card.classList.toggle("sb-card--idle",   s !== currentSection && s !== nextSection);
 
-queueBtn.addEventListener("pointerdown", (e) => {
+    const pill = card.querySelector(".sb-card-pill");
+    if (!pill) return;
+    if (s === currentSection) {
+      pill.textContent = "PLAYING";
+      pill.className = "sb-card-pill sb-pill--active";
+    } else if (s === nextSection && s !== currentSection) {
+      pill.textContent = "NEXT";
+      pill.className = "sb-card-pill sb-pill--next";
+    } else {
+      pill.textContent = "";
+      pill.className = "sb-card-pill";
+    }
+  });
+}
+
+// ── Update status strip ───────────────────────────────────────
+function sbUpdateStatus(state) {
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v != null ? String(v) : "\u2014";
+  };
+  setVal("sbBpm",      state.bpm);
+  setVal("sbKey",      state.key);
+  setVal("sbMode",     state.mode);
+  setVal("sbBarsLeft", state.barsLeft != null ? `${state.barsLeft} bars` : "\u2014");
+
+  const badge = document.getElementById("sbSongStatus");
+  if (badge) {
+    if (state.songActive) {
+      badge.textContent = "RUNNING";
+      badge.className = "sb-badge sb-badge--running";
+    } else {
+      badge.textContent = "Idle";
+      badge.className = "sb-badge";
+    }
+  }
+
+  // Update transport button states
+  const startBtn = document.getElementById("sbStartSongBtn");
+  const stopBtn  = document.getElementById("sbStopSongBtn");
+  const nextBtn  = document.getElementById("sbNextSectionBtn");
+  if (startBtn) startBtn.disabled = !!state.songActive;
+  if (stopBtn)  stopBtn.disabled  = !state.songActive;
+  if (nextBtn)  nextBtn.disabled  = !state.songActive;
+}
+
+// ── Handle incoming viz:state payload ────────────────────────
+function sbHandleVizState(payload) {
+  if (!payload) return;
+  sbState = { ...sbState, ...payload };
+  sbHighlight(sbState.section, sbState.upcoming);
+  sbUpdateStatus(sbState);
+
+  // Update bars-remaining on the active card
+  if (sbState.section && sbState.barsLeft != null) {
+    const barsEl = document.getElementById(`sbCardBars_${sbState.section}`);
+    if (barsEl) barsEl.textContent = `${sbState.barsLeft} bars`;
+  }
+}
+
+// ── Transport: Start Song ─────────────────────────────────────
+// Tells the room to start Song Mode by emitting a host:song-start event.
+// The player handles the actual Song Mode start; host is a conductor.
+document.getElementById("sbStartSongBtn")?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-
-  if (!currentRoom) {
-    log("Open a room first", "system");
-    return;
-  }
-
-  const loops = songBoardData[section] || [];
-
-  if (!loops.length) {
-    log(`${section} has no loops assigned`, "system");
-    return;
-  }
-
-  const playerIds = loops.map(l => l.playerId);
-  const startTime = getNextBarStartTime();
-
-  socket.emit("host:section-play", {
-    roomId: currentRoom,
-    section,
-    playerIds,
-    startTime
-  });
-
-  log(`⏭ ${section} queued for next bar`, "system");
-
-  document.querySelectorAll(".song-section").forEach(el => {
-    el.classList.toggle("section-active", el.dataset.section === section);
-  });
+  if (!currentRoom) { log("Open a room first", "system"); return; }
+  socket.emit("host:song-start", { roomId: currentRoom });
+  log("\u25b6 Song start requested", "system");
+  // Optimistic UI update
+  sbUpdateStatus({ ...sbState, songActive: true });
 });
 
-sectionEl.appendChild(title);
-sectionEl.appendChild(grid);
-sectionEl.appendChild(queueBtn);
-container.appendChild(sectionEl);
-  });
-}
+// ── Transport: Stop Song ──────────────────────────────────────
+document.getElementById("sbStopSongBtn")?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!currentRoom) return;
+  socket.emit("host:song-stop", { roomId: currentRoom });
+  log("\u25a0 Song stop requested", "system");
+  sbUpdateStatus({ ...sbState, songActive: false });
+  sbHighlight(null, null);
+});
 
+// ── Transport: Next Section ───────────────────────────────────
+// Asks the player to advance to the next section immediately.
+document.getElementById("sbNextSectionBtn")?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!currentRoom) return;
+  socket.emit("host:song-next", { roomId: currentRoom });
+  log("\u23ed Next section requested", "system");
+});
+
+// ── Save drag-and-drop board data (legacy) ────────────────────
 function saveSongBoard() {
   localStorage.setItem("pulsetap_song_board", JSON.stringify(songBoardData));
 }
 
-// Make inbox cards draggable
-function makeLoopCardsDraggable() {
-  document.querySelectorAll(".loop-card").forEach(card => {
-    if (card.dataset.draggableSet) return;
-    card.draggable = true;
-    card.addEventListener("dragstart", (e) => {
-      const playerId = card.dataset.player;
-      const playerName = card.querySelector("strong").textContent.split(" · ")[0];
-      const role = card.querySelector("strong").textContent.split(" · ")[1];
-      const loopId = `${playerId}-${Date.now()}`; // simple unique ID
-      
-      e.dataTransfer.setData("text/plain", loopId);
-      e.dataTransfer.setData("application/json", JSON.stringify({ playerId, playerName, role }));
-    });
-    card.dataset.draggableSet = "true";
-  });
-}
-
-// Initialize on load
+// ── Initialize on load ────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  renderSongBoard();
-  // Set up an observer to make new inbox cards draggable
+  sbRenderCards();
+  sbUpdateStatus(sbState);
+
+  // Make inbox cards draggable (legacy Phase 0 feature, preserved)
   const inbox = document.getElementById("loopInboxList");
   if (inbox) {
     const observer = new MutationObserver(() => makeLoopCardsDraggable());
@@ -906,3 +969,20 @@ document.addEventListener("DOMContentLoaded", () => {
     makeLoopCardsDraggable();
   }
 });
+
+// Make inbox cards draggable (legacy helper, preserved)
+function makeLoopCardsDraggable() {
+  document.querySelectorAll(".loop-card").forEach(card => {
+    if (card.dataset.draggableSet) return;
+    card.draggable = true;
+    card.addEventListener("dragstart", (e) => {
+      const playerId = card.dataset.player;
+      const playerName = card.querySelector("strong").textContent.split(" \u00b7 ")[0];
+      const role = card.querySelector("strong").textContent.split(" \u00b7 ")[1];
+      const loopId = `${playerId}-${Date.now()}`;
+      e.dataTransfer.setData("text/plain", loopId);
+      e.dataTransfer.setData("application/json", JSON.stringify({ playerId, playerName, role }));
+    });
+    card.dataset.draggableSet = "true";
+  });
+};

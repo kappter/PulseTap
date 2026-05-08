@@ -1,17 +1,25 @@
-# PulseTap · Phase 1
+# PulseTap · Phase 1 Alpha
 
-PulseTap is a browser-based multi-user music session prototype.
+PulseTap is a browser-based collaborative musical sketching and synchronized performance environment.
 
-It has two layers:
+The system is designed around a simple idea:
 
-1. **Landing page** at `/`  
-   This explains the PulseTap vision: an instrument in every pocket, the fidget-cube-to-instrument idea, the roadmap, the host board, and the group performance concept.
+> Music exists before production.
 
-2. **Live session app**  
-   - Player page: `/player/`
-   - Host page: `/host/`
+Before recording, before arrangement, and before perfection, musicians move through a shared space of rhythm, repetition, tension, transition, and emotional direction.
 
-## Live Links
+PulseTap focuses on that stage.
+
+The project currently exists as a browser-first ecosystem for:
+- collaborative loop creation
+- synchronized musical interaction
+- section-based song structure
+- live arrangement experimentation
+- future visualization-guided performance
+
+---
+
+# Live Links
 
 Landing page:
 
@@ -29,211 +37,293 @@ GitHub repo:
 
 https://github.com/kappter/PulseTap
 
-## What This Prototype Does
+---
 
-### Player Mode
+# Ecosystem Vision
+
+PulseTap is one part of a larger creative workflow.
+
+## 1. Songmaker
+
+Songmaker defines:
+- structure
+- sections
+- transitions
+- key and mode
+- energy movement
+- emotional direction
+
+The goal is to capture the shape of a song before it becomes a finished production.
+
+## 2. PulseTap
+
+PulseTap turns structure into synchronized playable interaction.
+
+Musicians:
+- build loops
+- experiment collaboratively
+- perform transitions
+- shape arrangements
+- sketch rhythmic and harmonic ideas in real time
+
+## 3. Visualization Layer
+
+A future fullscreen visualization system will guide live performers through:
+- section awareness
+- energy movement
+- timing cohesion
+- transition countdowns
+- ensemble synchronization
+
+The long-term vision is a collaborative musical ecosystem connecting composition, interaction, and performance flow.
+
+---
+
+# Philosophy
+
+PulseTap is intentionally lightweight:
+- touch-first
+- collaborative
+- synchronization-aware
+- structure-oriented
+- performance-focused
+
+The goal is not to replace a DAW.
+
+The goal is to preserve the fragile moment before a song fully exists.
+
+---
+
+# Current Applications
+
+PulseTap currently contains two primary interfaces:
+
+## Landing Page `/`
+
+The landing page explains:
+- the PulseTap vision
+- the instrument cube concept
+- the roadmap
+- collaborative performance philosophy
+- Songmaker integration
+- future visualization systems
+
+## Live Session App
+
+### Player
+`/player/`
+
+### Host
+`/host/`
+
+---
+
+# Current Features
+
+## Player Features
 
 Players can:
+- enter a name
+- join a room
+- choose a musical role
+- trigger sounds live
+- perform collaboratively
+- build synchronized loops
+- edit quantized step grids
+- save and load loop slots
+- duplicate loops
+- queue transitions on bar boundaries
+- organize sections into songs
+- export MIDI sketches
+- experiment with sample packs
 
-- Enter a name
-- Enter a room code
-- Choose a role:
-  - Melody
-  - Bass
-  - Percussion
-  - Chords
-  - FX
-- Join a shared session
-- Tap large pads to trigger sounds
-- Send tap activity to the host board
-- Record a one-bar loop with **Loop Mode v1**
-- Play the loop back while still tapping live
+The player interface is designed mobile-first.
 
-The player page is designed for phones first.
+---
 
-### Loop Mode v1
+# Loop + Song Mode
 
-Loop Mode is local-first.
+PulseTap currently supports:
 
-The player can:
+- multi-bar loop recording
+- quantized recording
+- editable step sequencing
+- variable step resolution
+- loop slot banks
+- slot duplication
+- loop import/export
+- queued bar-quantized slot switching
+- local-first playback
+- sample packs
+- automatic section progression
+- MIDI export
 
-1. Tap **Record Loop**
-2. Tap a short pattern
-3. Tap **Stop Recording**
-4. Tap **Play Loop**
-5. Keep tapping live over the loop
-6. Clear and rebuild the loop
+Song Mode allows musicians to organize loops into larger musical structures such as:
+- Intro
+- Verse
+- Chorus
+- Bridge
+- Outro
 
-Current loop behavior:
+The system automatically transitions between sections on exact bar boundaries while preserving playback continuity.
 
-- One-bar loop length based on the session BPM
-- Defaults to 4 beats at 120 BPM if no host metronome has been set
-- Taps play immediately on the player device
-- Loop playback also sends tap events to the session so the host can see activity
-- Quantize support is basic and snaps to a 16-step grid when active
+---
 
-### Host Mode
+# Synchronization Philosophy
 
-The host can:
+PulseTap prioritizes immediate local responsiveness first.
 
-- Enter a room code
-- View connected players
-- See player roles
-- Watch tap activity
-- Use the page as an early master board / switchboard concept
+Players should hear and feel their own interaction instantly.
 
-The host page is designed for laptop, desktop, or tablet.
+The system then uses:
+- quantization
+- synchronized transport
+- queued transitions
+- bar-aligned switching
+- shared BPM structure
 
-## How To Test
+to maintain collective timing coherence across devices.
 
-### Basic Test With One Device
+This local-first architecture preserves musical feel while still enabling collaborative synchronization.
+
+---
+
+# Host Features
+
+The host interface currently allows:
+- room management
+- player visibility
+- tap activity monitoring
+- timing coordination
+- early transport experimentation
+
+The host page represents the beginning of a future arrangement and visualization control system.
+
+---
+
+# How To Test
+
+## Basic Test
 
 1. Open:
 
-   https://pulsetap.onrender.com/player/
+https://pulsetap.onrender.com/player/
 
-2. Enter your name.
-3. Enter a room code, such as:
+2. Enter:
+- your name
+- room code
+- role
 
-   1413
+3. Join the session.
 
-4. Choose a role.
-5. Join the session.
-6. Tap the pads.
-7. Try Loop Mode:
-   - Record Loop
-   - Tap a pattern
-   - Stop Recording
-   - Play Loop
+4. Tap pads live.
 
-### Test With Two Devices
+5. Test:
+- Loop Mode
+- Slot saving
+- Slot switching
+- Song Mode
+- MIDI export
+- Sample packs
 
-1. On a computer, open:
+---
 
-   https://pulsetap.onrender.com/host/
+# Multi-Device Test
 
-2. Enter the room code:
+## Host
 
-   1413
+Open:
 
-3. On a phone, open:
+https://pulsetap.onrender.com/host/
 
-   https://pulsetap.onrender.com/player/
+## Player
 
-4. Enter a name.
-5. Use the same room code:
+Open:
 
-   1413
+https://pulsetap.onrender.com/player/
 
-6. Join the session.
-7. Tap on the phone and watch for activity on the host board.
-8. Record a loop on the phone and watch the host respond to loop playback.
+Use the same room code across devices.
 
-## Important Notes
+Test:
+- live interaction
+- loop playback
+- synchronized transitions
+- queued slot switching
+- song progression
 
-This is Phase 1.
+---
 
-The most important goal is:
+# Current Phase
 
-> The player should hear or feel their own tap immediately.
+PulseTap is currently in Phase 1 Alpha.
 
-Network sync is secondary in this version.
+The primary focus is:
+- synchronization stability
+- mobile usability
+- collaborative timing
+- live arrangement workflows
+- section-based composition
+- visualization architecture
 
-Perfect simultaneity is not expected yet. The goal is to begin testing how close we can get to shared musical timing across devices.
+Known limitations:
+- long-session synchronization still requires refinement
+- mobile UX continues evolving
+- visualization mode is early-stage
+- full session save/load is not finalized
+- hardware integration is experimental
 
-## Current Limitations
+---
 
-- Timing between devices may not be perfect.
-- Audio latency may vary by phone, browser, headphones, and internet connection.
-- Bluetooth headphones may add delay.
-- Loop Mode is one-bar only in this version.
-- Loop saving/export is not implemented yet.
-- The host board is an early prototype.
-- Recording full sessions is not implemented yet.
-- The cube hardware does not exist yet.
+# Recommended Testing Setup
 
-## Recommended Testing Setup
-
-Best early test:
-
-- Host page on laptop
-- Player page on phone
-- Same room code
-- Wired headphones if possible
+Recommended early testing:
+- host page on laptop
+- player page on phone
+- stable Wi-Fi
 - Chrome browser
-- Stable Wi-Fi
+- wired headphones when possible
 
-## Project Vision
+---
 
-PulseTap begins as a browser app, but the larger vision is a pocket instrument system.
+# Development Path
 
-Development path:
+PulseTap begins as a browser application, but the larger vision is a modular musical ecosystem.
 
-1. Build the browser app.
-2. Add external sensors outside the phone.
-3. Develop a wireless instrument cube.
+## Phase 1
+Browser-based collaborative music environment.
 
-The long-term dream is:
+## Phase 2
+External sensors and expanded interaction systems.
+
+## Phase 3
+Wireless PulseTap instrument cube hardware.
+
+The long-term vision is:
 
 > An instrument in every pocket.
 
-A small device could include buttons, switches, tap zones, motion sensors, or customizable panels. These inputs could become notes, percussion, chords, effects, or triggers inside a musical session.
+---
 
-## Future Features
+# Future Directions
 
-Possible next steps:
+Planned areas of development include:
+- fullscreen visualization mode
+- ensemble guidance systems
+- host arrangement board
+- player mixer controls
+- long-session sync correction
+- shared song session files
+- QR room joining
+- hardware sensor integration
+- Bluetooth MIDI experimentation
+- PulseTap cube prototypes
+- projector-safe performance mode
 
-- Better sounds
-- Multiple loop slots
-- Loop overdub
-- Loop save / export
-- Shared tempo
-- Better quantization
-- Host volume controls
-- Mute / solo per player
-- Session recording
-- Invite links
-- QR code room joining
-- Hardware sensor testing
-- Bluetooth MIDI experiments
-- Cube prototype documentation
+---
 
-## Local Development
+# Local Development
 
 Install dependencies:
 
 ```bash
 npm install
-```
-
-Start the server:
-
-```bash
-node server.js
-```
-
-Then open:
-
-```text
-http://localhost:3000/
-http://localhost:3000/player/
-http://localhost:3000/host/
-```
-
-## Deployment
-
-This app is deployed on Render.
-
-Render settings:
-
-```text
-Runtime: Node
-Build Command: npm install
-Start Command: node server.js
-```
-
-## Core Concept
-
-PulseTap is not just an app.
-
-It is a system for turning touch, timing, movement, looping, and collaboration into music.

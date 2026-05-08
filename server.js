@@ -232,6 +232,15 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("viz:state", payload);
   });
 
+  // ── PLAYER: relay song context to visualizer ──────────
+  // player.js emits "player:viz-state" on every updateSongContext call.
+  socket.on("player:viz-state", (payload) => {
+    const { roomId } = payload;
+    if (!roomId) return;
+    io.to(`${roomId}:viz`).emit("viz:state", payload);
+    io.to(roomId).emit("viz:state", payload);
+  });
+
   // ── HOST: global loop transport ───────────────────────────
 socket.on("host:loop-transport", ({ roomId, action, startTime }) => {
   const room = rooms.get(roomId);

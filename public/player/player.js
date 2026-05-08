@@ -707,6 +707,11 @@ function applySoloSettings() {
 
 function startSongMode() {
   songSections = buildSongSectionsFromUI();
+  // ── Conflict guard: stop Bank if it was running ───────
+  if (isBankPlaying) {
+    stopBankPlayback();
+    setLoopStatus("Bank stopped — Song starting", "ready");
+  }
   if (!songSections.length) {
     setLoopStatus("Song Mode: no sections configured", "empty");
     return;
@@ -730,7 +735,7 @@ function startSongMode() {
     ?.classList.add("section-active");
   // Start Song button → Stop Song
   const startBtn = document.getElementById("startSongBtn");
-  if (startBtn) { startBtn.textContent = "Stop Song"; startBtn.dataset.songRunning = "1"; }
+  if (startBtn) { startBtn.textContent = "Stop Song ■"; startBtn.dataset.songRunning = "1"; }
   // Start playback if not already playing
   if (!isLoopPlaying) {
     const ok = queueSlotForNextBar(first.slot);
@@ -752,7 +757,7 @@ function stopSongMode() {
   songBarsRemaining = 0;
   stopLoopPlayback();
   const startBtn = document.getElementById("startSongBtn");
-  if (startBtn) { startBtn.textContent = "Start Song"; delete startBtn.dataset.songRunning; }
+  if (startBtn) { startBtn.textContent = "Start Song ▶ Arrangement"; delete startBtn.dataset.songRunning; }
   document.querySelectorAll(".song-section-btn").forEach(b =>
     b.classList.remove("section-active")
   );
@@ -1461,12 +1466,20 @@ function startBankPlayback(anchorMs = Date.now()) {
 
   stopBankPlayback();
   stopLoopPlayback();
-
+  // ── Conflict guard: stop Song Mode if it was running ──
+  if (songModeActive) {
+    songModeActive = false;
+    songIndex = 0;
+    songBarsRemaining = 0;
+    const _sb = document.getElementById("startSongBtn");
+    if (_sb) { _sb.textContent = "Start Song ▶ Arrangement"; delete _sb.dataset.songRunning; }
+    document.querySelectorAll(".song-section-btn").forEach(b => b.classList.remove("section-active"));
+    setLoopStatus("Song stopped — Bank starting", "ready");
+  }
   isBankPlaying = true;
   bankPlaybackAnchorMs = anchorMs;
-
   playBankBtn?.classList.add("playing");
-  playBankBtn.textContent = "Stop Bank";
+  playBankBtn.textContent = "Stop Bank ■";
 
   setLoopStatus(`Playing bank · ${bankLoops.length} slot${bankLoops.length === 1 ? "" : "s"}`, "playing");
   updateSongContext({ bank: "Playing" });
@@ -1528,7 +1541,7 @@ function stopBankPlayback() {
   bankTimeouts = [];
 
   playBankBtn?.classList.remove("playing");
-  if (playBankBtn) playBankBtn.textContent = "Play Bank";
+  if (playBankBtn) playBankBtn.textContent = "Play Bank ▶ All Slots";
   updateSongContext({ bank: "Stopped" });
 
   updateLoopUI();
@@ -1713,6 +1726,28 @@ function updateSongContext(overrides = {}) {
       barsEl.classList.add("hidden");
     }
   }
+  // ── Visualizer relay ─────────────────────────────────
+  // Emit player:viz-state so the server can relay it to
+  // any connected /visualizer clients.
+  if (typeof socket !== "undefined" && socket.connected) {
+    const _roomId = (typeof roomCodeIn !== "undefined" && roomCodeIn)
+      ? roomCodeIn.value.trim().toUpperCase() : "";
+    if (_roomId) {
+      socket.emit("player:viz-state", {
+        roomId:     _roomId,
+        section:    part     || "—",
+        upcoming:   upcoming || "—",
+        barsLeft:   barsLeft,
+        slot:       currentLoopSlot || null,
+        bpm:        bpm,
+        key:        key,
+        mode:       mode,
+        timeSig:    timeSig,
+        energy:     null,
+        songActive: songModeActive
+      });
+    }
+  }
 }
 
 function ctxLoadSectionNotes(sectionName) {
@@ -1895,7 +1930,7 @@ function scheduleLoopCycle(cycleIndex = 0) {
       // ── Song complete ──
       songModeActive = false;
       const startBtnC = document.getElementById("startSongBtn");
-      if (startBtnC) { startBtnC.textContent = "Start Song"; delete startBtnC.dataset.songRunning; }
+      if (startBtnC) { startBtnC.textContent = "Start Song ▶ Arrangement"; delete startBtnC.dataset.songRunning; }
       document.querySelectorAll(".song-section-btn").forEach(b =>
         b.classList.remove("section-active")
       );
@@ -1998,7 +2033,7 @@ function stopLoopPlayback() {
   if (songModeActive) {
     songModeActive = false;
     const startBtnS = document.getElementById("startSongBtn");
-    if (startBtnS) { startBtnS.textContent = "Start Song"; delete startBtnS.dataset.songRunning; }
+    if (startBtnS) { startBtnS.textContent = "Start Song ▶ Arrangement"; delete startBtnS.dataset.songRunning; }
     document.querySelectorAll(".song-section-btn").forEach(b =>
       b.classList.remove("section-active")
     );

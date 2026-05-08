@@ -79,6 +79,8 @@ app.use("/player", express.static(path.join(__dirname, "public", "player")));
 app.use("/host",   express.static(path.join(__dirname, "public", "host")));
 // Serve shared assets (CSS, fonts, icons)
 app.use("/shared", express.static(path.join(__dirname, "public", "shared")));
+// Serve /visualizer  →  public/visualizer/
+app.use("/visualizer", express.static(path.join(__dirname, "public", "visualizer")));
 
 // ─────────────────────────────────────────────────────────────
 //  Room state
@@ -200,6 +202,34 @@ io.on("connection", (socket) => {
     io.to(`${roomId}:host`).emit("room:state", roomSnapshot(roomId, room));
 
     console.log(`[player:join]  room=${roomId}  player=${playerName}  role=${role}`);
+  });
+
+  // ── VISUALIZER: passive observer join ──────────────────
+  socket.on("viz:join", ({ roomId }) => {
+    if (!roomId) return;
+    // Join the room as a passive observer (read-only)
+    socket.join(roomId);
+    socket.join(`${roomId}:viz`);
+    // Push current room settings immediately so the visualizer
+    // can display state without waiting for the next event.
+    const room = rooms.get(roomId);
+    if (room) {
+      socket.emit("room:settings", room.settings);
+    }
+    console.log(`[viz:join]  room=${roomId}  socket=${socket.id}`);
+  });
+
+  // ── HOST: push visualizer song state ─────────────────────
+  // The host (or player) can emit "host:viz-state" to push
+  // song context to all visualizer clients in the room.
+  socket.on("host:viz-state", (payload) => {
+    const { roomId } = payload;
+    if (!roomId) return;
+    // Relay to all visualizer sockets in the room
+    io.to(`${roomId}:viz`).emit("viz:state", payload);
+    // Also relay to the full room so any visualizer that joined
+    // via the main room channel also receives it.
+    io.to(roomId).emit("viz:state", payload);
   });
 
   // ── HOST: global loop transport ───────────────────────────
@@ -374,6 +404,7 @@ room.settings.beatUnit = beatUnit || room.settings.beatUnit || 4;
 // ─────────────────────────────────────────────────────────────
 server.listen(PORT, () => {
   console.log(`\n  PulseTap Phase 1 server running`);
-  console.log(`  Player  →  http://localhost:${PORT}/player`);
-  console.log(`  Host    →  http://localhost:${PORT}/host\n`);
+  console.log(`  Player     →  http://localhost:${PORT}/player`);
+  console.log(`  Host       →  http://localhost:${PORT}/host`);
+  console.log(`  Visualizer →  http://localhost:${PORT}/visualizer\n`);
 });

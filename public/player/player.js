@@ -1377,7 +1377,8 @@ socket.on("metronome:start", (data) => {
 
 /** Metronome stop from host */
 socket.on("metronome:stop", () => {
-  stopMetronome();
+  renderStepGrid();
+  renderTimeGrid();
 });
 
 /** Remote tap from another player */

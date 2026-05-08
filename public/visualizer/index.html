@@ -1,1 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseTap Visualizer</title>
+  <link rel="stylesheet" href="visualizer.css" />
+</head>
+<body>
 
+  <!-- ── Join overlay ──────────────────────────────────────── -->
+  <div id="joinOverlay" class="join-overlay">
+    <div class="join-card">
+      <div class="join-logo">PulseTap</div>
+      <p class="join-sub">Visualizer Mode</p>
+      <input id="vizRoomCode" class="join-input" type="text"
+             placeholder="ROOM CODE" maxlength="8" autocomplete="off" />
+      <button id="joinVizBtn" class="join-btn">Connect</button>
+      <p id="joinError" class="join-error hidden"></p>
+    </div>
+  </div>
+
+  <!-- ── Main visualizer canvas ────────────────────────────── -->
+  <div id="vizCanvas" class="viz-canvas hidden">
+
+    <!-- Beat pulse ring -->
+    <div id="beatRing" class="beat-ring"></div>
+
+    <!-- Top meta bar -->
+    <header class="viz-meta">
+      <span class="meta-item" id="vizRoom">ROOM —</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-item"><span id="vizBpm">—</span> BPM</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-item" id="vizKey">— —</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-item" id="vizTimeSig">—/4</span>
+      <span class="meta-sep meta-right-push"></span>
+      <span class="meta-item meta-status" id="vizStatus">Waiting…</span>
+    </header>
+
+    <!-- Centre stage -->
+    <main class="viz-stage">
+
+      <!-- Upcoming label (top) -->
+      <div class="stage-upcoming-wrap">
+        <span class="upcoming-label">NEXT</span>
+        <span id="vizUpcoming" class="upcoming-text">—</span>
+      </div>
+
+      <!-- Current section (hero) -->
+      <div class="stage-hero">
+        <div id="vizSection" class="hero-section">—</div>
+        <div id="vizSlot" class="hero-slot">Slot —</div>
+      </div>
+
+      <!-- Transition countdown -->
+      <div id="vizCountdown" class="stage-countdown hidden">
+        <span id="vizCountdownText">— IN — BARS</span>
+      </div>
+
+      <!-- Bars remaining -->
+      <div id="vizBarsWrap" class="stage-bars hidden">
+        <div class="bars-label">BARS REMAINING</div>
+        <div id="vizBarsRemaining" class="bars-value">—</div>
+        <div id="vizBarsTrack" class="bars-track">
+          <!-- filled dynamically -->
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Energy meter (bottom) -->
+    <footer class="viz-footer">
+      <div class="energy-wrap">
+        <span class="energy-label">ENERGY</span>
+        <div class="energy-bar">
+          <div id="energyFill" class="energy-fill"></div>
+        </div>
+        <span id="energyLevel" class="energy-level">—</span>
+      </div>
+
+      <!-- Beat dots -->
+      <div id="vizBeatBar" class="viz-beat-bar"></div>
+    </footer>
+
+  </div><!-- /vizCanvas -->
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="visualizer.js"></script>
+</body>
+</html>

@@ -437,6 +437,8 @@ const importLoopBtn = document.getElementById("importLoopBtn");
 const exportMidiBtn = document.getElementById("exportMidiBtn");
 const playBankBtn = document.getElementById("playBankBtn");
 let isBankPlaying = false;
+// Transport Authority: true when host metronome is running
+let transportRunning = false;
 let bankTimeouts = [];
 let bankPlaybackAnchorMs = 0;
 let songModeActive = false;
@@ -735,6 +737,36 @@ function getNextLocalBarStartTime() {
   const untilNextBar = msPerBar - phaseInBar;
 
   return now + untilNextBar;
+}
+
+/**
+ * Returns the epoch-ms timestamp of the next bar boundary
+ * aligned to the HOST transport clock (metroStartEpoch).
+ *
+ * When transportRunning is true, this guarantees that all players
+ * who call this function at roughly the same time will receive the
+ * SAME next-bar timestamp, so their loops start in perfect sync.
+ *
+ * Falls back to getNextLocalBarStartTime() if no epoch is set.
+ */
+function getNextGlobalBarStartTime() {
+  if (!metroStartEpoch) {
+    // No host clock yet — fall back to local
+    return getNextLocalBarStartTime();
+  }
+  const bpm         = Number(sessionSettings.bpm) || metroBpm || 120;
+  const beatsPerBar = metroBeatsPerBar || 4;
+  const msPerBeat   = 60000 / bpm;
+  const msPerBar    = msPerBeat * beatsPerBar;
+  const now         = Date.now();
+  const elapsed     = now - metroStartEpoch;
+  // How far through the current bar are we?
+  const phaseInBar  = ((elapsed % msPerBar) + msPerBar) % msPerBar;
+  const untilNext   = msPerBar - phaseInBar;
+  // Add a small scheduling buffer (50 ms) so the setTimeout
+  // in startLoopPlaybackSynced has time to fire before the bar.
+  const buffer = 50;
+  return now + untilNext + (untilNext < buffer ? msPerBar : 0);
 }
 
 soloModeToggle?.addEventListener("change", () => {
@@ -1428,6 +1460,8 @@ socket.on("disconnect", () => setConnected(false));
 socket.on("room:settings", (s) => {
   if (isSoloMode) return;
   sessionSettings = { ...sessionSettings, ...s };
+  // Sync transport authority state from host settings
+  if (s.running !== undefined) transportRunning = !!s.running;
 
   dispKey.textContent = s.key || sessionSettings.key;
   dispMode.textContent = s.mode || sessionSettings.mode;
@@ -1484,6 +1518,7 @@ socket.on("section:play", ({ section, playerIds, startTime }) => {
 
 /** Metronome start from host */
 socket.on("metronome:start", (data) => {
+  transportRunning = true;
   startMetronome(data);
   renderStepGrid();
   renderTimeGrid();
@@ -1491,6 +1526,7 @@ socket.on("metronome:start", (data) => {
 
 /** Metronome stop from host */
 socket.on("metronome:stop", () => {
+  transportRunning = false;
   stopMetronome();
   renderStepGrid();
   renderTimeGrid();
@@ -2155,11 +2191,13 @@ function stopLoopPlayback() {
 
 playBankBtn?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-
   if (isBankPlaying) {
     stopBankPlayback();
   } else {
-    const startTime = getNextLocalBarStartTime();
+    // Use global bar boundary when host transport is running
+    const startTime = transportRunning
+      ? getNextGlobalBarStartTime()
+      : getNextLocalBarStartTime();
     startBankPlayback(startTime);
   }
 });
@@ -2193,13 +2231,29 @@ recordLoopBtn.addEventListener("pointerdown", (e) => {
 
 playLoopBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-
   if (isLoopPlaying) {
     stopLoopPlayback();
   } else {
-    const startTime = getNextLocalBarStartTime();
-    startPlayerLoopCountdown(startTime);
-    startLoopPlaybackSynced(startTime);
+    if (transportRunning) {
+      // ── Transport Authority: arm to next GLOBAL bar boundary ──
+      const startTime = getNextGlobalBarStartTime();
+      // Show "Armed for next bar" status while waiting
+      setLoopStatus("Armed for next bar ⏳", "queued");
+      playLoopBtn.textContent = "Armed…";
+      playLoopBtn.disabled = true;
+      startLoopPlaybackSynced(startTime);
+      // Re-enable button once the loop actually starts
+      const armDelay = Math.max(0, startTime - Date.now());
+      setTimeout(() => {
+        playLoopBtn.disabled = false;
+        updateLoopUI();
+      }, armDelay + 50);
+    } else {
+      // ── No host transport: local fallback ──
+      const startTime = getNextLocalBarStartTime();
+      setLoopStatus("Local start — no host transport", "ready");
+      startLoopPlaybackSynced(startTime);
+    }
   }
 });
 

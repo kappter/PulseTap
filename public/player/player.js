@@ -54,97 +54,161 @@ const KEY_FREQ = {
 //  Format matches the applyLoopData / buildLoopObject schema.
 // ─────────────────────────────────────────────────────────────
 const SAMPLE_PACKS = {
-  "Lo-Fi": {
-    label: "Lo-Fi",
-    settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" },
+  // ── 1. Blues Jam ─────────────────────────────────────────
+  // Teaches: layering, call-and-response, 12-bar feel
+  // Key: E  Mode: pentatonic  BPM: 90  Time: 4/4
+  // loopLengthMs = (60000/90)*4 = 2667ms  (1 bar)
+  "Blues Jam": {
+    label: "Blues Jam",
+    desc:  "Blues Jam \u00b7 teaches layering and call-response",
+    settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" },
     slots: [
-      // Slot 1 — mellow bass line
+      // Slot 1 \u2014 Intro: root-fifth bass walk (I chord feel)
       {
         instrument: "bass",
-        loopLengthMs: 3200,
+        loopLengthMs: 2667,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 0, instrument: "bass" },
           { step: 4,  degree: 2, instrument: "bass" },
           { step: 8,  degree: 0, instrument: "bass" },
-          { step: 12, degree: 4, instrument: "bass" }
+          { step: 10, degree: 2, instrument: "bass" },
+          { step: 12, degree: 4, instrument: "bass" },
+          { step: 14, degree: 2, instrument: "bass" }
         ],
-        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+        settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" }
       },
-      // Slot 2 — lo-fi chord stabs
-      {
-        instrument: "pad",
-        loopLengthMs: 3200,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "pad" },
-          { step: 2,  degree: 2, instrument: "pad" },
-          { step: 8,  degree: 3, instrument: "pad" },
-          { step: 10, degree: 5, instrument: "pad" }
-        ],
-        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
-      },
-      // Slot 3 — dusty kick pattern
+      // Slot 2 \u2014 Verse: shuffle kick + hi-hat groove
       {
         instrument: "kick",
-        loopLengthMs: 3200,
+        loopLengthMs: 2667,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 0, instrument: "kick" },
           { step: 6,  degree: 0, instrument: "kick" },
           { step: 8,  degree: 0, instrument: "kick" },
-          { step: 14, degree: 0, instrument: "kick" }
+          { step: 13, degree: 0, instrument: "kick" }
         ],
-        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+        settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" }
       },
-      // Slot 4 — snare on 2 and 4
+      // Slot 3 \u2014 Chorus: call phrase (lead melody, pentatonic)
       {
-        instrument: "snare",
-        loopLengthMs: 3200,
+        instrument: "lead",
+        loopLengthMs: 2667,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "lead" },
+          { step: 2,  degree: 2, instrument: "lead" },
+          { step: 4,  degree: 4, instrument: "lead" },
+          { step: 6,  degree: 2, instrument: "lead" },
+          { step: 8,  degree: 0, instrument: "lead" }
+        ],
+        settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" }
+      },
+      // Slot 4 \u2014 Bridge: response phrase (higher register answer)
+      {
+        instrument: "pluck",
+        loopLengthMs: 2667,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 8,  degree: 4, instrument: "pluck" },
+          { step: 10, degree: 5, instrument: "pluck" },
+          { step: 12, degree: 4, instrument: "pluck" },
+          { step: 14, degree: 2, instrument: "pluck" }
+        ],
+        settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" }
+      },
+      // Slot 5 \u2014 Outro: snare backbeat + sparse pad resolve
+      {
+        instrument: "snare",
+        loopLengthMs: 2667,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 4,  degree: 0, instrument: "snare" },
           { step: 12, degree: 0, instrument: "snare" }
         ],
-        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
-      },
-      // Slot 5 — pluck melody
-      {
-        instrument: "pluck",
-        loopLengthMs: 3200,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "pluck" },
-          { step: 3,  degree: 2, instrument: "pluck" },
-          { step: 6,  degree: 4, instrument: "pluck" },
-          { step: 9,  degree: 3, instrument: "pluck" },
-          { step: 12, degree: 5, instrument: "pluck" }
-        ],
-        settings: { key: "C", mode: "minor", bpm: 75, quantize: "8" }
+        settings: { key: "E", mode: "pentatonic", bpm: 90, quantize: "8" }
       }
     ]
   },
 
-  "Synthwave": {
-    label: "Synthwave",
-    settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" },
+  // ── 2. Synthwave Drive ────────────────────────────────────
+  // Teaches: four-on-the-floor, arpeggiation, energy build
+  // Key: A  Mode: minor  BPM: 118  Time: 4/4
+  // loopLengthMs = (60000/118)*4 = 2034ms  (1 bar)
+  "Synthwave Drive": {
+    label: "Synthwave Drive",
+    desc:  "Synthwave Drive \u00b7 teaches energy build and arpeggiation",
+    settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" },
     slots: [
-      // Slot 1 — pulsing lead
+      // Slot 1 \u2014 Intro: sparse arp seed (just root + fifth)
       {
-        instrument: "lead",
-        loopLengthMs: 2182,
+        instrument: "bell",
+        loopLengthMs: 2034,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "bell" },
+          { step: 8,  degree: 4, instrument: "bell" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" }
+      },
+      // Slot 2 \u2014 Verse: sawtooth bass pulse (root on every beat)
+      {
+        instrument: "sawtooth",
+        loopLengthMs: 2034,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "sawtooth" },
+          { step: 4,  degree: 0, instrument: "sawtooth" },
+          { step: 8,  degree: 3, instrument: "sawtooth" },
+          { step: 12, degree: 2, instrument: "sawtooth" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" }
+      },
+      // Slot 3 \u2014 Chorus: four-on-the-floor kick + full arp
+      {
+        instrument: "kick",
+        loopLengthMs: 2034,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 0,  degree: 0, instrument: "kick" },
+          { step: 4,  degree: 0, instrument: "kick" },
+          { step: 8,  degree: 0, instrument: "kick" },
+          { step: 12, degree: 0, instrument: "kick" }
+        ],
+        settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" }
+      },
+      // Slot 4 \u2014 Bridge: gated snare + lead stab
+      {
+        instrument: "lead",
+        loopLengthMs: 2034,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 0, instrument: "lead" },
@@ -156,110 +220,69 @@ const SAMPLE_PACKS = {
           { step: 12, degree: 5, instrument: "lead" },
           { step: 14, degree: 4, instrument: "lead" }
         ],
-        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+        settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" }
       },
-      // Slot 2 — sawtooth bass
+      // Slot 5 \u2014 Outro: snare + pad resolve (energy drops back)
       {
-        instrument: "sawtooth",
-        loopLengthMs: 2182,
+        instrument: "pad",
+        loopLengthMs: 2034,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "sawtooth" },
-          { step: 4,  degree: 0, instrument: "sawtooth" },
-          { step: 8,  degree: 3, instrument: "sawtooth" },
-          { step: 12, degree: 2, instrument: "sawtooth" }
+          { step: 0,  degree: 0, instrument: "pad" },
+          { step: 8,  degree: 3, instrument: "pad" }
         ],
-        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
-      },
-      // Slot 3 — four-on-the-floor kick
-      {
-        instrument: "kick",
-        loopLengthMs: 2182,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "kick" },
-          { step: 4,  degree: 0, instrument: "kick" },
-          { step: 8,  degree: 0, instrument: "kick" },
-          { step: 12, degree: 0, instrument: "kick" }
-        ],
-        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
-      },
-      // Slot 4 — gated snare
-      {
-        instrument: "snare",
-        loopLengthMs: 2182,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 4,  degree: 0, instrument: "snare" },
-          { step: 12, degree: 0, instrument: "snare" }
-        ],
-        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
-      },
-      // Slot 5 — arpeggiated bell
-      {
-        instrument: "bell",
-        loopLengthMs: 2182,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "bell" },
-          { step: 2,  degree: 2, instrument: "bell" },
-          { step: 4,  degree: 4, instrument: "bell" },
-          { step: 6,  degree: 7, instrument: "bell" },
-          { step: 8,  degree: 4, instrument: "bell" },
-          { step: 10, degree: 2, instrument: "bell" },
-          { step: 12, degree: 0, instrument: "bell" },
-          { step: 14, degree: 5, instrument: "bell" }
-        ],
-        settings: { key: "A", mode: "minor", bpm: 110, quantize: "16" }
+        settings: { key: "A", mode: "minor", bpm: 118, quantize: "16" }
       }
     ]
   },
 
-  "Ambient": {
-    label: "Ambient",
-    settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" },
+  // ── 3. Ambient Build ─────────────────────────────────────
+  // Teaches: texture layering, slow harmonic movement, space
+  // Key: D  Mode: dorian  BPM: 72  Time: 4/4
+  // loopLengthMs = (60000/72)*4 = 3333ms  (1 bar)
+  "Ambient Build": {
+    label: "Ambient Build",
+    desc:  "Ambient Build \u00b7 teaches texture layering and harmonic space",
+    settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" },
     slots: [
-      // Slot 1 — slow pad wash
+      // Slot 1 \u2014 Intro: single root drone (just the tonic)
       {
         instrument: "pad",
-        loopLengthMs: 4000,
+        loopLengthMs: 3333,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
-          { step: 0,  degree: 0, instrument: "pad" },
-          { step: 8,  degree: 4, instrument: "pad" }
+          { step: 0, degree: 0, instrument: "pad" }
         ],
-        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+        settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" }
       },
-      // Slot 2 — sparse bell tones
+      // Slot 2 \u2014 Verse: pad wash + sparse bell tones (add texture)
       {
         instrument: "bell",
-        loopLengthMs: 4000,
+        loopLengthMs: 3333,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 2, instrument: "bell" },
           { step: 5,  degree: 4, instrument: "bell" },
           { step: 11, degree: 7, instrument: "bell" }
         ],
-        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+        settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" }
       },
-      // Slot 3 — sine drone
+      // Slot 3 \u2014 Chorus: sine bass + hi-hat pulse (rhythm enters)
       {
         instrument: "sine",
-        loopLengthMs: 4000,
+        loopLengthMs: 3333,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 0, instrument: "sine" },
@@ -267,43 +290,92 @@ const SAMPLE_PACKS = {
           { step: 8,  degree: 3, instrument: "sine" },
           { step: 12, degree: 0, instrument: "sine" }
         ],
-        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+        settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" }
       },
-      // Slot 4 — soft hi-hat texture
-      {
-        instrument: "hi-hat",
-        loopLengthMs: 4000,
-        stepGridSteps: 16,
-        stepResolution: "16",
-        loopEvents: [],
-        stepGridEvents: [
-          { step: 2,  degree: 0, instrument: "hi-hat" },
-          { step: 6,  degree: 0, instrument: "hi-hat" },
-          { step: 10, degree: 0, instrument: "hi-hat" },
-          { step: 14, degree: 0, instrument: "hi-hat" }
-        ],
-        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
-      },
-      // Slot 5 — pluck melody
+      // Slot 4 \u2014 Bridge: pluck melody (harmonic peak, most notes)
       {
         instrument: "pluck",
-        loopLengthMs: 4000,
+        loopLengthMs: 3333,
         stepGridSteps: 16,
         stepResolution: "16",
+        loopLengthBars: 1,
         loopEvents: [],
         stepGridEvents: [
           { step: 0,  degree: 0, instrument: "pluck" },
           { step: 4,  degree: 2, instrument: "pluck" },
           { step: 8,  degree: 4, instrument: "pluck" },
-          { step: 12, degree: 3, instrument: "pluck" }
+          { step: 10, degree: 5, instrument: "pluck" },
+          { step: 12, degree: 4, instrument: "pluck" },
+          { step: 14, degree: 2, instrument: "pluck" }
         ],
-        settings: { key: "D", mode: "dorian", bpm: 60, quantize: "4" }
+        settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" }
+      },
+      // Slot 5 \u2014 Outro: soft hi-hat fade (rhythm dissolves)
+      {
+        instrument: "hi-hat",
+        loopLengthMs: 3333,
+        stepGridSteps: 16,
+        stepResolution: "16",
+        loopLengthBars: 1,
+        loopEvents: [],
+        stepGridEvents: [
+          { step: 2,  degree: 0, instrument: "hi-hat" },
+          { step: 10, degree: 0, instrument: "hi-hat" }
+        ],
+        settings: { key: "D", mode: "dorian", bpm: 72, quantize: "4" }
       }
     ]
   }
 };
 
-
+// ─────────────────────────────────────────────────────────────
+//  Demo Song configs — Song Mode section bar counts + notes
+//  Keyed to SAMPLE_PACKS names.
+// ─────────────────────────────────────────────────────────────
+const DEMO_SONGS = {
+  "Blues Jam": {
+    sections: [
+      { section: "Intro",  slot: 1, bars: 4,
+        notes: "Root-fifth bass walk. Just the bass — let it breathe.\nTeaches: single-layer entry." },
+      { section: "Verse",  slot: 2, bars: 8,
+        notes: "Shuffle kick enters. Feel the swing — don\u2019t rush.\nTeaches: adding rhythm under melody." },
+      { section: "Chorus", slot: 3, bars: 8,
+        notes: "Call phrase on lead. This is the question.\nTeaches: melodic call-and-response." },
+      { section: "Bridge", slot: 4, bars: 4,
+        notes: "Response phrase answers the call. Higher register.\nTeaches: harmonic conversation between layers." },
+      { section: "Outro",  slot: 5, bars: 4,
+        notes: "Snare backbeat only. Strip it back to close.\nTeaches: arrangement resolution." }
+    ]
+  },
+  "Synthwave Drive": {
+    sections: [
+      { section: "Intro",  slot: 1, bars: 4,
+        notes: "Sparse arp seed: root + fifth only. Space is intentional.\nTeaches: restraint and anticipation." },
+      { section: "Verse",  slot: 2, bars: 8,
+        notes: "Sawtooth bass enters. Feel the pulse lock in.\nTeaches: bass as rhythmic anchor." },
+      { section: "Chorus", slot: 3, bars: 8,
+        notes: "Four-on-the-floor kick drops. Energy peaks here.\nTeaches: kick as energy driver." },
+      { section: "Bridge", slot: 4, bars: 4,
+        notes: "Lead melody stabs over the groove. Contrast moment.\nTeaches: melodic contrast in arrangement." },
+      { section: "Outro",  slot: 5, bars: 4,
+        notes: "Pad resolves. Kick drops out. Energy returns to intro level.\nTeaches: energy arc and resolution." }
+    ]
+  },
+  "Ambient Build": {
+    sections: [
+      { section: "Intro",  slot: 1, bars: 4,
+        notes: "Single root drone. Just one note. Listen to the space.\nTeaches: silence as a musical element." },
+      { section: "Verse",  slot: 2, bars: 8,
+        notes: "Bell tones enter. Sparse, unhurried. Let notes ring.\nTeaches: texture as a layer, not clutter." },
+      { section: "Chorus", slot: 3, bars: 8,
+        notes: "Bass and hi-hat pulse. Rhythm finally arrives.\nTeaches: delayed rhythmic entry for impact." },
+      { section: "Bridge", slot: 4, bars: 8,
+        notes: "Pluck melody at the harmonic peak. Most active moment.\nTeaches: building to a melodic climax." },
+      { section: "Outro",  slot: 5, bars: 4,
+        notes: "Hi-hat fades. Rhythm dissolves. Return to stillness.\nTeaches: graceful arrangement exit." }
+    ]
+  }
+};
 // ─────────────────────────────────────────────────────────────
 //  DOM references
 // ─────────────────────────────────────────────────────────────
@@ -2439,6 +2511,65 @@ document.querySelectorAll(".sample-pack-btn").forEach((btn) => {
   });
 });
 
+
+// ─────────────────────────────────────────────────────────────
+//  Demo Song loader — populates slots + sets Song Mode sections
+// ─────────────────────────────────────────────────────────────
+function loadDemoPack(packName) {
+  const pack = SAMPLE_PACKS[packName];
+  const demo = DEMO_SONGS[packName];
+  if (!pack || !demo) return;
+
+  // 1. Write slots 1-5 to localStorage
+  pack.slots.forEach((loopData, i) => {
+    const slot = i + 1;
+    localStorage.setItem(`pulsetap_loop_slot_${slot}`, JSON.stringify(loopData));
+    const slotBtn = document.querySelector(`.slot-btn[data-slot="${slot}"]`);
+    if (slotBtn) {
+      slotBtn.classList.remove('active', 'queued');
+      slotBtn.classList.add('saved');
+    }
+  });
+
+  // 2. Set Song Mode bar counts in the UI
+  demo.sections.forEach(({ section, bars }) => {
+    const row = [...document.querySelectorAll('.song-section-row')]
+      .find(r => r.querySelector('.song-section-btn')?.dataset.section === section);
+    if (!row) return;
+    const sel = row.querySelector('.song-bars-select');
+    if (sel) sel.value = String(bars);
+  });
+
+  // 3. Save section notes to localStorage
+  demo.sections.forEach(({ section, notes }) => {
+    if (notes) {
+      localStorage.setItem(`pulsetap_section_notes_${section}`, notes);
+    }
+  });
+
+  // 4. Apply pack settings to session (Solo-safe)
+  sessionSettings = { ...sessionSettings, ...pack.settings };
+
+  // 5. Highlight the active pack button
+  document.querySelectorAll('.sample-pack-btn').forEach(b => b.classList.remove('pack-active'));
+  document.querySelector(`.sample-pack-btn[data-pack="${packName}"]`)?.classList.add('pack-active');
+
+  // 6. Update editing banner and status
+  updateEditingBanner(null);
+  setLoopStatus(`✓ ${pack.label} loaded · tap a slot to play · Start Song to run arrangement`, 'ready');
+
+  // 7. Sync Song Context
+  updateSongContext({ key: pack.settings.key, mode: pack.settings.mode, bpm: pack.settings.bpm });
+}
+
+// Demo Song button handler
+document.querySelectorAll('.demo-song-btn').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const packName = btn.dataset.pack;
+    loadDemoPack(packName);
+  });
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  MIDI EXPORT  — pure inline encoder, no external library

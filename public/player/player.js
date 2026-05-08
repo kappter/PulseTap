@@ -845,7 +845,9 @@ function startSongMode() {
   if (!isLoopPlaying) {
     const ok = queueSlotForNextBar(first.slot);
     if (!ok) { songModeActive = false; return; }
-    const startTime = getNextLocalBarStartTime();
+    const startTime = transportRunning
+  ? getNextGlobalBarStartTime()
+  : getNextLocalBarStartTime();
     startPlayerLoopCountdown(startTime);
     startLoopPlaybackSynced(startTime);
   } else {
@@ -1534,10 +1536,11 @@ socket.on("metronome:stop", () => {
 
 /** Remote tap from another player */
 socket.on("tap:event", (event) => {
-  // Play the sound locally using the event's instrument and degree
+  if (event.source === "loop") return;
+
   const vel = event.velocity || 1;
-playSound(event.padNumber, event.instrument || "sine", vel);
-  // Flash the corresponding pad cyan (remote colour)
+  playSound(event.padNumber, event.instrument || "sine", vel);
+
   const pad = padGrid.querySelector(`.pad[data-degree="${event.padNumber}"]`);
   if (pad) flashPad(pad, "active-remote");
 });

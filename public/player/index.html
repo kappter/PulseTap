@@ -66,6 +66,7 @@
         <div class="pad-status-row">
           <span id="connStatus" class="conn-dot disconnected"></span>
           <span id="connLabel" class="conn-label">Connecting…</span>
+          <button id="openVizBtn" class="icon-btn viz-launch-btn" title="Open Visualizer">⬡ Viz</button>
         </div>
       </div>
 
@@ -480,5 +481,19 @@
   <!-- Socket.IO client (served by the server automatically) -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="player.js"></script>
+  <script>
+  // Open Visualizer button – passes current room code as URL param
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('openVizBtn');
+    btn.addEventListener('click', function() {
+      var roomInput = document.getElementById('roomCode') || document.getElementById('roomCodeIn');
+      var roomLabel = document.getElementById('padRoomLabel');
+      var code = (roomInput && roomInput.value) || (roomLabel && roomLabel.textContent) || '';
+      code = code.trim().toUpperCase();
+      var url = '/visualizer/' + (code ? '?room=' + encodeURIComponent(code) : '');
+      window.open(url, '_blank');
+    });
+  });
+  </script>
 </body>
 </html>

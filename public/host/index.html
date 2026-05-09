@@ -65,6 +65,7 @@
         <span id="hostConnDot" class="conn-dot disconnected"></span>
         <span id="hostConnLabel" class="conn-label">Connecting…</span>
       </div>
+      <button id="launchVizBtn" class="icon-btn viz-launch-btn" title="Launch Visualizer">⬡ Visualizer</button>
     </nav>
 
     <!-- Global transport + settings bar -->
@@ -184,5 +185,16 @@
  <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="host.js"></script>
+  <script>
+  // Launch Visualizer button – passes current room code as URL param
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('launchVizBtn');
+    btn.addEventListener('click', function() {
+      var roomCode = (document.getElementById('roomDisplay') || {}).textContent || '';
+      var url = '/visualizer/' + (roomCode ? '?room=' + encodeURIComponent(roomCode.trim()) : '');
+      window.open(url, '_blank');
+    });
+  });
+  </script>
 </body>
 </html>

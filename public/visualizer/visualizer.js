@@ -107,6 +107,8 @@ socket.on("room:settings", (s) => {
     vizTimeSig.textContent = `${s.beatsPerBar}/${bu}`;
     buildBeatDots(metroBeatsPerBar);
   }
+  // Also sync into Rehearsal Mode
+  if (typeof applyRoomSettingsToRehearsal === "function") applyRoomSettingsToRehearsal(s);
 });
 
 // ── Metronome ─────────────────────────────────────────────────
@@ -144,6 +146,8 @@ socket.on("section:play", ({ section }) => {
 // ── Visualizer state (new relay event from server) ────────────
 socket.on("viz:state", (state) => {
   applyVizState(state);
+  // Also sync into Rehearsal Mode
+  if (typeof applyVizStateToRehearsal === "function") applyVizStateToRehearsal(state);
 });
 
 // ── Tap events (for energy density) ──────────────────────────
@@ -398,3 +402,189 @@ function flashCanvas() {
 // ─────────────────────────────────────────────────────────────
 buildBeatDots(4);
 renderEnergy(0);
+
+// ── URL room-code pre-fill ────────────────────────────────────
+(function prefillRoomFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const roomParam = params.get("room") || params.get("ROOM");
+  if (roomParam) {
+    const code = roomParam.trim().toUpperCase();
+    vizRoomInput.value = code;
+    // Also pre-fill rehearsal room input if present
+    const rhInput = document.getElementById("rhRoomCode");
+    if (rhInput) rhInput.value = code;
+  }
+})();
+
+// ── Host/Player viz-launch button wiring (host.js / player.js
+//    set window.__pulsetapRoomCode before opening the visualizer)
+// ─────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────
+//  Rehearsal Mode
+// ─────────────────────────────────────────────────────────────
+const rehearsalPanel    = document.getElementById("rehearsalPanel");
+const rehearsalModeBtn  = document.getElementById("rehearsalModeBtn");
+const rhCloseBtn        = document.getElementById("rhCloseBtn");
+const rhSectionList     = document.getElementById("rhSectionList");
+const rhLoadBtn         = document.getElementById("rhLoadBtn");
+const rhLoadStatus      = document.getElementById("rhLoadStatus");
+const rhRoomCodeInput   = document.getElementById("rhRoomCode");
+const rhArrangementNotes = document.getElementById("rhArrangementNotes");
+
+// Rehearsal state – populated from live room or manual entry
+let rehearsalData = {
+  title:   "Untitled Arrangement",
+  bpm:     "—",
+  key:     "—",
+  mode:    "—",
+  timeSig: "—",
+  sections: []  // [{ name, slot, bars, notes }]
+};
+
+// Open / close
+if (rehearsalModeBtn) {
+  rehearsalModeBtn.addEventListener("click", () => {
+    // Hide join overlay, show rehearsal panel
+    joinOverlay.classList.add("hidden");
+    rehearsalPanel.classList.remove("hidden");
+    renderRehearsalSections();
+  });
+}
+if (rhCloseBtn) {
+  rhCloseBtn.addEventListener("click", () => {
+    rehearsalPanel.classList.add("hidden");
+    joinOverlay.classList.remove("hidden");
+  });
+}
+
+// Load arrangement from a live room
+if (rhLoadBtn) {
+  rhLoadBtn.addEventListener("click", () => {
+    const code = (rhRoomCodeInput ? rhRoomCodeInput.value.trim().toUpperCase() : "") ||
+                 vizRoomInput.value.trim().toUpperCase();
+    if (!code) { rhLoadStatus.textContent = "Enter a room code first."; return; }
+    rhLoadStatus.textContent = "Connecting…";
+    // Join as viz observer to pull room:settings
+    currentRoom = code;
+    socket.emit("viz:join", { roomId: code });
+    rhLoadStatus.textContent = "Waiting for room state…";
+    // room:settings will fire and populate rehearsalData via applyRoomSettingsToRehearsal()
+  });
+}
+
+// Sync room:settings into rehearsal meta bar
+function applyRoomSettingsToRehearsal(s) {
+  if (s.bpm)  { rehearsalData.bpm = String(s.bpm); document.getElementById("rhBpm").textContent = s.bpm; }
+  if (s.key)  { rehearsalData.key = s.key;  document.getElementById("rhKey").textContent = s.key; }
+  if (s.mode) { rehearsalData.mode = s.mode; document.getElementById("rhMode").textContent = s.mode; }
+  if (s.beatsPerBar) {
+    const bu = s.beatUnit || 4;
+    rehearsalData.timeSig = `${s.beatsPerBar}/${bu}`;
+    document.getElementById("rhTimeSig").textContent = rehearsalData.timeSig;
+  }
+  rhLoadStatus.textContent = "Room state loaded.";
+}
+
+// Sync viz:state song sections into rehearsal section list
+function applyVizStateToRehearsal(state) {
+  if (!state) return;
+  // Update meta
+  if (state.bpm)  document.getElementById("rhBpm").textContent  = state.bpm;
+  if (state.key)  document.getElementById("rhKey").textContent  = state.key;
+  if (state.mode) document.getElementById("rhMode").textContent = state.mode;
+  if (state.timeSig) document.getElementById("rhTimeSig").textContent = state.timeSig;
+  // Build or update section entry for the current section
+  if (state.section && state.section !== "—") {
+    let entry = rehearsalData.sections.find(s => s.name === state.section);
+    if (!entry) {
+      entry = { name: state.section, slot: state.slot || "—", bars: state.barsLeft || "—", notes: "" };
+      rehearsalData.sections.push(entry);
+    } else {
+      if (state.slot)    entry.slot = state.slot;
+      if (state.barsLeft !== undefined) entry.bars = state.barsLeft;
+    }
+    renderRehearsalSections();
+    // Highlight active section
+    highlightRehearsalSection(state.section);
+  }
+}
+
+// Render section cards
+function renderRehearsalSections() {
+  if (!rhSectionList) return;
+  // Preserve existing notes from inputs before re-render
+  rhSectionList.querySelectorAll(".rh-section-card").forEach(card => {
+    const name = card.dataset.section;
+    const textarea = card.querySelector(".rh-section-notes");
+    if (name && textarea) {
+      const entry = rehearsalData.sections.find(s => s.name === name);
+      if (entry) entry.notes = textarea.value;
+    }
+  });
+  // If no sections yet, show placeholder
+  if (rehearsalData.sections.length === 0) {
+    rhSectionList.innerHTML = '<div class="rh-empty">No sections loaded yet. Load from a room or connect to a live session.</div>';
+    return;
+  }
+  rhSectionList.innerHTML = rehearsalData.sections.map((sec, i) => `
+    <div class="rh-section-card" data-section="${sec.name}" data-index="${i}">
+      <div class="rh-section-head">
+        <span class="rh-section-name">${sec.name}</span>
+        <span class="rh-section-meta">Slot ${sec.slot} · ${sec.bars} bars</span>
+      </div>
+      <textarea class="rh-section-notes" placeholder="Cues, notes, lyrics sketch…" rows="2">${sec.notes || ""}</textarea>
+    </div>
+  `).join("");
+  // Auto-save notes on input
+  rhSectionList.querySelectorAll(".rh-section-notes").forEach(ta => {
+    ta.addEventListener("input", saveRehearsalToLocalStorage);
+  });
+}
+
+// Highlight active section card
+function highlightRehearsalSection(sectionName) {
+  if (!rhSectionList) return;
+  rhSectionList.querySelectorAll(".rh-section-card").forEach(card => {
+    card.classList.toggle("rh-section-active", card.dataset.section === sectionName);
+  });
+}
+
+// Persist rehearsal data to localStorage
+function saveRehearsalToLocalStorage() {
+  // Collect notes from DOM
+  rhSectionList.querySelectorAll(".rh-section-card").forEach(card => {
+    const name = card.dataset.section;
+    const ta = card.querySelector(".rh-section-notes");
+    const entry = rehearsalData.sections.find(s => s.name === name);
+    if (entry && ta) entry.notes = ta.value;
+  });
+  if (rhArrangementNotes) rehearsalData.arrangementNotes = rhArrangementNotes.value;
+  try {
+    localStorage.setItem("pulsetap_rehearsal_data", JSON.stringify(rehearsalData));
+  } catch(e) {}
+}
+
+// Restore rehearsal data from localStorage
+(function loadRehearsalFromLocalStorage() {
+  try {
+    const saved = localStorage.getItem("pulsetap_rehearsal_data");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(rehearsalData, parsed);
+      // Restore meta bar
+      if (rehearsalData.bpm)    document.getElementById("rhBpm").textContent    = rehearsalData.bpm;
+      if (rehearsalData.key)    document.getElementById("rhKey").textContent    = rehearsalData.key;
+      if (rehearsalData.mode)   document.getElementById("rhMode").textContent   = rehearsalData.mode;
+      if (rehearsalData.timeSig) document.getElementById("rhTimeSig").textContent = rehearsalData.timeSig;
+      if (rehearsalData.title)  document.getElementById("rhTitle").textContent  = rehearsalData.title;
+      if (rehearsalData.arrangementNotes && rhArrangementNotes)
+        rhArrangementNotes.value = rehearsalData.arrangementNotes;
+    }
+  } catch(e) {}
+})();
+
+// Wire arrangement notes auto-save
+if (rhArrangementNotes) {
+  rhArrangementNotes.addEventListener("input", saveRehearsalToLocalStorage);
+}

@@ -16,6 +16,7 @@
       <input id="vizRoomCode" class="join-input" type="text"
              placeholder="ROOM CODE" maxlength="8" autocomplete="off" />
       <button id="joinVizBtn" class="join-btn">Connect</button>
+      <button id="rehearsalModeBtn" class="join-btn rehearsal-btn">Rehearsal Mode</button>
       <p id="joinError" class="join-error hidden"></p>
     </div>
   </div>
@@ -85,6 +86,37 @@
     </footer>
 
   </div><!-- /vizCanvas -->
+  <!-- ── Rehearsal Mode panel ──────────────────────────────── -->
+  <div id="rehearsalPanel" class="rehearsal-panel hidden">
+    <header class="rh-header">
+      <div class="rh-logo">PulseTap</div>
+      <span class="rh-title">Rehearsal Mode</span>
+      <button id="rhCloseBtn" class="rh-close-btn" title="Close Rehearsal Mode">✕</button>
+    </header>
+    <!-- Session meta -->
+    <div class="rh-meta-bar">
+      <div class="rh-meta-chip"><span class="rh-chip-label">TITLE</span><span id="rhTitle" class="rh-chip-value">—</span></div>
+      <div class="rh-meta-chip"><span class="rh-chip-label">BPM</span><span id="rhBpm" class="rh-chip-value">—</span></div>
+      <div class="rh-meta-chip"><span class="rh-chip-label">KEY</span><span id="rhKey" class="rh-chip-value">—</span></div>
+      <div class="rh-meta-chip"><span class="rh-chip-label">MODE</span><span id="rhMode" class="rh-chip-value">—</span></div>
+      <div class="rh-meta-chip"><span class="rh-chip-label">TIME SIG</span><span id="rhTimeSig" class="rh-chip-value">—</span></div>
+    </div>
+    <!-- Section list -->
+    <div class="rh-section-list" id="rhSectionList">
+      <!-- populated by JS -->
+    </div>
+    <!-- Load from room / manual entry -->
+    <div class="rh-load-bar">
+      <input id="rhRoomCode" class="rh-room-input" type="text" placeholder="ROOM CODE (optional)" maxlength="8" />
+      <button id="rhLoadBtn" class="rh-load-btn">Load from Room</button>
+      <span id="rhLoadStatus" class="rh-load-status"></span>
+    </div>
+    <!-- Arrangement notes -->
+    <div class="rh-notes-wrap">
+      <label class="rh-notes-label">Arrangement Notes</label>
+      <textarea id="rhArrangementNotes" class="rh-notes-area" placeholder="Overall arrangement notes…" rows="3"></textarea>
+    </div>
+  </div><!-- /rehearsalPanel -->
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="visualizer.js"></script>

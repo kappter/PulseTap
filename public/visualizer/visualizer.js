@@ -398,6 +398,360 @@ function flashCanvas() {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  Playback Mode Engine
+// ─────────────────────────────────────────────────────────────
+const PART_LANES = ["Guitar", "Bass", "Drums", "Keys", "Vocals"];
+
+// Default arrangement format
+const DEFAULT_ARRANGEMENT = {
+  title:    "Untitled",
+  bpm:      120,
+  key:      "C",
+  mode:     "major",
+  timeSig:  "4/4",
+  sections: [
+    { name: "Intro",  bars: 4,  slot: 1, notes: "" },
+    { name: "Verse",  bars: 8,  slot: 2, notes: "" },
+    { name: "Chorus", bars: 8,  slot: 3, notes: "" },
+    { name: "Bridge", bars: 4,  slot: 4, notes: "" },
+    { name: "Outro",  bars: 4,  slot: 5, notes: "" }
+  ],
+  // partLanes: per-part intensity per section [0-100]
+  partLanes: {
+    Guitar: [30, 60, 90, 70, 20],
+    Bass:   [40, 70, 90, 60, 20],
+    Drums:  [20, 50, 100, 80, 10],
+    Keys:   [50, 40, 80, 90, 30],
+    Vocals: [0,  60, 100, 70, 20]
+  },
+  notes: ""
+};
+
+let pbMode         = "live";      // "live" | "playback"
+let pbArrangement  = JSON.parse(JSON.stringify(DEFAULT_ARRANGEMENT));
+let pbPlaying      = false;
+let pbSectionIndex = 0;
+let pbBarCount     = 0;           // bars elapsed in current section
+let pbBpm          = 120;
+let pbTimer        = null;        // setInterval handle
+let pbBeatsPerBar  = 4;
+let pbBeatCount    = 0;           // beats elapsed in current section
+
+// DOM refs (Playback Mode)
+const modeLiveBtn       = document.getElementById("modeLiveBtn");
+const modePlaybackBtn   = document.getElementById("modePlaybackBtn");
+const playbackControls  = document.getElementById("playbackControls");
+const partTimeline      = document.getElementById("partTimeline");
+const timelineCanvas    = document.getElementById("timelineCanvas");
+const timelinePlayhead  = document.getElementById("timelinePlayhead");
+const pbPlayBtn         = document.getElementById("pbPlayBtn");
+const pbRestartBtn      = document.getElementById("pbRestartBtn");
+const pbSlowerBtn       = document.getElementById("pbSlowerBtn");
+const pbFasterBtn       = document.getElementById("pbFasterBtn");
+const pbBpmSlider       = document.getElementById("pbBpmSlider");
+const pbBpmDisplay      = document.getElementById("pbBpmDisplay");
+const pbImportBtn       = document.getElementById("pbImportBtn");
+const pbExportBtn       = document.getElementById("pbExportBtn");
+const ioModal           = document.getElementById("ioModal");
+const ioModalTitle      = document.getElementById("ioModalTitle");
+const ioModalClose      = document.getElementById("ioModalClose");
+const ioModalTextarea   = document.getElementById("ioModalTextarea");
+const ioModalConfirm    = document.getElementById("ioModalConfirm");
+const ioModalCopy       = document.getElementById("ioModalCopy");
+const ioModalStatus     = document.getElementById("ioModalStatus");
+
+// ── Mode switch ───────────────────────────────────────────────
+function switchMode(mode) {
+  pbMode = mode;
+  modeLiveBtn.classList.toggle("mode-btn-active",     mode === "live");
+  modePlaybackBtn.classList.toggle("mode-btn-active", mode === "playback");
+  playbackControls.classList.toggle("hidden",  mode !== "playback");
+  partTimeline.classList.toggle("hidden",      mode !== "playback");
+  if (mode === "playback") {
+    pbBpm = pbArrangement.bpm || 120;
+    pbBpmSlider.value = pbBpm;
+    pbBpmDisplay.textContent = `${pbBpm} BPM`;
+    pbBeatsPerBar = parseInt((pbArrangement.timeSig || "4/4").split("/")[0]) || 4;
+    renderTimeline();
+    pbGoToSection(0);
+    setStatus("Playback Mode", "accent2");
+  } else {
+    pbStop();
+    setStatus(isPlaying ? "Playing" : "Waiting…", isPlaying ? "ready" : "accent2");
+  }
+}
+modeLiveBtn.addEventListener("click",     () => switchMode("live"));
+modePlaybackBtn.addEventListener("click", () => switchMode("playback"));
+
+// ── Playback transport ────────────────────────────────────────
+function pbPlay() {
+  if (pbPlaying) return;
+  pbPlaying = true;
+  pbPlayBtn.textContent = "⏸";
+  pbPlayBtn.title = "Pause";
+  const msPerBeat = (60 / pbBpm) * 1000;
+  pbTimer = setInterval(pbTick, msPerBeat);
+}
+function pbPause() {
+  pbPlaying = false;
+  pbPlayBtn.textContent = "▶";
+  pbPlayBtn.title = "Play";
+  clearInterval(pbTimer);
+  pbTimer = null;
+}
+function pbStop() {
+  pbPause();
+}
+function pbRestart() {
+  pbStop();
+  pbGoToSection(0);
+}
+function pbGoToSection(idx) {
+  const secs = pbArrangement.sections || [];
+  if (idx < 0 || idx >= secs.length) return;
+  pbSectionIndex = idx;
+  pbBarCount     = 0;
+  pbBeatCount    = 0;
+  const sec = secs[idx];
+  updateSection(sec.name, secs[idx + 1] ? secs[idx + 1].name : "End",
+                sec.bars, sec.slot || "—");
+  setEnergyFromSection(sec.name);
+  updatePlayhead();
+  flashCanvas();
+}
+function pbTick() {
+  // Advance one beat
+  pbBeatCount++;
+  const beat = pbBeatCount % pbBeatsPerBar;
+  highlightBeat(beat);
+  // Bar boundary
+  if (pbBeatCount % pbBeatsPerBar === 0) {
+    pbBarCount++;
+    const sec = pbArrangement.sections[pbSectionIndex];
+    const barsLeft = (sec.bars || 4) - pbBarCount;
+    const secs = pbArrangement.sections;
+    const nextSec = secs[pbSectionIndex + 1];
+    updateSection(sec.name, nextSec ? nextSec.name : "End", barsLeft, sec.slot || "—");
+    updatePlayhead();
+    if (pbBarCount >= (sec.bars || 4)) {
+      // Advance section
+      if (pbSectionIndex + 1 < secs.length) {
+        pbGoToSection(pbSectionIndex + 1);
+      } else {
+        // Song complete
+        pbPause();
+        setStatus("Playback complete", "accent2");
+        updateSection("—", "—", 0, "—");
+      }
+    }
+  }
+}
+
+// ── BPM controls ──────────────────────────────────────────────
+function pbSetBpm(bpm) {
+  pbBpm = Math.max(40, Math.min(240, bpm));
+  pbBpmSlider.value   = pbBpm;
+  pbBpmDisplay.textContent = `${pbBpm} BPM`;
+  if (pbPlaying) { pbPause(); pbPlay(); }   // restart interval at new BPM
+}
+pbPlayBtn.addEventListener("click",    () => pbPlaying ? pbPause() : pbPlay());
+pbRestartBtn.addEventListener("click", () => pbRestart());
+pbSlowerBtn.addEventListener("click",  () => pbSetBpm(pbBpm - 5));
+pbFasterBtn.addEventListener("click",  () => pbSetBpm(pbBpm + 5));
+pbBpmSlider.addEventListener("input",  () => pbSetBpm(Number(pbBpmSlider.value)));
+
+// ── Part Timeline renderer ────────────────────────────────────
+const LANE_COLORS = {
+  Guitar: "#00e5ff",
+  Bass:   "#ff6b35",
+  Drums:  "#ff3b6b",
+  Keys:   "#a78bfa",
+  Vocals: "#34d399"
+};
+const LANE_H    = 28;   // px per lane
+const LABEL_W   = 64;   // px for lane label column
+const SECTION_GAP = 2;  // px gap between sections
+
+function renderTimeline() {
+  if (!timelineCanvas) return;
+  const secs    = pbArrangement.sections || [];
+  const totalBars = secs.reduce((s, sec) => s + (sec.bars || 4), 0);
+  const dpr     = window.devicePixelRatio || 1;
+  const cssW    = timelineCanvas.parentElement.clientWidth || 800;
+  const cssH    = PART_LANES.length * LANE_H + 24; // +24 for section labels row
+  timelineCanvas.style.width  = cssW + "px";
+  timelineCanvas.style.height = cssH + "px";
+  timelineCanvas.width  = cssW * dpr;
+  timelineCanvas.height = cssH * dpr;
+  const ctx = timelineCanvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+  const drawW = cssW - LABEL_W;
+  const barW  = drawW / totalBars;
+
+  // Draw section label row (top)
+  let xCursor = LABEL_W;
+  secs.forEach((sec) => {
+    const secW = barW * sec.bars - SECTION_GAP;
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fillRect(xCursor, 0, secW, 20);
+    ctx.fillStyle = "#aaa";
+    ctx.font = "bold 10px system-ui, sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.fillText(sec.name.toUpperCase(), xCursor + 4, 10);
+    xCursor += barW * sec.bars;
+  });
+
+  // Draw lane rows
+  PART_LANES.forEach((lane, laneIdx) => {
+    const y = 24 + laneIdx * LANE_H;
+    // Lane label
+    ctx.fillStyle = "#666";
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textBaseline = "middle";
+    ctx.fillText(lane, 4, y + LANE_H / 2);
+    // Lane background
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    ctx.fillRect(LABEL_W, y, drawW, LANE_H - 2);
+    // Section intensity blocks
+    let xc = LABEL_W;
+    secs.forEach((sec, secIdx) => {
+      const intensity = (pbArrangement.partLanes[lane] || [])[secIdx] ?? 50;
+      const secW = barW * sec.bars - SECTION_GAP;
+      const alpha = 0.15 + (intensity / 100) * 0.65;
+      const color = LANE_COLORS[lane] || "#888";
+      ctx.fillStyle = hexToRgba(color, alpha);
+      ctx.fillRect(xc, y + 2, secW, LANE_H - 4);
+      // Intensity text if block is wide enough
+      if (secW > 28) {
+        ctx.fillStyle = hexToRgba(color, 0.9);
+        ctx.font = "9px system-ui, sans-serif";
+        ctx.fillText(`${intensity}`, xc + 4, y + LANE_H / 2);
+      }
+      xc += barW * sec.bars;
+    });
+  });
+  // Store for playhead
+  timelineCanvas._totalBars = totalBars;
+  timelineCanvas._barW      = barW;
+  timelineCanvas._labelW    = LABEL_W;
+}
+
+function updatePlayhead() {
+  if (!timelineCanvas || !timelinePlayhead) return;
+  const secs = pbArrangement.sections || [];
+  const totalBars = secs.reduce((s, sec) => s + (sec.bars || 4), 0);
+  if (totalBars === 0) return;
+  // Bars elapsed = bars in completed sections + current section bars elapsed
+  let barsElapsed = 0;
+  for (let i = 0; i < pbSectionIndex; i++) barsElapsed += secs[i].bars || 4;
+  barsElapsed += pbBarCount;
+  const cssW  = timelineCanvas.clientWidth || 800;
+  const drawW = cssW - LABEL_W;
+  const barW  = drawW / totalBars;
+  const x     = LABEL_W + barsElapsed * barW;
+  timelinePlayhead.style.left   = x + "px";
+  timelinePlayhead.style.height = timelineCanvas.style.height;
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Re-render timeline on resize
+window.addEventListener("resize", () => {
+  if (pbMode === "playback") { renderTimeline(); updatePlayhead(); }
+});
+
+// ── Import / Export ───────────────────────────────────────────
+function openImportModal() {
+  ioModalTitle.textContent   = "Import Arrangement";
+  ioModalTextarea.value      = "";
+  ioModalTextarea.readOnly   = false;
+  ioModalConfirm.textContent = "Load";
+  ioModalConfirm.classList.remove("hidden");
+  ioModalCopy.classList.add("hidden");
+  ioModalStatus.textContent  = "";
+  ioModal.classList.remove("hidden");
+  ioModalTextarea.focus();
+}
+function openExportModal() {
+  // Collect notes from rehearsal panel if available
+  try {
+    const rhCards = document.querySelectorAll(".rh-section-card");
+    rhCards.forEach(card => {
+      const name = card.dataset.section;
+      const ta   = card.querySelector(".rh-section-notes");
+      const entry = pbArrangement.sections.find(s => s.name === name);
+      if (entry && ta) entry.notes = ta.value;
+    });
+    const rhNotes = document.getElementById("rhArrangementNotes");
+    if (rhNotes) pbArrangement.notes = rhNotes.value;
+  } catch(e) {}
+  ioModalTitle.textContent   = "Export Arrangement";
+  ioModalTextarea.value      = JSON.stringify(pbArrangement, null, 2);
+  ioModalTextarea.readOnly   = true;
+  ioModalConfirm.classList.add("hidden");
+  ioModalCopy.classList.remove("hidden");
+  ioModalStatus.textContent  = "";
+  ioModal.classList.remove("hidden");
+}
+function closeIoModal() {
+  ioModal.classList.add("hidden");
+}
+function loadArrangementFromJson(jsonStr) {
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (!parsed.sections || !Array.isArray(parsed.sections)) throw new Error("Missing sections array");
+    pbArrangement = Object.assign(JSON.parse(JSON.stringify(DEFAULT_ARRANGEMENT)), parsed);
+    // Ensure partLanes has all lanes
+    PART_LANES.forEach(lane => {
+      if (!pbArrangement.partLanes[lane]) {
+        pbArrangement.partLanes[lane] = pbArrangement.sections.map(() => 50);
+      }
+    });
+    pbBpm = pbArrangement.bpm || 120;
+    pbBpmSlider.value = pbBpm;
+    pbBpmDisplay.textContent = `${pbBpm} BPM`;
+    pbBeatsPerBar = parseInt((pbArrangement.timeSig || "4/4").split("/")[0]) || 4;
+    renderTimeline();
+    pbGoToSection(0);
+    // Sync meta bar
+    vizBpm.textContent = pbBpm;
+    vizKey.textContent = `${pbArrangement.key || "—"} ${pbArrangement.mode || ""}`.trim();
+    vizTimeSig.textContent = pbArrangement.timeSig || "4/4";
+    buildBeatDots(pbBeatsPerBar);
+    ioModalStatus.textContent = "Loaded!";
+    setTimeout(closeIoModal, 800);
+    return true;
+  } catch(e) {
+    ioModalStatus.textContent = "Error: " + e.message;
+    return false;
+  }
+}
+
+pbImportBtn.addEventListener("click", openImportModal);
+pbExportBtn.addEventListener("click", openExportModal);
+ioModalClose.addEventListener("click", closeIoModal);
+ioModalConfirm.addEventListener("click", () => {
+  loadArrangementFromJson(ioModalTextarea.value.trim());
+});
+ioModalCopy.addEventListener("click", () => {
+  navigator.clipboard.writeText(ioModalTextarea.value).then(() => {
+    ioModalStatus.textContent = "Copied!";
+  }).catch(() => {
+    ioModalStatus.textContent = "Copy failed — select all and copy manually.";
+  });
+});
+// Close modal on backdrop click
+ioModal.addEventListener("click", (e) => {
+  if (e.target === ioModal) closeIoModal();
+});
+
+// ─────────────────────────────────────────────────────────────
 //  Init
 // ─────────────────────────────────────────────────────────────
 buildBeatDots(4);

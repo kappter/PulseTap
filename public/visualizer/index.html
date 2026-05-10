@@ -23,7 +23,27 @@
 
   <!-- ── Main visualizer canvas ────────────────────────────── -->
   <div id="vizCanvas" class="viz-canvas hidden">
-
+    <!-- ── Mode switcher ────────────────────────────────────────────── -->
+    <div id="modeSwitcher" class="mode-switcher">
+      <button id="modeLiveBtn"     class="mode-btn mode-btn-active">⬡ Live</button>
+      <button id="modePlaybackBtn" class="mode-btn">▶ Playback</button>
+    </div>
+    <!-- ── Playback Mode controls (hidden in Live Mode) ────────────── -->
+    <div id="playbackControls" class="playback-controls hidden">
+      <button id="pbRestartBtn" class="pb-btn" title="Restart">⏮</button>
+      <button id="pbPlayBtn"    class="pb-btn pb-play" title="Play/Pause">▶</button>
+      <button id="pbSlowerBtn"  class="pb-btn" title="Slower">−</button>
+      <span   id="pbBpmDisplay" class="pb-bpm-display">120 BPM</span>
+      <button id="pbFasterBtn"  class="pb-btn" title="Faster">+</button>
+      <input  id="pbBpmSlider"  class="pb-bpm-slider" type="range" min="40" max="240" value="120" />
+      <button id="pbImportBtn"  class="pb-btn pb-io-btn" title="Import Arrangement">⬆ Import</button>
+      <button id="pbExportBtn"  class="pb-btn pb-io-btn" title="Export Arrangement">⬇ Export</button>
+    </div>
+    <!-- ── Part Timeline Strip ────────────────────────────────────────────── -->
+    <div id="partTimeline" class="part-timeline hidden">
+      <canvas id="timelineCanvas" class="timeline-canvas"></canvas>
+      <div    id="timelinePlayhead" class="timeline-playhead"></div>
+    </div>
     <!-- Beat pulse ring -->
     <div id="beatRing" class="beat-ring"></div>
 
@@ -118,6 +138,22 @@
     </div>
   </div><!-- /rehearsalPanel -->
 
+  <!-- ── Import/Export Arrangement Modal ──────────────────── -->
+  <div id="ioModal" class="io-modal hidden">
+    <div class="io-modal-card">
+      <div class="io-modal-header">
+        <span id="ioModalTitle" class="io-modal-title">Import Arrangement</span>
+        <button id="ioModalClose" class="io-modal-close">✕</button>
+      </div>
+      <textarea id="ioModalTextarea" class="io-modal-textarea"
+                placeholder='Paste arrangement JSON here…' rows="14"></textarea>
+      <div class="io-modal-actions">
+        <button id="ioModalConfirm" class="io-modal-confirm">Load</button>
+        <button id="ioModalCopy"    class="io-modal-copy hidden">Copy to Clipboard</button>
+        <span   id="ioModalStatus"  class="io-modal-status"></span>
+      </div>
+    </div>
+  </div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="visualizer.js"></script>
 </body>

@@ -174,6 +174,46 @@ card.dataset.player = data.playerId;
   }
 });
 
+// ── Host: receive loop passed from player ─────────────────
+socket.on("host:passed-loop", (data) => {
+  if (!loopInboxList) return;
+  const {
+    playerName, role, slot, loopLengthMs,
+    loopEvents, stepGridEvents
+  } = data;
+  const totalEvents =
+    (loopEvents?.length || 0) + (stepGridEvents?.length || 0);
+  const slotLabel = slot ? `Slot ${slot}` : 'Unsaved';
+  const lenSec    = loopLengthMs ? (loopLengthMs / 1000).toFixed(2) + 's' : '—';
+
+  // Remove any existing passed card for this player
+  const existingPassed = loopInboxList.querySelector(
+    `[data-player="${data.playerId}"][data-passed="1"]`
+  );
+  if (existingPassed) existingPassed.remove();
+
+  const card = document.createElement('div');
+  card.className = 'loop-card loop-card--passed';
+  card.dataset.player = data.playerId;
+  card.dataset.passed = '1';
+  card.innerHTML = `
+    <div class="lc-header">
+      <strong>${escHtml(playerName)}</strong>
+      <span class="lc-role">${escHtml(role)}</span>
+      <span class="lc-badge lc-badge--available">Available</span>
+    </div>
+    <div class="lc-meta">
+      <span>${slotLabel}</span>
+      <span>${totalEvents} events</span>
+      <span>${lenSec}</span>
+    </div>
+  `;
+  loopInboxList.prepend(card);
+  if (loopInboxList.children.length > 20) {
+    loopInboxList.removeChild(loopInboxList.lastChild);
+  }
+});
+
 /** A new player joined */
 socket.on("player:joined", (p) => {
   ensureStrip(p);

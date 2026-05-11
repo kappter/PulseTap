@@ -569,6 +569,41 @@ shareLoopBtn?.addEventListener("click", async () => {
 importLoopBtn?.addEventListener("click", importLoopFromClipboard);
 exportMidiBtn?.addEventListener("pointerdown", (e) => { e.preventDefault(); exportMidi(); });
 
+// ── Pass to Host ──────────────────────────────────────────────────────────────────
+function emitPassToHost() {
+  if (!socket.connected) {
+    setLoopStatus("Not connected — cannot pass to host."); return;
+  }
+  const roomId = roomCodeIn.value.trim().toUpperCase();
+  if (!roomId) {
+    setLoopStatus("Join a room before passing to host."); return;
+  }
+  const data = getCurrentLoopData();
+  const totalEvents = (data.loopEvents?.length || 0) + (data.stepGridEvents?.length || 0);
+  if (!totalEvents) {
+    setLoopStatus("Nothing to pass — loop is empty."); return;
+  }
+  socket.emit("player:pass-to-host", {
+    roomId,
+    playerId,
+    playerName: playerNameIn.value.trim() || "Player",
+    role: selectedRole,
+    slot: currentLoopSlot,
+    loopLengthMs: data.loopLengthMs,
+    loopEvents: data.loopEvents,
+    stepGridEvents: data.stepGridEvents,
+    stepGridSteps: data.stepGridSteps,
+    instrument: data.instrument,
+    settings: data.settings
+  });
+  setLoopStatus("Passed to Host · available for arrangement.");
+}
+
+document.getElementById("passToHostBtn")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  emitPassToHost();
+});
+
 const slotButtons = document.querySelectorAll(".slot-btn");
 
 slotButtons.forEach((btn) => {

@@ -23,10 +23,6 @@
 
   <!-- ── Main visualizer canvas ────────────────────────────── -->
   <div id="vizCanvas" class="viz-canvas hidden">
-    <!-- ── Mode switcher ────────────────────────────────────────────── -->
-    <div id="modeSwitcher" class="mode-switcher">
-      <button id="modeLiveBtn"     class="mode-btn mode-btn-active">⬡ Live</button>
-      <button id="modePlaybackBtn" class="mode-btn">▶ Playback</button>
     </div>
     <!-- ── Playback Mode controls (hidden in Live Mode) ────────────── -->
     <div id="playbackControls" class="playback-controls hidden">
@@ -58,6 +54,11 @@
       <span class="meta-item" id="vizTimeSig">—/4</span>
       <span class="meta-sep meta-right-push"></span>
       <span class="meta-item meta-status" id="vizStatus">Waiting…</span>
+      <span class="meta-sep">·</span>
+      <div id="modeSwitcher" class="mode-switcher mode-switcher--inline">
+        <button id="modeLiveBtn"     class="mode-btn mode-btn-active">⬡ Live</button>
+        <button id="modePlaybackBtn" class="mode-btn">▶ Playback</button>
+      </div>
     </header>
 
     <!-- Centre stage -->

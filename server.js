@@ -233,6 +233,22 @@ io.on("connection", (socket) => {
   });
 
   // ── PLAYER: relay song context to visualizer ──────────
+  // player.js emits "player:pass-to-host" when user taps Pass to Host.
+  socket.on("player:pass-to-host", (payload) => {
+    const { roomId } = payload || {};
+    if (!roomId) return;
+    const room = rooms.get(roomId);
+    const player = room?.players?.find(p => p.socketId === socket.id);
+    const enriched = {
+      ...payload,
+      playerName: player?.playerName || payload.playerName || "Player",
+      role:       player?.role       || payload.role       || "—",
+      playerId:   player?.playerId   || socket.id
+    };
+    // Relay to host channel only (not to all players)
+    io.to(`${roomId}:host`).emit("host:passed-loop", enriched);
+  });
+
   // player.js emits "player:viz-state" on every updateSongContext call.
   socket.on("player:viz-state", (payload) => {
     const { roomId } = payload;
@@ -316,24 +332,6 @@ socket.on("player:loop-state", (payload) => {
     ts: Date.now()
   });
 });
-
-  // ── PLAYER: pass loop to host ──────────────────────────────
-  socket.on("player:pass-to-host", (payload) => {
-    const { roomId } = payload;
-    if (!roomId) return;
-    const room = rooms.get(roomId);
-    if (!room) return;
-    const player = room.players.get(socket.id);
-    if (player) {
-      payload.playerName = player.playerName;
-      payload.role       = player.role;
-      payload.playerId   = player.playerId;
-    }
-    io.to(`${roomId}:host`).emit("host:passed-loop", {
-      ...payload,
-      ts: Date.now()
-    });
-  });
 
   // ── HOST: update session settings ─────────────────────────
  socket.on("host:settings", ({ roomId, bpm, key, mode, quantize, beatsPerBar, beatUnit }) => {

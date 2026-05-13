@@ -86,13 +86,14 @@ html, body {
 .viz-canvas {
   position: fixed; inset: 0;
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  grid-template-areas: "header" "pbbar" "stage" "footer";
+  grid-template-rows: auto auto auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "pbbar"
+    "timeline"
+    "stage"
+    "footer";
   overflow: hidden;
-}
-.playback-controls:not(.hidden) {
-  grid-area: pbbar;
-  order: unset;
 }
 
 /* ── Beat ring (background pulse) ────────────────────────── */
@@ -126,6 +127,9 @@ html, body {
 /* ── Meta bar (top) ───────────────────────────────────────── */
 .viz-meta {
   grid-area: header;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   display: flex; align-items: center; gap: 10px;
   padding: 18px 32px 14px;
   border-bottom: 1px solid var(--border);
@@ -559,20 +563,17 @@ html, body {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Playback Mode — Mode Switcher
+   Mode Switcher — inline in header, no absolute positioning
 ───────────────────────────────────────────────────────────── */
 .mode-switcher {
   display: flex;
   gap: 0.25rem;
-  background: rgba(0,0,0,0.35);
+  margin-left: auto;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 0.2rem;
-  flex-shrink: 0;
-}
-/* When embedded inline in the meta bar */
-.mode-switcher--inline {
-  margin-left: auto;
 }
 .mode-btn {
   background: transparent;
@@ -594,22 +595,18 @@ html, body {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Playback Mode — Transport Controls Bar
+   Playback Mode — Transport Controls Bar (grid row, no absolute)
 ───────────────────────────────────────────────────────────── */
 .playback-controls {
-  grid-area: header;
+  grid-area: pbbar;
   display: flex;
   align-items: center;
   gap: 0.4rem;
   background: rgba(8,10,13,0.92);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   padding: 0.4rem 1rem;
   flex-wrap: wrap;
-  justify-content: center;
-  max-width: 100%;
-  /* Override grid-area so it sits in a new row below the meta header */
-  grid-area: unset;
-  order: 1;
+  justify-content: flex-start;
 }
 .playback-controls.hidden { display: none; }
 .pb-btn {
@@ -649,15 +646,13 @@ html, body {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Part Timeline Strip
+   Part Timeline Strip (grid row, no absolute)
 ───────────────────────────────────────────────────────────── */
 .part-timeline {
-  position: absolute;
-  bottom: 80px;
-  left: 0;
-  right: 0;
+  grid-area: timeline;
   padding: 0 0.5rem;
   z-index: 15;
+  position: relative;
 }
 .part-timeline.hidden { display: none; }
 .timeline-canvas {
@@ -762,8 +757,7 @@ html, body {
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .mode-switcher { font-size: 0.72rem; }
+  .mode-switcher { margin-left: auto; }
   .playback-controls { gap: 0.25rem; padding: 0.3rem 0.5rem; }
   .pb-bpm-slider { width: 60px; }
-  .part-timeline { bottom: 70px; }
 }

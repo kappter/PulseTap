@@ -577,22 +577,26 @@ passToHostBtn?.addEventListener("pointerdown", (e) => {
   const roomId = roomCodeIn?.value?.trim()?.toUpperCase() || "";
   if (!roomId) { setLoopStatus("Join a room first"); return; }
   const data = getCurrentLoopData();
-  if (!data || (data.events.length === 0 && data.stepGridEvents.length === 0)) {
-    setLoopStatus("Nothing to pass — record or load a loop first");
-    return;
-  }
-  socket.emit("player:pass-to-host", {
-    roomId,
-    playerName: playerNameIn?.value?.trim() || "Player",
-    role:        roleSelect?.value || "—",
-    slot:        currentLoopSlot,
-    loopLengthMs:  data.loopLengthMs,
-    loopEvents:    data.events,
-    stepGridEvents: data.stepGridEvents,
-    stepGridSteps:  data.stepGridSteps,
-    instrument:    instrumentSelect?.value || "—",
-    settings:      sessionSettings
-  });
+const totalEvents = (data.loopEvents?.length || 0) + (data.stepGridEvents?.length || 0);
+
+if (!totalEvents) {
+  setLoopStatus("Nothing to pass — record or load a loop first");
+  return;
+}
+
+socket.emit("player:pass-to-host", {
+  roomId,
+  playerId,
+  playerName: playerNameIn?.value?.trim() || "Player",
+  role: selectedRole,
+  slot: currentLoopSlot,
+  loopLengthMs: data.loopLengthMs,
+  loopEvents: data.loopEvents,
+  stepGridEvents: data.stepGridEvents,
+  stepGridSteps: data.stepGridSteps,
+  instrument: instrumentSel?.value || "—",
+  settings: data.settings
+});
   setLoopStatus("Passed to Host · available for arrangement.");
 });
 

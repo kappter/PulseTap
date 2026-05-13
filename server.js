@@ -238,7 +238,7 @@ io.on("connection", (socket) => {
     const { roomId } = payload || {};
     if (!roomId) return;
     const room = rooms.get(roomId);
-    const player = room?.players?.find(p => p.socketId === socket.id);
+    const player = room?.players?.get(socket.id);
     const enriched = {
       ...payload,
       playerName: player?.playerName || payload.playerName || "Player",

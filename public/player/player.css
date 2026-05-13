@@ -1207,3 +1207,13 @@ body.solo-active .performance-module .pad {
     display: none;
   }
 }
+
+/* Pass to Host button */
+.loop-btn--pass {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.4);
+  color: #00e5ff;
+}
+.loop-btn--pass:hover, .loop-btn--pass:active {
+  background: rgba(0, 229, 255, 0.22);
+}

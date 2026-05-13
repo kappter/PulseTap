@@ -174,44 +174,69 @@ card.dataset.player = data.playerId;
   }
 });
 
-// ── Host: receive loop passed from player ─────────────────
+// ── Arrangement Inbox: receive passed loops from players ─────
 socket.on("host:passed-loop", (data) => {
   if (!loopInboxList) return;
   const {
-    playerName, role, slot, loopLengthMs,
-    loopEvents, stepGridEvents
+    playerId, playerName, role, slot,
+    loopLengthMs, loopEvents, stepGridEvents, instrument
   } = data;
-  const totalEvents =
-    (loopEvents?.length || 0) + (stepGridEvents?.length || 0);
-  const slotLabel = slot ? `Slot ${slot}` : 'Unsaved';
-  const lenSec    = loopLengthMs ? (loopLengthMs / 1000).toFixed(2) + 's' : '—';
-
-  // Remove any existing passed card for this player
-  const existingPassed = loopInboxList.querySelector(
-    `[data-player="${data.playerId}"][data-passed="1"]`
-  );
-  if (existingPassed) existingPassed.remove();
-
-  const card = document.createElement('div');
-  card.className = 'loop-card loop-card--passed';
-  card.dataset.player = data.playerId;
-  card.dataset.passed = '1';
+  const totalEvents = (loopEvents?.length || 0) + (stepGridEvents?.length || 0);
+  const lenSec = loopLengthMs ? (loopLengthMs / 1000).toFixed(2) + "s" : "—";
+  const cardId = `passed_${playerId}`;
+  let card = document.getElementById(cardId);
+  if (!card) {
+    card = document.createElement("div");
+    card.id = cardId;
+    card.className = "loop-card loop-card--passed";
+    card.draggable = true;
+    card.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", cardId);
+      e.dataTransfer.setData("application/json", JSON.stringify({
+        playerId, playerName, role, slot,
+        loopLengthMs, totalEvents, instrument
+      }));
+      card.classList.add("loop-card--dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("loop-card--dragging"));
+    loopInboxList.prepend(card);
+    if (loopInboxList.children.length > 20) loopInboxList.removeChild(loopInboxList.lastChild);
+  }
+  // Store full data on card for assign button
+  card.dataset.loopJson = JSON.stringify(data);
   card.innerHTML = `
-    <div class="lc-header">
-      <strong>${escHtml(playerName)}</strong>
+    <div class="lc-top">
+      <strong class="lc-name">${escHtml(playerName)}</strong>
       <span class="lc-role">${escHtml(role)}</span>
       <span class="lc-badge lc-badge--available">Available</span>
     </div>
     <div class="lc-meta">
-      <span>${slotLabel}</span>
-      <span>${totalEvents} events</span>
-      <span>${lenSec}</span>
+      Slot ${slot ?? "—"} · ${totalEvents} events · ${lenSec}
+      ${instrument ? `· ${escHtml(instrument)}` : ""}
+    </div>
+    <div class="lc-assign-row">
+      <span class="lc-assign-label">Assign to:</span>
+      ${["Intro","Verse","Chorus","Bridge","Outro"].map(s =>
+        `<button class="lc-assign-btn" data-section="${s}">${s}</button>`
+      ).join("")}
     </div>
   `;
-  loopInboxList.prepend(card);
-  if (loopInboxList.children.length > 20) {
-    loopInboxList.removeChild(loopInboxList.lastChild);
-  }
+  // Wire assign buttons
+  card.querySelectorAll(".lc-assign-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const section = btn.dataset.section;
+      const loopData = JSON.parse(card.dataset.loopJson || "{}");
+      sbAssignLoopToSection(section, loopData);
+      // Visual feedback on card
+      card.querySelectorAll(".lc-assign-btn").forEach(b => b.classList.remove("lc-assign-btn--active"));
+      btn.classList.add("lc-assign-btn--active");
+      log(`${playerName} · Slot ${slot} → ${section}`, "system");
+    });
+  });
+  // Update inbox count badge
+  const countEl = document.getElementById("inboxCount");
+  if (countEl) countEl.textContent = loopInboxList.children.length;
+  log(`${playerName} passed loop (Slot ${slot}, ${totalEvents} events)`, "remote");
 });
 
 /** A new player joined */
@@ -888,6 +913,33 @@ function sbRenderCards() {
     card.appendChild(barsEl);
     card.appendChild(notesEl);
     card.appendChild(pillEl);
+    // Drop zone for dragged inbox cards
+    card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("sb-card--drop-hover"); });
+    card.addEventListener("dragleave", () => card.classList.remove("sb-card--drop-hover"));
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      card.classList.remove("sb-card--drop-hover");
+      try {
+        const loopData = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
+        if (loopData.playerId) {
+          sbAssignLoopToSection(card.dataset.section, loopData);
+          log(`${loopData.playerName} → ${card.dataset.section}`, "system");
+        }
+      } catch {}
+    });
+    // Restore saved assignment if any
+    const saved = songBoardData[card.dataset.section];
+    if (saved) {
+      const assignChip = document.createElement("div");
+      assignChip.className = "sb-card-assigned";
+      const lenSec = saved.loopLengthMs ? (saved.loopLengthMs / 1000).toFixed(2) + "s" : "—";
+      assignChip.innerHTML = `
+        <span class="sb-assigned-name">${escHtml(saved.playerName || "")}</span>
+        <span class="sb-assigned-meta">${escHtml(saved.role || "")} · Slot ${saved.slot ?? "—"} · ${lenSec}</span>
+      `;
+      card.appendChild(assignChip);
+      card.classList.add("sb-card--has-loop");
+    }
     container.appendChild(card);
   });
 }

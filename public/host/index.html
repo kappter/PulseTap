@@ -152,16 +152,42 @@
     <div class="mixer-body">
 
       <div class="host-sidebar">
-        <div class="loop-inbox">
-          <h3>Loop Inbox</h3>
-          <div id="loopInboxList"></div>
+
+        <!-- ── Arrangement Inbox ──────────────────────────── -->
+        <div class="arrangement-inbox">
+          <div class="inbox-header">
+            <h3>Arrangement Inbox</h3>
+            <span class="inbox-badge" id="inboxCount">0</span>
+          </div>
+          <p class="inbox-hint">Loops passed by players. Drag or assign to a section.</p>
+          <div id="loopInboxList" class="inbox-list"></div>
         </div>
+
+        <!-- ── Song Board ─────────────────────────────────── -->
         <div class="song-board">
-          <h3>Song Board</h3>
+          <div class="sb-header-row">
+            <h3>Song Board</h3>
+            <span class="sb-badge" id="sbSongStatus">Idle</span>
+          </div>
+          <!-- Status strip -->
+          <div class="sb-status-strip">
+            <span class="sb-stat"><span class="sb-stat-label">BPM</span><span id="sbBpm">—</span></span>
+            <span class="sb-stat"><span class="sb-stat-label">KEY</span><span id="sbKey">—</span></span>
+            <span class="sb-stat"><span class="sb-stat-label">MODE</span><span id="sbMode">—</span></span>
+            <span class="sb-stat"><span class="sb-stat-label">BARS</span><span id="sbBarsLeft">—</span></span>
+          </div>
+          <!-- Transport controls -->
+          <div class="sb-transport">
+            <button id="sbStartSongBtn" class="sb-btn sb-btn--start">▶ Start Song</button>
+            <button id="sbStopSongBtn"  class="sb-btn sb-btn--stop"  disabled>■ Stop</button>
+            <button id="sbNextSectionBtn" class="sb-btn sb-btn--next" disabled>⏭ Next</button>
+          </div>
+          <!-- Section cards -->
           <div id="songBoardSections">
-            <!-- Sections will be injected by host.js -->
+            <!-- Injected by host.js -->
           </div>
         </div>
+
       </div>
       <div id="channelStrips" class="channel-strips">
         <!-- Injected by host.js -->

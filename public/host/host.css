@@ -993,30 +993,115 @@
 }
 
 
-/* ── Passed-to-host loop card ──────────────────────────────── */
-.loop-card--passed {
-  border-left: 3px solid #00e5ff;
-  background: rgba(0,229,255,0.06);
+/* ═══════════════════════════════════════════════════════════════
+   Arrangement Inbox
+═══════════════════════════════════════════════════════════════ */
+.arrangement-inbox {
+  margin-bottom: 1.2rem;
 }
-.lc-header {
+.inbox-header {
   display: flex; align-items: center; gap: 0.5rem;
-  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
 }
-.lc-role {
-  font-size: 0.72rem; color: #888;
-  text-transform: uppercase; letter-spacing: 0.06em;
+.inbox-header h3 { margin: 0; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.inbox-badge {
+  background: var(--accent, #00e5ff);
+  color: #000;
+  font-size: 0.65rem; font-weight: 800;
+  padding: 1px 6px; border-radius: 999px;
 }
-.lc-badge {
-  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase; padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+.inbox-hint {
+  font-size: 0.68rem; color: rgba(255,255,255,0.35);
+  margin-bottom: 0.5rem; line-height: 1.4;
 }
-.lc-badge--available {
-  background: rgba(0,229,255,0.18);
-  color: #00e5ff;
-  border: 1px solid rgba(0,229,255,0.35);
+.inbox-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+/* Passed loop cards */
+.loop-card--passed {
+  background: rgba(0,229,255,0.05);
+  border: 1px solid rgba(0,229,255,0.25);
+  border-left: 3px solid #00e5ff;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  cursor: grab;
+  transition: background 0.15s, opacity 0.15s;
 }
-.lc-meta {
-  display: flex; gap: 0.75rem; margin-top: 0.25rem;
-  font-size: 0.72rem; color: #888;
+.loop-card--passed:hover { background: rgba(0,229,255,0.1); }
+.loop-card--dragging { opacity: 0.5; }
+.lc-top {
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-bottom: 0.2rem;
 }
+.lc-name { font-size: 0.78rem; font-weight: 700; }
+.lc-role { font-size: 0.68rem; color: rgba(255,255,255,0.5); }
+.lc-badge { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em;
+  padding: 1px 6px; border-radius: 999px; margin-left: auto; }
+.lc-badge--available { background: rgba(52,211,153,0.2); color: #34d399; border: 1px solid #34d399; }
+.lc-meta { font-size: 0.68rem; color: rgba(255,255,255,0.45); margin-bottom: 0.35rem; }
+.lc-assign-row { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.lc-assign-label { font-size: 0.6rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.08em; }
+.lc-assign-btn {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 7px; border-radius: 5px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7); cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.lc-assign-btn:hover { background: rgba(0,229,255,0.15); color: #00e5ff; border-color: #00e5ff; }
+.lc-assign-btn--active { background: rgba(0,229,255,0.2); color: #00e5ff; border-color: #00e5ff; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Song Board — Phase 1 upgrade
+═══════════════════════════════════════════════════════════════ */
+.sb-header-row {
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;
+}
+.sb-header-row h3 { margin: 0; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.sb-status-strip {
+  display: flex; gap: 0.6rem; flex-wrap: wrap;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px; margin-bottom: 0.5rem;
+}
+.sb-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.sb-stat-label { font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; }
+.sb-stat span:last-child { font-size: 0.75rem; font-weight: 700; color: #fff; }
+.sb-transport { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+.sb-btn {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 5px 10px; border-radius: 6px; border: none; cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+.sb-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.sb-btn--start { background: #34d399; color: #000; }
+.sb-btn--stop  { background: #f87171; color: #000; }
+.sb-btn--next  { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* Section cards */
+.sb-card {
+  border-radius: 8px; padding: 0.5rem 0.6rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
+}
+.sb-card--drop-hover { border-color: #00e5ff; background: rgba(0,229,255,0.08); }
+.sb-card--active  { background: rgba(255,194,71,0.1); border-color: rgba(255,194,71,0.5); }
+.sb-card--next    { background: rgba(103,232,249,0.07); border-color: rgba(103,232,249,0.35); }
+.sb-card--has-loop { border-left: 3px solid #34d399; }
+.sb-card-slot  { font-size: 0.6rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; }
+.sb-card-name  { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.sb-card-bars  { font-size: 0.68rem; color: rgba(255,255,255,0.45); }
+.sb-card-notes { font-size: 0.65rem; color: rgba(255,255,255,0.3); font-style: italic; min-height: 0.9rem; }
+.sb-card-pill  { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em;
+  position: absolute; top: 0.4rem; right: 0.5rem; padding: 1px 6px; border-radius: 999px; }
+.sb-pill--active { background: rgba(255,194,71,0.2); color: #ffc247; border: 1px solid #ffc247; }
+.sb-pill--next   { background: rgba(103,232,249,0.15); color: #67e8f9; border: 1px solid #67e8f9; }
+.sb-card-assigned {
+  margin-top: 0.3rem; padding: 0.25rem 0.4rem;
+  background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 5px;
+}
+.sb-assigned-name { font-size: 0.7rem; font-weight: 700; color: #34d399; }
+.sb-assigned-meta { font-size: 0.62rem; color: rgba(255,255,255,0.4); margin-left: 0.4rem; }

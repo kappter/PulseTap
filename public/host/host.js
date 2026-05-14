@@ -33,7 +33,7 @@ const startStopBtn = document.getElementById("startStopBtn");
 
 const startAllLoopsBtn = document.createElement("button");
 startAllLoopsBtn.className = "transport-btn start";
-startAllLoopsBtn.textContent = "Start All Loops";
+startAllLoopsBtn.textContent = "Launch Arrangement";
 
 startStopBtn.insertAdjacentElement("afterend", startAllLoopsBtn);
 
@@ -350,7 +350,7 @@ function startGlobalLoopCountdown(startTime) {
       clearInterval(globalLoopCountdownTimer);
       globalLoopCountdownTimer = null;
 
-      startAllLoopsBtn.textContent = "Start All Loops";
+      startAllLoopsBtn.textContent = "Launch Arrangement";
       startAllLoopsBtn.disabled = false;
     }
   }
@@ -432,7 +432,7 @@ function updateJoinQr() {
 //  Transport — start / stop
 // ─────────────────────────────────────────────────────────────
 function updateStartStopBtn() {
-  startStopBtn.textContent = isRunning ? "■ Stop" : "▶ Start";
+  startStopBtn.textContent = isRunning ? "■ Stop Session Clock" : "▶ Start Session Clock";
   startStopBtn.classList.toggle("stop", isRunning);
   startStopBtn.classList.toggle("start", !isRunning);
 }

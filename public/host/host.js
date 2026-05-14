@@ -92,6 +92,26 @@ function log(msg, kind = "system") {
   while (hostLog.children.length > 40) hostLog.removeChild(hostLog.lastChild);
 }
 
+function sbAssignLoopToSection(section, loopData) {
+  if (!section || !loopData) return;
+
+  songBoardData[section] = {
+    playerId: loopData.playerId,
+    playerName: loopData.playerName,
+    role: loopData.role,
+    slot: loopData.slot,
+    loopLengthMs: loopData.loopLengthMs,
+    totalEvents:
+      (loopData.loopEvents?.length || 0) +
+      (loopData.stepGridEvents?.length || 0),
+    instrument: loopData.instrument
+  };
+
+  saveSongBoard();
+  sbRenderCards();
+
+  log(`${loopData.playerName || "Player"} assigned to ${section}`, "system");
+}
 // ─────────────────────────────────────────────────────────────
 //  Socket.IO
 // ─────────────────────────────────────────────────────────────

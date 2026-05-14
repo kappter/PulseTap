@@ -846,7 +846,7 @@ function startSongMode() {
   // ── Conflict guard: stop Bank if it was running ───────
   if (isBankPlaying) {
     stopBankPlayback();
-    setLoopStatus("Bank stopped — Song starting", "ready");
+    setLoopStatus("Review Bank stopped — Preview starting", "ready");
   }
   if (!songSections.length) {
     setLoopStatus("Song Mode: no sections configured", "empty");
@@ -871,7 +871,7 @@ function startSongMode() {
     ?.classList.add("section-active");
   // Start Song button → Stop Song
   const startBtn = document.getElementById("startSongBtn");
-  if (startBtn) { startBtn.textContent = "Stop Song ■"; startBtn.dataset.songRunning = "1"; }
+  if (startBtn) { startBtn.textContent = "Stop Preview ■"; startBtn.dataset.songRunning = "1"; }
   // Start playback if not already playing
   if (!isLoopPlaying) {
     const ok = queueSlotForNextBar(first.slot);
@@ -895,11 +895,11 @@ function stopSongMode() {
   songBarsRemaining = 0;
   stopLoopPlayback();
   const startBtn = document.getElementById("startSongBtn");
-  if (startBtn) { startBtn.textContent = "Start Song ▶ Arrangement"; delete startBtn.dataset.songRunning; }
+  if (startBtn) { startBtn.textContent = "Preview Song ▶ Arrangement"; delete startBtn.dataset.songRunning; }
   document.querySelectorAll(".song-section-btn").forEach(b =>
     b.classList.remove("section-active")
   );
-  setLoopStatus("Song stopped", "ready");
+  setLoopStatus("Preview stopped", "ready");
   updateSongContext({ part: "—", barsLeft: "—", upcoming: "—", queued: "—" });
 }
 // ─────────────────────────────────────────────────────────────
@@ -1652,14 +1652,14 @@ function startBankPlayback(anchorMs = Date.now()) {
     songIndex = 0;
     songBarsRemaining = 0;
     const _sb = document.getElementById("startSongBtn");
-    if (_sb) { _sb.textContent = "Start Song ▶ Arrangement"; delete _sb.dataset.songRunning; }
+    if (_sb) { _sb.textContent = "Preview Song ▶ Arrangement"; delete _sb.dataset.songRunning; }
     document.querySelectorAll(".song-section-btn").forEach(b => b.classList.remove("section-active"));
-    setLoopStatus("Song stopped — Bank starting", "ready");
+    setLoopStatus("Preview stopped — Review Bank starting", "ready");
   }
   isBankPlaying = true;
   bankPlaybackAnchorMs = anchorMs;
   playBankBtn?.classList.add("playing");
-  playBankBtn.textContent = "Stop Bank ■";
+  playBankBtn.textContent = "Stop Review Bank ■";
 
   setLoopStatus(`Playing bank · ${bankLoops.length} slot${bankLoops.length === 1 ? "" : "s"}`, "playing");
   updateSongContext({ bank: "Playing" });
@@ -1721,7 +1721,7 @@ function stopBankPlayback() {
   bankTimeouts = [];
 
   playBankBtn?.classList.remove("playing");
-  if (playBankBtn) playBankBtn.textContent = "Play Bank ▶ All Slots";
+  if (playBankBtn) playBankBtn.textContent = "Review Bank ▶ All Slots";
   updateSongContext({ bank: "Stopped" });
 
   updateLoopUI();
@@ -2004,7 +2004,7 @@ function updateLoopUI() {
   playLoopBtn.classList.toggle("playing", isLoopPlaying);
 
   recordLoopBtn.textContent = isLoopRecording ? "Stop Recording" : "Record Loop";
-  playLoopBtn.textContent = isLoopPlaying ? "Stop Loop" : "Play Loop";
+  playLoopBtn.textContent = isLoopPlaying ? "Stop Review" : "Review Loop";
 
   const hasLoopContent = loopEvents.length > 0 || stepGridEvents.length > 0;
 
@@ -2110,12 +2110,12 @@ function scheduleLoopCycle(cycleIndex = 0) {
       // ── Song complete ──
       songModeActive = false;
       const startBtnC = document.getElementById("startSongBtn");
-      if (startBtnC) { startBtnC.textContent = "Start Song ▶ Arrangement"; delete startBtnC.dataset.songRunning; }
+      if (startBtnC) { startBtnC.textContent = "Preview Song ▶ Arrangement"; delete startBtnC.dataset.songRunning; }
       document.querySelectorAll(".song-section-btn").forEach(b =>
         b.classList.remove("section-active")
       );
       stopLoopPlayback();
-      setLoopStatus("Song complete", "ready");
+      setLoopStatus("Preview complete", "ready");
       updateSongContext({ part: "—", barsLeft: "—", upcoming: "—", queued: "—" });
       return;
     }
@@ -2213,7 +2213,7 @@ function stopLoopPlayback() {
   if (songModeActive) {
     songModeActive = false;
     const startBtnS = document.getElementById("startSongBtn");
-    if (startBtnS) { startBtnS.textContent = "Start Song ▶ Arrangement"; delete startBtnS.dataset.songRunning; }
+    if (startBtnS) { startBtnS.textContent = "Preview Song ▶ Arrangement"; delete startBtnS.dataset.songRunning; }
     document.querySelectorAll(".song-section-btn").forEach(b =>
       b.classList.remove("section-active")
     );
@@ -2272,8 +2272,8 @@ playLoopBtn.addEventListener("pointerdown", (e) => {
       // ── Transport Authority: arm to next GLOBAL bar boundary ──
       const startTime = getNextGlobalBarStartTime();
       // Show "Armed for next bar" status while waiting
-      setLoopStatus("Armed for next bar ⏳", "queued");
-      playLoopBtn.textContent = "Armed…";
+      setLoopStatus("Armed for next bar ⏳ — Review starts on count 1", "queued");
+      playLoopBtn.textContent = "Armed… ⏳";
       playLoopBtn.disabled = true;
       startLoopPlaybackSynced(startTime);
       // Re-enable button once the loop actually starts
@@ -2285,7 +2285,7 @@ playLoopBtn.addEventListener("pointerdown", (e) => {
     } else {
       // ── No host transport: local fallback ──
       const startTime = getNextLocalBarStartTime();
-      setLoopStatus("Local start — no host transport", "ready");
+      setLoopStatus("Local Review — no session clock", "ready");
       startLoopPlaybackSynced(startTime);
     }
   }
@@ -2594,7 +2594,7 @@ document.querySelectorAll(".sample-pack-btn").forEach((btn) => {
     );
     btn.classList.add("pack-active");
 
-    setLoopStatus(`✓ Loaded ${pack.label} · tap a slot to play`, "ready");
+    setLoopStatus(`✓ Loaded ${pack.label} · tap a slot to review`, "ready");
     updateEditingBanner(null);
   });
 });

@@ -111,6 +111,49 @@
   margin: 15px 0 25px 20px;
 }
 
+.workflow-section {
+  padding: 90px 0;
+}
+
+.workflow-graphic {
+  margin: 42px auto 52px;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: rgba(255,255,255,.04);
+}
+
+.workflow-graphic img {
+  width: 100%;
+  display: block;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 18px;
+}
+
+.workflow-card {
+  background: rgba(255,255,255,.055);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.workflow-card p {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+@media(max-width:900px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cube-tagline {
   text-align: center;
   margin-top: 30px;
@@ -330,6 +373,72 @@ Players create privately. The host performs publicly.
 Players privately sketch loops, textures, and ideas while the host shapes arrangement, timing, transitions, and collective flow for the room.</p></div>
         <div class="diagram-shell"><div><h3>Many Players</h3><p style="margin-bottom:18px">Everyone plays their way. All in time.</p><div class="player-stack"><div class="player-row"><div class="avatar">01</div><div><strong>Player 01</strong><span>Melody</span></div><div class="mini-device"></div></div><div class="player-row"><div class="avatar">02</div><div><strong>Player 02</strong><span>Bass Line</span></div><div class="mini-device"></div></div><div class="player-row"><div class="avatar">03</div><div><strong>Player 03</strong><span>Percussion</span></div><div class="mini-device"></div></div><div class="player-row"><div class="avatar">04</div><div><strong>Player 04</strong><span>Chords</span></div><div class="mini-device"></div></div></div></div><div class="switchboard-card"><strong>PulseTap Switchboard</strong><div class="mixer-strips"><div class="strip"><div class="fader" style="height:54%"></div><button>S</button></div><div class="strip"><div class="fader" style="height:74%"></div><button>S</button></div><div class="strip"><div class="fader" style="height:64%"></div><button>S</button></div><div class="strip"><div class="fader" style="height:82%"></div><button>S</button></div><div class="strip"><div class="fader" style="height:70%"></div><button>S</button></div></div><p style="color:#aeb6c2">Master timing, mute, solo, volume, and routing.</p></div><div class="mix-card"><h3>Your Mix System</h3><p>Plug in anywhere. Sound amazing.</p><div class="mix-option"><strong>Live Mixer</strong><span>XLR / TRS Out</span></div><div class="mix-option"><strong>PA System</strong><span>Stage / Venue</span></div><div class="mix-option"><strong>DAW / Studio</strong><span>USB / Audio Interface</span></div><div class="mix-option"><strong>Headphones</strong><span>Personal Monitoring</span></div></div></div>
       </section>
+
+      <section id="workflow" class="workflow-section">
+  <div class="section-title">
+    <div class="section-label">Song Creation Workflow</div>
+    <h2>Less friction. More flow.</h2>
+
+    <p>
+      Traditional collaborative music creation is full of interruption:
+      exporting files, explaining structure, resyncing timing, revising transitions,
+      and trying not to lose the emotional momentum of the song.
+    </p>
+
+    <p>
+      PulseTap shifts the focus away from production complexity and toward
+      arrangement, interaction, rehearsal, and shared structure.
+    </p>
+
+    <p style="margin-top:18px; font-weight:600; color:var(--text);">
+      Players create privately. The host performs publicly.
+    </p>
+  </div>
+
+  <figure class="workflow-graphic">
+    <img src="pulsetap-info/assets/song-process-before-after.png"
+         alt="Traditional music creation compared to PulseTap collaborative arrangement workflow">
+  </figure>
+
+  <div class="workflow-grid">
+
+    <article class="workflow-card">
+      <h3>Private Creation</h3>
+      <p>
+        Musicians sketch loops, melodies, textures, percussion,
+        and harmonic ideas privately in headphones before contributing
+        them to the arrangement.
+      </p>
+    </article>
+
+    <article class="workflow-card">
+      <h3>Shared Structure</h3>
+      <p>
+        Tempo, key, mode, transitions, energy,
+        and section flow become visible to everyone in the room.
+      </p>
+    </article>
+
+    <article class="workflow-card">
+      <h3>Host-Led Arrangement</h3>
+      <p>
+        The host acts like a conductor:
+        organizing sections, activating parts,
+        shaping transitions, and guiding the collective performance.
+      </p>
+    </article>
+
+    <article class="workflow-card">
+      <h3>Visualizer Rehearsal System</h3>
+      <p>
+        The visualizer becomes the rehearsal roadmap:
+        showing sections, transitions, pulse, timing,
+        cues, and arrangement flow for everyone together.
+      </p>
+    </article>
+
+  </div>
+</section>
 
       <section id="songmaker" class="two-col reverse">
         <figure class="glow-card"><img src="pulsetap-info/assets/pulsetap-ecosystem.png" alt="PulseTap cube connected to the app and Songmaker" /></figure>

@@ -1099,9 +1099,25 @@
 .sb-pill--active { background: rgba(255,194,71,0.2); color: #ffc247; border: 1px solid #ffc247; }
 .sb-pill--next   { background: rgba(103,232,249,0.15); color: #67e8f9; border: 1px solid #67e8f9; }
 .sb-card-assigned {
-  margin-top: 0.3rem; padding: 0.25rem 0.4rem;
-  background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
-  border-radius: 5px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(101,214,206,0.10);
+  border: 1px solid rgba(101,214,206,0.28);
 }
-.sb-assigned-name { font-size: 0.7rem; font-weight: 700; color: #34d399; }
+
+.sb-assigned-name {
+  font-weight: 800;
+  color: #65d6ce;
+}
+
+.sb-assigned-meta {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.65);
+  white-space: nowrap;
+}
 .sb-assigned-meta { font-size: 0.62rem; color: rgba(255,255,255,0.4); margin-left: 0.4rem; }

@@ -141,6 +141,7 @@ socket.on("room:state", (state) => {
     bpmInput.value          = state.settings.bpm      || 120;
     keySelect.value         = state.settings.key      || "C";
     modeSelect.value        = state.settings.mode     || "major";
+    document.dispatchEvent(new Event("pulsetap:room-settings"));
     quantizeSelect.value    = state.settings.quantize || "none";
     isRunning               = state.settings.running  || false;
     updateStartStopBtn();
@@ -394,6 +395,62 @@ function broadcastSettings() {
 [keySelect, modeSelect, quantizeSelect].forEach(el => {
   el.addEventListener("change", broadcastSettings);
 });
+// ── Key Shift Performance Pad ─────────────────────────────────────────────
+(function initKeyShiftPad() {
+  const pad       = document.getElementById("keyShiftPad");
+  const kspActive = document.getElementById("kspActive");
+  const rootBtns  = document.querySelectorAll(".ksp-root");
+  const modeBtns  = document.querySelectorAll(".ksp-mode");
+
+  // Keep pad state in sync with the main keySelect/modeSelect
+  function syncPadState() {
+    const activeKey  = keySelect.value  || "C";
+    const activeMode = modeSelect.value || "major";
+    rootBtns.forEach(b => b.classList.toggle("ksp-root--active", b.dataset.root === activeKey));
+    modeBtns.forEach(b => b.classList.toggle("ksp-mode--active", b.dataset.mode === activeMode));
+    if (kspActive) kspActive.textContent = activeKey + " · " + activeMode.charAt(0).toUpperCase() + activeMode.slice(1);
+  }
+
+  // Root note click — update keySelect and broadcast
+  rootBtns.forEach(btn => {
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      keySelect.value = btn.dataset.root;
+      syncPadState();
+      broadcastSettings();
+    });
+    // Hover preview — highlight matching mode buttons (visual only)
+    btn.addEventListener("pointerenter", () => {
+      btn.classList.add("ksp-root--hover");
+    });
+    btn.addEventListener("pointerleave", () => {
+      btn.classList.remove("ksp-root--hover");
+    });
+  });
+
+  // Mode button click — update modeSelect and broadcast
+  modeBtns.forEach(btn => {
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      modeSelect.value = btn.dataset.mode;
+      syncPadState();
+      broadcastSettings();
+    });
+  });
+
+  // Keep pad in sync when keySelect/modeSelect change via other controls
+  keySelect.addEventListener("change",  syncPadState);
+  modeSelect.addEventListener("change", syncPadState);
+
+  // Initial sync on load
+  syncPadState();
+
+  // Also sync when room state arrives
+  const _origRoomState = window._kspRoomStateHook;
+  document.addEventListener("pulsetap:room-settings", syncPadState);
+})();
+
+
 
 bpmInput.addEventListener("change", broadcastSettings);
 

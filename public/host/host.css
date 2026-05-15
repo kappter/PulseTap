@@ -1121,3 +1121,103 @@
   white-space: nowrap;
 }
 .sb-assigned-meta { font-size: 0.62rem; color: rgba(255,255,255,0.4); margin-left: 0.4rem; }
+
+/* ── Key Shift Performance Pad ─────────────────────────────────────────── */
+.key-shift-pad {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 0.65rem 0.7rem 0.7rem;
+  margin-bottom: 0.75rem;
+}
+.ksp-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.ksp-title {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+.ksp-active {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffc247;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+/* Root note grid — 6 columns × 2 rows */
+.ksp-roots {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  margin-bottom: 0.45rem;
+}
+.ksp-root {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 5px 0;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.ksp-root:hover,
+.ksp-root--hover {
+  background: rgba(255,194,71,0.15);
+  border-color: rgba(255,194,71,0.4);
+  color: #ffc247;
+}
+.ksp-root--active {
+  background: rgba(255,194,71,0.22);
+  border-color: #ffc247;
+  color: #ffc247;
+  box-shadow: 0 0 8px rgba(255,194,71,0.35);
+}
+.ksp-root:active { transform: scale(0.93); }
+
+/* Mode buttons — 4 columns × 2 rows */
+.ksp-modes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.ksp-mode {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 0;
+  cursor: pointer;
+  text-align: center;
+  text-transform: capitalize;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.ksp-mode:hover {
+  background: rgba(103,232,249,0.12);
+  border-color: rgba(103,232,249,0.35);
+  color: #67e8f9;
+}
+.ksp-mode--active {
+  background: rgba(103,232,249,0.18);
+  border-color: #67e8f9;
+  color: #67e8f9;
+  box-shadow: 0 0 8px rgba(103,232,249,0.3);
+}
+.ksp-mode:active { transform: scale(0.93); }

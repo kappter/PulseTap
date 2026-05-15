@@ -152,7 +152,39 @@
     <div class="mixer-body">
 
       <div class="host-sidebar">
-
+        <!-- ── Key Shift Performance Pad ────────────────────── -->
+        <div class="key-shift-pad" id="keyShiftPad">
+          <div class="ksp-header">
+            <span class="ksp-title">Key Shift</span>
+            <span class="ksp-active" id="kspActive">C · Major</span>
+          </div>
+          <!-- Root note grid -->
+          <div class="ksp-roots" id="kspRoots">
+            <button class="ksp-root" data-root="C">C</button>
+            <button class="ksp-root" data-root="C#">C#</button>
+            <button class="ksp-root" data-root="D">D</button>
+            <button class="ksp-root" data-root="D#">D#</button>
+            <button class="ksp-root" data-root="E">E</button>
+            <button class="ksp-root" data-root="F">F</button>
+            <button class="ksp-root" data-root="F#">F#</button>
+            <button class="ksp-root" data-root="G">G</button>
+            <button class="ksp-root" data-root="G#">G#</button>
+            <button class="ksp-root" data-root="A">A</button>
+            <button class="ksp-root" data-root="A#">A#</button>
+            <button class="ksp-root" data-root="B">B</button>
+          </div>
+          <!-- Mode buttons -->
+          <div class="ksp-modes" id="kspModes">
+            <button class="ksp-mode" data-mode="major">Major</button>
+            <button class="ksp-mode" data-mode="minor">Minor</button>
+            <button class="ksp-mode" data-mode="dorian">Dorian</button>
+            <button class="ksp-mode" data-mode="phrygian">Phrygian</button>
+            <button class="ksp-mode" data-mode="lydian">Lydian</button>
+            <button class="ksp-mode" data-mode="mixolydian">Mixolydian</button>
+            <button class="ksp-mode" data-mode="pentatonic">Pentatonic</button>
+            <button class="ksp-mode" data-mode="chromatic">Chromatic</button>
+          </div>
+        </div>
         <!-- ── Arrangement Inbox ──────────────────────────── -->
         <div class="arrangement-inbox">
           <div class="inbox-header">

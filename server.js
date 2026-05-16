@@ -117,7 +117,8 @@ function getOrCreateRoom(roomId) {
     rooms.set(roomId, {
       hostSocketId: null,
       settings:     { ...DEFAULT_SETTINGS },
-      players:      new Map()
+      players:      new Map(),
+      latestVizState: null
     });
   }
   return rooms.get(roomId);
@@ -215,6 +216,10 @@ io.on("connection", (socket) => {
     const room = rooms.get(roomId);
     if (room) {
       socket.emit("room:settings", room.settings);
+      // Also replay the latest viz:state so the visualizer is not stuck on "Joining"
+      if (room.latestVizState) {
+        socket.emit("viz:state", room.latestVizState);
+      }
     }
     console.log(`[viz:join]  room=${roomId}  socket=${socket.id}`);
   });
@@ -225,6 +230,9 @@ io.on("connection", (socket) => {
   socket.on("host:viz-state", (payload) => {
     const { roomId } = payload;
     if (!roomId) return;
+    // Cache latest state so new visualizer joins get it immediately
+    const room = rooms.get(roomId);
+    if (room) room.latestVizState = payload;
     // Relay to all visualizer sockets in the room
     io.to(`${roomId}:viz`).emit("viz:state", payload);
     // Also relay to the full room so any visualizer that joined
@@ -253,6 +261,9 @@ io.on("connection", (socket) => {
   socket.on("player:viz-state", (payload) => {
     const { roomId } = payload;
     if (!roomId) return;
+    // Cache latest state so new visualizer joins get it immediately
+    const room = rooms.get(roomId);
+    if (room) room.latestVizState = payload;
     io.to(`${roomId}:viz`).emit("viz:state", payload);
     io.to(roomId).emit("viz:state", payload);
   });

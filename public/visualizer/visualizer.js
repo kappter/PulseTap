@@ -87,7 +87,7 @@ function joinRoom() {
   joinOverlay.classList.add("hidden");
   vizCanvas.classList.remove("hidden");
   vizRoom.textContent = `ROOM ${code}`;
-  setStatus("Joining…", "accent2");
+  setStatus("Connected \u00b7 waiting for host\u2026", "accent2");
 }
 
 function showJoinError(msg) {

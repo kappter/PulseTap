@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-05-16",
+    "title": "Living Journal System Added",
+    "summary": "PulseTap now has a homepage module for project updates, field notes, and longer development reflections.",
+    "tags": ["homepage", "journal", "archive"],
+    "link": "journal/music-as-temporary-agreement.html"
+  }
+  {
+    "date": "2026-05-16",
     "title": "Living Development Archive Begins",
     "summary": "PulseTap's front page now opens a public lab notebook for updates, long-form design reflections, and historical milestones.",
     "tags": ["archive", "journal", "homepage"],

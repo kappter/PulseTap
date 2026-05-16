@@ -1773,14 +1773,17 @@ let cpSectionIndex = 0;
 let cpTimer = null;
 
 function startCentralArrangementPlayback() {
+  if (cpActive) return;  // guard: ignore repeated calls while running
   if (!hostAudioCtx) initHostAudio();
   if (hostAudioCtx.state === "suspended") hostAudioCtx.resume();
   cpActive = true;
   cpSectionIndex = 0;
   const startBtn = document.getElementById("sbStartSongBtn");
   const stopBtn  = document.getElementById("sbStopSongBtn");
-  if (startBtn) startBtn.disabled = true;
-  if (stopBtn)  stopBtn.disabled = false;
+  const nextBtn  = document.getElementById("sbNextSectionBtn");
+  if (startBtn) { startBtn.disabled = true; }
+  if (stopBtn)  { stopBtn.disabled  = false; }
+  if (nextBtn)  { nextBtn.disabled  = false; }
   sbUpdateStatus({ ...sbState, songActive: true });
   log("Central Playback started", "system");
   scheduleCentralSection(cpSectionIndex);
@@ -1792,8 +1795,10 @@ function stopCentralArrangementPlayback() {
   cpTimer = null;
   const startBtn = document.getElementById("sbStartSongBtn");
   const stopBtn  = document.getElementById("sbStopSongBtn");
-  if (startBtn) startBtn.disabled = false;
-  if (stopBtn)  stopBtn.disabled = true;
+  const nextBtn  = document.getElementById("sbNextSectionBtn");
+  if (startBtn) { startBtn.disabled = false; }
+  if (stopBtn)  { stopBtn.disabled  = true; }
+  if (nextBtn)  { nextBtn.disabled  = true; }
   sbUpdateStatus({ ...sbState, songActive: false });
   sbHighlight(null, null);
   log("Central Playback stopped", "system");

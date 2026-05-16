@@ -67,7 +67,7 @@ let metroBeat     = 0;
 let metroTimer    = null;
 let metroBeatsPerBar = 4;
 const savedLoopStates = new Map();
-// Full loop library: Map<playerId, full passed-loop payload>
+// Full loop library: Map<loopId, full passed-loop payload>
 const passedLoopsLibrary = new Map();
 
 /** Map<playerId, { playerName, role, socketId, muted, volume, stripEl, meterEl, meterTimer }> */
@@ -97,22 +97,28 @@ function log(msg, kind = "system") {
 function sbAssignLoopToSection(section, loopData) {
   if (!section || !loopData) return;
 
-  songBoardData[section] = {
-    playerId: loopData.playerId,
-    playerName: loopData.playerName,
-    role: loopData.role,
-    slot: loopData.slot,
-    loopLengthMs: loopData.loopLengthMs,
-    totalEvents:
-      (loopData.loopEvents?.length || 0) +
-      (loopData.stepGridEvents?.length || 0),
-    instrument: loopData.instrument
-  };
+  // Ensure loopId exists
+  if (!loopData.loopId) {
+    loopData.loopId = `${loopData.playerId}_${loopData.slot || "slot"}_${Date.now()}`;
+  }
+
+  // Store full loop data in library by loopId
+  passedLoopsLibrary.set(loopData.loopId, loopData);
+
+  // Initialise section array if needed
+  if (!Array.isArray(songBoardData[section])) {
+    songBoardData[section] = [];
+  }
+
+  // Add loopId only if not already assigned to this section
+  if (!songBoardData[section].includes(loopData.loopId)) {
+    songBoardData[section].push(loopData.loopId);
+  }
 
   saveSongBoard();
   sbRenderCards();
 
-  log(`${loopData.playerName || "Player"} assigned to ${section}`, "system");
+  log(`${loopData.playerName || "Player"} (${loopData.loopId}) → ${section}`, "system");
 }
 // ─────────────────────────────────────────────────────────────
 //  Socket.IO
@@ -205,7 +211,11 @@ socket.on("host:passed-loop", (data) => {
   } = data;
   const totalEvents = (loopEvents?.length || 0) + (stepGridEvents?.length || 0);
   const lenSec = loopLengthMs ? (loopLengthMs / 1000).toFixed(2) + "s" : "—";
-  const cardId = `passed_${playerId}`;
+  // Generate unique loopId for this passed loop
+  const loopId = data.loopId || `${playerId}_${slot || "slot"}_${Date.now()}`;
+  data.loopId = loopId;
+
+  const cardId = `passed_${loopId}`;
   let card = document.getElementById(cardId);
   if (!card) {
     card = document.createElement("div");
@@ -215,7 +225,7 @@ socket.on("host:passed-loop", (data) => {
     card.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", cardId);
       e.dataTransfer.setData("application/json", JSON.stringify({
-        playerId, playerName, role, slot,
+        loopId, playerId, playerName, role, slot,
         loopLengthMs, totalEvents, instrument
       }));
       card.classList.add("loop-card--dragging");
@@ -224,15 +234,17 @@ socket.on("host:passed-loop", (data) => {
     loopInboxList.prepend(card);
     if (loopInboxList.children.length > 20) loopInboxList.removeChild(loopInboxList.lastChild);
   }
-  // Store full data on card for assign button
+  // Store full data on card and in library (keyed by loopId)
   card.dataset.loopJson = JSON.stringify(data);
-  // Also keep in the in-memory library for export
-  passedLoopsLibrary.set(playerId, data);
+  card.dataset.loopId = loopId;
+  passedLoopsLibrary.set(loopId, data);
+
   card.innerHTML = `
     <div class="lc-top">
       <strong class="lc-name">${escHtml(playerName)}</strong>
       <span class="lc-role">${escHtml(role)}</span>
       <span class="lc-badge lc-badge--available">Available</span>
+      <button class="lc-delete-btn" title="Delete loop">✕</button>
     </div>
     <div class="lc-meta">
       Slot ${slot ?? "—"} · ${totalEvents} events · ${lenSec}
@@ -251,15 +263,17 @@ socket.on("host:passed-loop", (data) => {
       const section = btn.dataset.section;
       const loopData = JSON.parse(card.dataset.loopJson || "{}");
       sbAssignLoopToSection(section, loopData);
-      // Visual feedback on card
       card.querySelectorAll(".lc-assign-btn").forEach(b => b.classList.remove("lc-assign-btn--active"));
       btn.classList.add("lc-assign-btn--active");
       log(`${playerName} · Slot ${slot} → ${section}`, "system");
     });
   });
-  // Update inbox count badge
-  const countEl = document.getElementById("inboxCount");
-  if (countEl) countEl.textContent = loopInboxList.children.length;
+  // Wire delete button
+  card.querySelector(".lc-delete-btn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    deletePassedLoop(loopId);
+  });
+  updateInboxCount();
   log(`${playerName} passed loop (Slot ${slot}, ${totalEvents} events)`, "remote");
 });
 
@@ -302,6 +316,32 @@ function updateInboxCount() {
   const countEl = document.getElementById("inboxCount");
   const list = document.getElementById("loopInboxList");
   if (countEl && list) countEl.textContent = list.children.length;
+}
+
+/** Remove a loop from the library, inbox, and all section assignments */
+function deletePassedLoop(loopId) {
+  // Remove from library
+  passedLoopsLibrary.delete(loopId);
+
+  // Remove from all section assignments
+  SB_SECTIONS.forEach(section => {
+    if (Array.isArray(songBoardData[section])) {
+      songBoardData[section] = songBoardData[section].filter(id => id !== loopId);
+      if (songBoardData[section].length === 0) {
+        delete songBoardData[section];
+      }
+    }
+  });
+  saveSongBoard();
+
+  // Remove inbox card
+  const card = document.getElementById(`passed_${loopId}`);
+  if (card) card.remove();
+  updateInboxCount();
+
+  // Re-render Song Board
+  sbRenderCards();
+  log(`Loop ${loopId} deleted`, "system");
 }
 // ─────────────────────────────────────────────────────────────
 //  Room setup
@@ -388,6 +428,7 @@ function buildArrangementFile() {
   });
 
   const loopLibrary = Array.from(passedLoopsLibrary.values()).map(loop => ({
+    loopId:         loop.loopId || `${loop.playerId}_${loop.slot || "slot"}_export`,
     playerId:       loop.playerId,
     playerName:     loop.playerName,
     role:           loop.role,
@@ -401,7 +442,7 @@ function buildArrangementFile() {
   }));
 
   return {
-    ptarrVersion: "1.0",
+    ptarrVersion: "1.1",
     exportedAt:   new Date().toISOString(),
     title:        currentRoom ? `PulseTap Room ${currentRoom}` : "PulseTap Arrangement",
     roomId:       currentRoom || "",
@@ -420,17 +461,11 @@ function buildArrangementFile() {
     },
     songStructure: sectionStructure,
     loopLibrary,
+    // arrangementAssignments: section -> [loopId, ...]
     arrangementAssignments: Object.fromEntries(
       sections
-        .filter(s => songBoardData[s])
-        .map(s => [s, {
-          playerId:     songBoardData[s].playerId,
-          playerName:   songBoardData[s].playerName,
-          role:         songBoardData[s].role,
-          slot:         songBoardData[s].slot,
-          loopLengthMs: songBoardData[s].loopLengthMs,
-          instrument:   songBoardData[s].instrument
-        }])
+        .filter(s => Array.isArray(songBoardData[s]) && songBoardData[s].length > 0)
+        .map(s => [s, songBoardData[s]])
     )
   };
 }
@@ -453,7 +488,7 @@ function exportArrangement() {
 
 /** Load a .ptarr JSON object into the host */
 function importArrangement(data) {
-  if (!data || data.ptarrVersion !== "1.0") {
+  if (!data || !["1.0", "1.1"].includes(data.ptarrVersion)) {
     log("Invalid .ptarr file (version mismatch)", "error");
     return;
   }
@@ -472,10 +507,15 @@ function importArrangement(data) {
   // 2. Restore loop library into passedLoopsLibrary and Inbox UI
   passedLoopsLibrary.clear();
   (data.loopLibrary || []).forEach(loop => {
-    passedLoopsLibrary.set(loop.playerId, loop);
+    // Ensure loopId exists for imported loops
+    if (!loop.loopId) {
+      loop.loopId = `${loop.playerId}_${loop.slot || "slot"}_imported`;
+    }
+    passedLoopsLibrary.set(loop.loopId, loop);
     // Re-render inbox card
     if (loopInboxList) {
-      const cardId = `passed_${loop.playerId}`;
+      const importLoopId = loop.loopId;
+      const cardId = `passed_${importLoopId}`;
       let card = document.getElementById(cardId);
       if (!card) {
         card = document.createElement("div");
@@ -485,6 +525,7 @@ function importArrangement(data) {
         card.addEventListener("dragstart", (e) => {
           e.dataTransfer.setData("text/plain", cardId);
           e.dataTransfer.setData("application/json", JSON.stringify({
+            loopId:      importLoopId,
             playerId:    loop.playerId,
             playerName:  loop.playerName,
             role:        loop.role,
@@ -499,6 +540,7 @@ function importArrangement(data) {
         loopInboxList.prepend(card);
       }
       card.dataset.loopJson = JSON.stringify(loop);
+      card.dataset.loopId = importLoopId;
       const totalEvents = (loop.loopEvents?.length || 0) + (loop.stepGridEvents?.length || 0);
       const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
       card.innerHTML = `
@@ -506,6 +548,7 @@ function importArrangement(data) {
           <strong class="lc-name">${escHtml(loop.playerName || "")}</strong>
           <span class="lc-role">${escHtml(loop.role || "")}</span>
           <span class="lc-badge lc-badge--available">Imported</span>
+          <button class="lc-delete-btn" title="Delete loop">✕</button>
         </div>
         <div class="lc-meta">
           Slot ${loop.slot ?? "—"} · ${totalEvents} events · ${lenSec}
@@ -526,6 +569,10 @@ function importArrangement(data) {
           btn.textContent = "✓ " + btn.dataset.section;
         });
       });
+      card.querySelector(".lc-delete-btn")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deletePassedLoop(importLoopId);
+      });
     }
   });
   updateInboxCount();
@@ -537,10 +584,24 @@ function importArrangement(data) {
     }
   });
 
-  // 4. Restore Song Board assignments
+  // 4. Restore Song Board assignments as loopId arrays
   songBoardData = {};
   Object.entries(data.arrangementAssignments || {}).forEach(([section, assignment]) => {
-    songBoardData[section] = assignment;
+    // New format: assignment is an array of loopIds
+    if (Array.isArray(assignment)) {
+      songBoardData[section] = assignment;
+    } else if (assignment && assignment.loopId) {
+      // Single-loopId object (v1.1+)
+      songBoardData[section] = [assignment.loopId];
+    } else if (assignment && assignment.playerId) {
+      // Legacy single-assignment object: synthesise a loopId
+      const lid = `${assignment.playerId}_${assignment.slot || "slot"}_imported`;
+      songBoardData[section] = [lid];
+      // Ensure the loop is in the library if not already
+      if (!passedLoopsLibrary.has(lid)) {
+        passedLoopsLibrary.set(lid, { ...assignment, loopId: lid });
+      }
+    }
   });
   saveSongBoard();
   sbRenderCards();
@@ -1178,29 +1239,70 @@ function sbRenderCards() {
       e.preventDefault();
       card.classList.remove("sb-card--drop-hover");
       try {
-        const loopData = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
-        if (loopData.playerId) {
+        const dragData = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
+        // Prefer full loop from library if loopId is present
+        const loopData = (dragData.loopId && passedLoopsLibrary.has(dragData.loopId))
+          ? passedLoopsLibrary.get(dragData.loopId)
+          : dragData;
+        if (loopData.playerId || loopData.loopId) {
           sbAssignLoopToSection(card.dataset.section, loopData);
-          log(`${loopData.playerName} → ${card.dataset.section}`, "system");
+          log(`${loopData.playerName || "Loop"} → ${card.dataset.section}`, "system");
         }
       } catch {}
     });
-    // Restore saved assignment if any
-    const saved = songBoardData[card.dataset.section];
-    if (saved) {
-      const assignChip = document.createElement("div");
-      assignChip.className = "sb-card-assigned";
-      const lenSec = saved.loopLengthMs ? (saved.loopLengthMs / 1000).toFixed(2) + "s" : "—";
-      assignChip.innerHTML = `
-        <span class="sb-assigned-name">${escHtml(saved.playerName || "")}</span>
-        <span class="sb-assigned-meta">${escHtml(saved.role || "")} · Slot ${saved.slot ?? "—"} · ${lenSec}</span>
-      `;
-      card.appendChild(assignChip);
+    // Restore saved assignments (array of loopIds)
+    const assignedIds = Array.isArray(songBoardData[card.dataset.section])
+      ? songBoardData[card.dataset.section]
+      : (songBoardData[card.dataset.section] ? [songBoardData[card.dataset.section].playerId].filter(Boolean) : []);
+
+    if (assignedIds.length > 0) {
       card.classList.add("sb-card--has-loop");
+      const assignList = document.createElement("div");
+      assignList.className = "sb-card-assign-list";
+
+      assignedIds.forEach(lid => {
+        const loop = passedLoopsLibrary.get(lid);
+        const row = document.createElement("div");
+        row.className = "sb-assigned-row";
+
+        if (loop) {
+          const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
+          row.innerHTML = `
+            <span class="sb-assigned-name">${escHtml(loop.playerName || "")}</span>
+            <span class="sb-assigned-meta">${escHtml(loop.role || "")} · Slot ${loop.slot ?? "—"} · ${lenSec}</span>
+            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(card.dataset.section)}" title="Remove from section">✕</button>
+          `;
+        } else {
+          // Loop was deleted from library but still referenced
+          row.innerHTML = `
+            <span class="sb-assigned-name sb-assigned-missing">[deleted]</span>
+            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(card.dataset.section)}" title="Remove">✕</button>
+          `;
+        }
+        assignList.appendChild(row);
+      });
+
+      card.appendChild(assignList);
     }
     container.appendChild(card);
   });
 }
+
+// ── Delegated remove-from-section listener ───────────────────
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sb-remove-btn");
+  if (!btn) return;
+  const loopId  = btn.dataset.loopId;
+  const section = btn.dataset.section;
+  if (!loopId || !section) return;
+  if (Array.isArray(songBoardData[section])) {
+    songBoardData[section] = songBoardData[section].filter(id => id !== loopId);
+    if (songBoardData[section].length === 0) delete songBoardData[section];
+  }
+  saveSongBoard();
+  sbRenderCards();
+  log(`Loop removed from ${section}`, "system");
+});
 
 // ── Highlight current and next section ───────────────────────
 function sbHighlight(currentSection, nextSection) {
@@ -1343,8 +1445,8 @@ function makeLoopCardsDraggable() {
 
 // ═══════════════════════════════════════════════════════════════
 //  Central Playback Engine (Phase 1.5)
-//  Allows the Host to play the arrangement through local speakers
-//  using Web Audio without requiring connected players.
+//  Plays imported/passed arrangement through Host Web Audio.
+//  Works with zero connected players.
 // ═══════════════════════════════════════════════════════════════
 
 let hostAudioCtx = null;
@@ -1361,12 +1463,10 @@ function initHostAudio() {
   hostMasterGain.connect(hostAudioCtx.destination);
 }
 
-// Unlock audio on interaction
 document.body.addEventListener("pointerdown", initHostAudio, { once: true });
 
-// ── Synth Helpers (Adapted from player.js) ───────────────
-
-const SCALES = {
+// ── Scale / frequency tables ──────────────────────────────────
+const HOST_SCALES = {
   major:      [0, 2, 4, 5, 7, 9, 11, 12],
   minor:      [0, 2, 3, 5, 7, 8, 10, 12],
   dorian:     [0, 2, 3, 5, 7, 9, 10, 12],
@@ -1376,36 +1476,33 @@ const SCALES = {
   pentatonic: [0, 2, 4, 7, 9, 12, 14, 16],
   chromatic:  [0, 1, 2, 3, 4, 5, 6, 7]
 };
-
-const KEY_FREQ = {
+const HOST_KEY_FREQ = {
   C: 261.63, "C#": 277.18, D: 293.66, "D#": 311.13,
   E: 329.63, F: 349.23, "F#": 369.99, G: 392.00,
   "G#": 415.30, A: 440.00, "A#": 466.16, B: 493.88
 };
 
-function semitoneToHz(rootHz, semitones) {
+function hostSemitoneToHz(rootHz, semitones) {
   return rootHz * Math.pow(2, semitones / 12);
 }
 
 function hostPadFrequency(degree) {
-  const root  = KEY_FREQ[keySelect.value] || 261.63;
-  const scale = SCALES[modeSelect.value]  || SCALES.major;
-  return semitoneToHz(root, scale[degree] ?? 0);
+  const root  = HOST_KEY_FREQ[keySelect.value] || 261.63;
+  const scale = HOST_SCALES[modeSelect.value]  || HOST_SCALES.major;
+  return hostSemitoneToHz(root, scale[degree] ?? 0);
 }
 
-function hostSynthTone(freq, type = "sine", velocity = 1, time) {
+// ── Synth voices ──────────────────────────────────────────────
+function hostSynthTone(freq, type, velocity, time) {
   const osc = hostAudioCtx.createOscillator();
   const gain = hostAudioCtx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, time);
   gain.gain.setValueAtTime(0.4 * velocity, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
-  osc.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.25);
+  osc.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.25);
 }
-
 function hostSynthKick(time) {
   const osc = hostAudioCtx.createOscillator();
   const gain = hostAudioCtx.createGain();
@@ -1414,12 +1511,9 @@ function hostSynthKick(time) {
   osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
   gain.gain.setValueAtTime(1.0, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
-  osc.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.13);
+  osc.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.13);
 }
-
 function hostSynthSnare(time) {
   const noise = hostAudioCtx.createBufferSource();
   const buffer = hostAudioCtx.createBuffer(1, hostAudioCtx.sampleRate * 0.2, hostAudioCtx.sampleRate);
@@ -1427,18 +1521,13 @@ function hostSynthSnare(time) {
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   noise.buffer = buffer;
   const filter = hostAudioCtx.createBiquadFilter();
-  filter.type = "highpass";
-  filter.frequency.value = 1000;
+  filter.type = "highpass"; filter.frequency.value = 1000;
   const gain = hostAudioCtx.createGain();
   gain.gain.setValueAtTime(0.7, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  noise.start(time);
-  noise.stop(time + 0.2);
+  noise.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  noise.start(time); noise.stop(time + 0.2);
 }
-
 function hostSynthHiHat(time) {
   const noise = hostAudioCtx.createBufferSource();
   const buffer = hostAudioCtx.createBuffer(1, hostAudioCtx.sampleRate * 0.05, hostAudioCtx.sampleRate);
@@ -1446,18 +1535,13 @@ function hostSynthHiHat(time) {
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   noise.buffer = buffer;
   const filter = hostAudioCtx.createBiquadFilter();
-  filter.type = "highpass";
-  filter.frequency.value = 5000;
+  filter.type = "highpass"; filter.frequency.value = 5000;
   const gain = hostAudioCtx.createGain();
   gain.gain.setValueAtTime(0.3, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  noise.start(time);
-  noise.stop(time + 0.05);
+  noise.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  noise.start(time); noise.stop(time + 0.05);
 }
-
 function hostSynthTom(freq, time) {
   const osc = hostAudioCtx.createOscillator();
   const gain = hostAudioCtx.createGain();
@@ -1465,109 +1549,80 @@ function hostSynthTom(freq, time) {
   osc.frequency.setValueAtTime(freq, time);
   gain.gain.setValueAtTime(0.5, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
-  osc.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.25);
+  osc.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.25);
 }
-
-function hostSynthBass(freq, velocity = 1, time) {
+function hostSynthBass(freq, velocity, time) {
   const osc = hostAudioCtx.createOscillator();
   const filter = hostAudioCtx.createBiquadFilter();
   const gain = hostAudioCtx.createGain();
   osc.type = "sawtooth";
   osc.frequency.setValueAtTime(freq / 2, time);
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(400 + velocity * 800, time);
+  filter.type = "lowpass"; filter.frequency.setValueAtTime(400 + velocity * 800, time);
   gain.gain.setValueAtTime(0.6 * velocity, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.25);
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.3);
+  osc.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.3);
 }
-
-function hostSynthPluck(freq, velocity = 1, time) {
+function hostSynthPluck(freq, velocity, time) {
   const osc = hostAudioCtx.createOscillator();
   const filter = hostAudioCtx.createBiquadFilter();
   const gain = hostAudioCtx.createGain();
   osc.type = "triangle";
   osc.frequency.setValueAtTime(freq, time);
-  filter.type = "highpass";
-  filter.frequency.setValueAtTime(800 + velocity * 800, time);
+  filter.type = "highpass"; filter.frequency.setValueAtTime(800 + velocity * 800, time);
   gain.gain.setValueAtTime(0.7 * velocity, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.12);
+  osc.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.12);
 }
-
-function hostSynthBell(freq, velocity = 1, time) {
+function hostSynthBell(freq, velocity, time) {
   const osc1 = hostAudioCtx.createOscillator();
   const osc2 = hostAudioCtx.createOscillator();
   const gain = hostAudioCtx.createGain();
-  osc1.type = "sine";
-  osc2.type = "sine";
+  osc1.type = "sine"; osc2.type = "sine";
   osc1.frequency.setValueAtTime(freq, time);
   osc2.frequency.setValueAtTime(freq * 2.01, time);
   gain.gain.setValueAtTime(0.5 * velocity, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 1.2);
-  osc1.connect(gain);
-  osc2.connect(gain);
-  gain.connect(hostMasterGain);
-  osc1.start(time);
-  osc2.start(time);
-  osc1.stop(time + 1.3);
-  osc2.stop(time + 1.3);
+  osc1.connect(gain); osc2.connect(gain); gain.connect(hostMasterGain);
+  osc1.start(time); osc2.start(time);
+  osc1.stop(time + 1.3); osc2.stop(time + 1.3);
 }
-
-function hostSynthPad(freq, velocity = 1, time) {
+function hostSynthPad(freq, velocity, time) {
   const osc = hostAudioCtx.createOscillator();
   const filter = hostAudioCtx.createBiquadFilter();
   const gain = hostAudioCtx.createGain();
   osc.type = "sine";
   osc.frequency.setValueAtTime(freq, time);
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(800 + velocity * 1200, time);
+  filter.type = "lowpass"; filter.frequency.setValueAtTime(800 + velocity * 1200, time);
   gain.gain.setValueAtTime(0.0001, time);
   gain.gain.linearRampToValueAtTime(0.3 * velocity, time + 0.3);
   gain.gain.linearRampToValueAtTime(0.0001, time + 1.5);
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 1.6);
+  osc.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 1.6);
 }
-
-function hostSynthLead(freq, velocity = 1, time) {
+function hostSynthLead(freq, velocity, time) {
   const osc = hostAudioCtx.createOscillator();
   const filter = hostAudioCtx.createBiquadFilter();
   const gain = hostAudioCtx.createGain();
   osc.type = "square";
   osc.frequency.setValueAtTime(freq, time);
-  filter.type = "bandpass";
-  filter.frequency.setValueAtTime(freq * (1.5 + velocity), time);
+  filter.type = "bandpass"; filter.frequency.setValueAtTime(freq * (1.5 + velocity), time);
   gain.gain.setValueAtTime(0.5 * velocity, time);
   gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.3);
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(hostMasterGain);
-  osc.start(time);
-  osc.stop(time + 0.35);
+  osc.connect(filter); filter.connect(gain); gain.connect(hostMasterGain);
+  osc.start(time); osc.stop(time + 0.35);
 }
 
 function playHostSound(degree, instrument, time, velocity = 1) {
   if (!hostAudioCtx) return;
   const freq = hostPadFrequency(degree);
-
   switch (instrument) {
-    case "sine":     hostSynthTone(freq, "sine", velocity, time);      break;
-    case "triangle": hostSynthTone(freq, "triangle", velocity, time);  break;
-    case "square":   hostSynthTone(freq, "square", velocity, time);    break;
-    case "sawtooth": hostSynthTone(freq, "sawtooth", velocity, time);  break;
+    case "sine":     hostSynthTone(freq, "sine",     velocity, time); break;
+    case "triangle": hostSynthTone(freq, "triangle", velocity, time); break;
+    case "square":   hostSynthTone(freq, "square",   velocity, time); break;
+    case "sawtooth": hostSynthTone(freq, "sawtooth", velocity, time); break;
     case "bass":     hostSynthBass(freq, velocity, time);  break;
     case "pluck":    hostSynthPluck(freq, velocity, time); break;
     case "bell":     hostSynthBell(freq, velocity, time);  break;
@@ -1579,14 +1634,14 @@ function playHostSound(degree, instrument, time, velocity = 1) {
     case "tom":      hostSynthTom(freq, time);         break;
     case "kit":
       switch (degree) {
-        case 0: hostSynthKick(time); break;
-        case 1: hostSynthSnare(time); break;
-        case 2: hostSynthHiHat(time); break;
-        case 3: hostSynthTom(220, time); break;
-        case 4: hostSynthTom(180, time); break;
-        case 5: hostSynthHiHat(time); break;
-        case 6: hostSynthSnare(time); break;
-        case 7: hostSynthKick(time); break;
+        case 0: hostSynthKick(time);       break;
+        case 1: hostSynthSnare(time);      break;
+        case 2: hostSynthHiHat(time);      break;
+        case 3: hostSynthTom(220, time);   break;
+        case 4: hostSynthTom(180, time);   break;
+        case 5: hostSynthHiHat(time);      break;
+        case 6: hostSynthSnare(time);      break;
+        case 7: hostSynthKick(time);       break;
         default: hostSynthKick(time);
       }
       break;
@@ -1594,48 +1649,36 @@ function playHostSound(degree, instrument, time, velocity = 1) {
   }
 }
 
-// ── Playback Engine ───────────────
+// ── Normalise loop events ─────────────────────────────────────
+function getEventsFromLoop(loopData) {
+  const events = [];
+  const loopLenMs = loopData.loopLengthMs || 2000;
+  (loopData.loopEvents || []).forEach(ev => {
+    events.push({ timeMs: ev.timeMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
+  });
+  (loopData.stepGridEvents || []).forEach(ev => {
+    const steps = loopData.stepGridSteps || 16;
+    events.push({ timeMs: (ev.step / steps) * loopLenMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
+  });
+  return events;
+}
 
+// ── Playback state ────────────────────────────────────────────
 let cpActive = false;
 let cpSectionIndex = 0;
 let cpTimer = null;
 
-function getEventsFromLoop(loopData) {
-  const events = [];
-  const loopLenMs = loopData.loopLengthMs || 2000;
-  
-  if (loopData.loopEvents) {
-    loopData.loopEvents.forEach(ev => {
-      events.push({ timeMs: ev.timeMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
-    });
-  }
-  
-  if (loopData.stepGridEvents) {
-    const steps = loopData.stepGridSteps || 16;
-    loopData.stepGridEvents.forEach(ev => {
-      const timeMs = (ev.step / steps) * loopLenMs;
-      events.push({ timeMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
-    });
-  }
-  
-  return events;
-}
-
 function startCentralArrangementPlayback() {
   if (!hostAudioCtx) initHostAudio();
   if (hostAudioCtx.state === "suspended") hostAudioCtx.resume();
-  
   cpActive = true;
   cpSectionIndex = 0;
-  
   const startBtn = document.getElementById("sbStartSongBtn");
   const stopBtn  = document.getElementById("sbStopSongBtn");
   if (startBtn) startBtn.disabled = true;
   if (stopBtn)  stopBtn.disabled = false;
-  
   sbUpdateStatus({ ...sbState, songActive: true });
   log("Central Playback started", "system");
-  
   scheduleCentralSection(cpSectionIndex);
 }
 
@@ -1643,12 +1686,10 @@ function stopCentralArrangementPlayback() {
   cpActive = false;
   if (cpTimer) clearTimeout(cpTimer);
   cpTimer = null;
-  
   const startBtn = document.getElementById("sbStartSongBtn");
   const stopBtn  = document.getElementById("sbStopSongBtn");
   if (startBtn) startBtn.disabled = false;
   if (stopBtn)  stopBtn.disabled = true;
-  
   sbUpdateStatus({ ...sbState, songActive: false });
   sbHighlight(null, null);
   log("Central Playback stopped", "system");
@@ -1656,67 +1697,55 @@ function stopCentralArrangementPlayback() {
 
 function scheduleCentralSection(idx) {
   if (!cpActive) return;
-  
   const sectionName = SB_SECTIONS[idx];
-  if (!sectionName) {
-    stopCentralArrangementPlayback();
-    return;
-  }
-  
+  if (!sectionName) { stopCentralArrangementPlayback(); return; }
+
   const barsEl = document.getElementById(`sbCardBars_${sectionName}`);
   const bars = barsEl ? parseInt(barsEl.textContent) || 4 : 4;
-  
   const bpm = Number(bpmInput.value) || 120;
   const beatsPerBar = Number(beatsPerBarSel.value) || 4;
-  const msPerBeat = 60000 / bpm;
-  const msPerBar = msPerBeat * beatsPerBar;
+  const msPerBar = (60000 / bpm) * beatsPerBar;
   const sectionDurationMs = msPerBar * bars;
-  
+
   const nextSectionName = SB_SECTIONS[idx + 1] || null;
   sbHighlight(sectionName, nextSectionName);
-  
-  // Update state for UI
   sbState.section = sectionName;
   sbState.upcoming = nextSectionName;
   sbState.barsLeft = bars;
   sbUpdateStatus(sbState);
-  
-  const assignment = songBoardData[sectionName];
-  if (assignment && assignment.playerId) {
-    const loopData = passedLoopsLibrary.get(assignment.playerId);
-    if (loopData) {
-      const events = getEventsFromLoop(loopData);
-      const loopLenMs = loopData.loopLengthMs || msPerBar;
-      
-      const startTime = hostAudioCtx.currentTime + 0.1;
-      
-      // Schedule all loops for this section
-      const loopsNeeded = Math.ceil(sectionDurationMs / loopLenMs);
-      for (let i = 0; i < loopsNeeded; i++) {
-        const loopStartOffset = i * (loopLenMs / 1000);
-        
-        events.forEach(ev => {
-          const evTime = startTime + loopStartOffset + (ev.timeMs / 1000);
-          if (evTime < startTime + (sectionDurationMs / 1000)) {
-            playHostSound(ev.degree, ev.instrument, evTime);
-          }
-        });
-      }
+
+  // ── Layered multi-loop scheduling ────────────────────────────
+  const assignedIds = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
+  const startTime = hostAudioCtx.currentTime + 0.1;
+
+  assignedIds.forEach(loopId => {
+    const loopData = passedLoopsLibrary.get(loopId);
+    if (!loopData) return;
+    const events = getEventsFromLoop(loopData);
+    const loopLenMs = loopData.loopLengthMs || msPerBar;
+    const loopsNeeded = Math.ceil(sectionDurationMs / loopLenMs);
+
+    for (let i = 0; i < loopsNeeded; i++) {
+      const loopOffset = i * (loopLenMs / 1000);
+      events.forEach(ev => {
+        const evTime = startTime + loopOffset + (ev.timeMs / 1000);
+        if (evTime < startTime + (sectionDurationMs / 1000)) {
+          playHostSound(ev.degree, ev.instrument, evTime);
+        }
+      });
     }
-  }
-  
-  // Bar countdown UI update loop
+  });
+
+  // ── Bar countdown + auto-advance ─────────────────────────────
   let currentBar = 0;
-  const updateBarCountdown = () => {
+  const tick = () => {
     if (!cpActive || sbState.section !== sectionName) return;
-    
     sbState.barsLeft = bars - currentBar;
     const barsLabel = document.getElementById(`sbCardBars_${sectionName}`);
     if (barsLabel) barsLabel.textContent = `${sbState.barsLeft} bars`;
-    
     currentBar++;
     if (currentBar < bars) {
-      cpTimer = setTimeout(updateBarCountdown, msPerBar);
+      cpTimer = setTimeout(tick, msPerBar);
     } else {
       cpTimer = setTimeout(() => {
         cpSectionIndex++;
@@ -1724,11 +1753,5 @@ function scheduleCentralSection(idx) {
       }, msPerBar);
     }
   };
-  
-  updateBarCountdown();
+  tick();
 }
-
-// Wire Central Playback to Transport buttons
-// We replace the socket.emit logic for song start/stop with Central Playback
-// if there are no connected players, or we can just use Central Playback as the default
-// behavior when Host clicks Start on the Song Board.

@@ -252,8 +252,8 @@ socket.on("host:passed-loop", (data) => {
     </div>
     <div class="lc-assign-row">
       <span class="lc-assign-label">Assign to:</span>
-      ${["Intro","Verse","Chorus","Bridge","Outro"].map(s =>
-        `<button class="lc-assign-btn" data-section="${s}">${s}</button>`
+      ${arrangementSections.map(s =>
+        `<button class="lc-assign-btn" data-section="${s.name}">${s.name}</button>`
       ).join("")}
     </div>
   `;
@@ -324,7 +324,8 @@ function deletePassedLoop(loopId) {
   passedLoopsLibrary.delete(loopId);
 
   // Remove from all section assignments
-  SB_SECTIONS.forEach(section => {
+  arrangementSections.forEach(sec => {
+    const section = sec.name;
     if (Array.isArray(songBoardData[section])) {
       songBoardData[section] = songBoardData[section].filter(id => id !== loopId);
       if (songBoardData[section].length === 0) {
@@ -407,25 +408,23 @@ function saveCurrentSession() {
 
 /** Build a .ptarr JSON object from current host state */
 function buildArrangementFile() {
-  const sections = ["Intro","Verse","Chorus","Bridge","Outro"];
-  const sectionStructure = sections.map((name, idx) => {
-    const barsEl = document.getElementById(`sbCardBars_${name}`);
-    const notesRaw = localStorage.getItem(`pulsetap_section_notes_${name}`) || "";
-    const assigned = songBoardData[name] || null;
+  const sectionStructure = arrangementSections.map((sec, idx) => {
     return {
-      name,
+      name: sec.name,
       slot: idx + 1,
-      bars: barsEl ? parseInt(barsEl.textContent) || 4 : 4,
+      bars: sec.bars,
       feel: "",
-      lyrics: notesRaw,
-      energy: null,
-      assignedPlayerId:     assigned ? assigned.playerId     : null,
-      assignedPlayerName:   assigned ? assigned.playerName   : null,
-      assignedRole:         assigned ? assigned.role         : null,
-      assignedSlot:         assigned ? assigned.slot         : null,
-      assignedLoopLengthMs: assigned ? assigned.loopLengthMs : null
+      lyrics: sec.notes,
+      energy: sec.energy,
+      // Legacy fields kept null for v1.1
+      assignedPlayerId: null,
+      assignedPlayerName: null,
+      assignedRole: null,
+      assignedSlot: null,
+      assignedLoopLengthMs: null
     };
   });
+  const sections = arrangementSections.map(s => s.name);
 
   const loopLibrary = Array.from(passedLoopsLibrary.values()).map(loop => ({
     loopId:         loop.loopId || `${loop.playerId}_${loop.slot || "slot"}_export`,
@@ -577,12 +576,16 @@ function importArrangement(data) {
   });
   updateInboxCount();
 
-  // 3. Restore section notes
-  (data.songStructure || []).forEach(sec => {
-    if (sec.lyrics) {
-      localStorage.setItem(`pulsetap_section_notes_${sec.name}`, sec.lyrics);
-    }
-  });
+  // 3. Restore song structure (arrangementSections)
+  if (data.songStructure && data.songStructure.length > 0) {
+    arrangementSections = data.songStructure.map(sec => ({
+      id: generateSectionId(),
+      name: sec.name,
+      bars: sec.bars || 4,
+      notes: sec.lyrics || "",
+      energy: sec.energy || null
+    }));
+  }
 
   // 4. Restore Song Board assignments as loopId arrays
   songBoardData = {};
@@ -1167,7 +1170,90 @@ saveSessionBtn.addEventListener("pointerdown", (e) => {
 //  status strip (BPM / key / mode / bars remaining).
 // ═══════════════════════════════════════════════════════════════
 
-const SB_SECTIONS = ["Intro", "Verse", "Chorus", "Bridge", "Outro"];
+// Dynamic arrangement sections
+let arrangementSections = [
+  { id: "sec_intro",  name: "Intro",  bars: 4, notes: "", energy: null },
+  { id: "sec_verse",  name: "Verse",  bars: 4, notes: "", energy: null },
+  { id: "sec_chorus", name: "Chorus", bars: 4, notes: "", energy: null },
+  { id: "sec_bridge", name: "Bridge", bars: 4, notes: "", energy: null },
+  { id: "sec_outro",  name: "Outro",  bars: 4, notes: "", energy: null }
+];
+
+const ARR_TEMPLATES = {
+  "basic": [
+    { name: "Intro", bars: 4 },
+    { name: "Verse", bars: 8 },
+    { name: "Chorus", bars: 8 },
+    { name: "Bridge", bars: 4 },
+    { name: "Outro", bars: 4 }
+  ],
+  "rock_pop": [
+    { name: "Intro", bars: 4 },
+    { name: "Verse 1", bars: 8 },
+    { name: "Chorus 1", bars: 8 },
+    { name: "Verse 2", bars: 8 },
+    { name: "Chorus 2", bars: 8 },
+    { name: "Bridge", bars: 8 },
+    { name: "Chorus 3", bars: 8 },
+    { name: "Outro", bars: 4 }
+  ],
+  "jam_session": [
+    { name: "Warmup", bars: 8 },
+    { name: "Groove A", bars: 16 },
+    { name: "Groove B", bars: 16 },
+    { name: "Breakdown", bars: 8 },
+    { name: "Climax", bars: 16 }
+  ],
+  "classroom_abc": [
+    { name: "Part A", bars: 4 },
+    { name: "Part B", bars: 4 },
+    { name: "Part C", bars: 4 },
+    { name: "All Together", bars: 8 }
+  ],
+  "energy_build": [
+    { name: "Ambient", bars: 8 },
+    { name: "Pulse", bars: 8 },
+    { name: "Drive", bars: 8 },
+    { name: "Peak", bars: 8 },
+    { name: "Fade", bars: 8 }
+  ]
+};
+
+function generateSectionId() {
+  return "sec_" + Math.random().toString(36).substring(2, 9);
+}
+
+function loadTemplate(templateKey) {
+  const tpl = ARR_TEMPLATES[templateKey];
+  if (!tpl) return;
+  
+  // Warn if we have existing assignments
+  const hasAssignments = Object.keys(songBoardData).length > 0;
+  if (hasAssignments && !confirm("Loading a template will rebuild sections. Assignments for matching section names will be kept, but others may be lost. Continue?")) {
+    return;
+  }
+
+  // Preserve assignments for names that still exist in the new template
+  const newNames = tpl.map(s => s.name);
+  Object.keys(songBoardData).forEach(oldName => {
+    if (!newNames.includes(oldName)) {
+      delete songBoardData[oldName];
+    }
+  });
+
+  arrangementSections = tpl.map(s => ({
+    id: generateSectionId(),
+    name: s.name,
+    bars: s.bars,
+    notes: "",
+    energy: null
+  }));
+
+  saveSongBoard();
+  sbRenderCards();
+  log(`Template loaded: ${templateKey}`, "system");
+}
+
 
 // Live state received from player
 let sbState = {
@@ -1191,43 +1277,61 @@ function sbRenderCards() {
   if (!container) return;
   container.innerHTML = "";
 
-  SB_SECTIONS.forEach((section, idx) => {
+  arrangementSections.forEach((sec, idx) => {
+    const section = sec.name;
     const card = document.createElement("div");
     card.className = "sb-card";
     card.dataset.section = section;
+    card.dataset.sectionId = sec.id;
 
-    // Slot badge (slot index = section index + 1 by convention)
-    const slotNum = idx + 1;
+    // Header row with slot badge and controls
+    const headerRow = document.createElement("div");
+    headerRow.className = "sb-card-header";
+    headerRow.style.display = "flex";
+    headerRow.style.justifyContent = "space-between";
+    headerRow.style.alignItems = "center";
+    headerRow.style.marginBottom = "8px";
+
     const slotBadge = document.createElement("div");
     slotBadge.className = "sb-card-slot";
-    slotBadge.textContent = `Slot ${slotNum}`;
+    slotBadge.textContent = `Sec ${idx + 1}`;
+
+    const controls = document.createElement("div");
+    controls.className = "sb-card-controls";
+    controls.innerHTML = `
+      <button class="sb-ctrl-btn" onclick="editSection('${sec.id}')" title="Edit Section">✎</button>
+      <button class="sb-ctrl-btn" onclick="duplicateSection('${sec.id}')" title="Duplicate Section">+</button>
+      <button class="sb-ctrl-btn" onclick="deleteSection('${sec.id}')" title="Delete Section">✕</button>
+    `;
+    controls.style.display = "flex";
+    controls.style.gap = "4px";
+
+    headerRow.appendChild(slotBadge);
+    headerRow.appendChild(controls);
 
     // Section name
     const nameEl = document.createElement("div");
     nameEl.className = "sb-card-name";
     nameEl.textContent = section;
 
-    // Bars label (default 4 bars, updated from viz:state)
+    // Bars label
     const barsEl = document.createElement("div");
     barsEl.className = "sb-card-bars";
     barsEl.id = `sbCardBars_${section}`;
-    barsEl.textContent = "4 bars";
+    barsEl.textContent = `${sec.bars} bars`;
 
     // Notes preview
     const notesEl = document.createElement("div");
     notesEl.className = "sb-card-notes";
     notesEl.id = `sbCardNotes_${section}`;
-    const savedNotes = localStorage.getItem(`pulsetap_section_notes_${section}`) || "";
-    notesEl.textContent = savedNotes
-      ? savedNotes.split("\n")[0].slice(0, 60)
-      : "";
+    notesEl.textContent = sec.notes ? sec.notes.split("\n")[0].slice(0, 60) : "";
 
     // Active/next indicator pill
     const pillEl = document.createElement("div");
     pillEl.className = "sb-card-pill";
     pillEl.id = `sbCardPill_${section}`;
 
-    card.appendChild(slotBadge);
+    card.appendChild(headerRow);
     card.appendChild(nameEl);
     card.appendChild(barsEl);
     card.appendChild(notesEl);
@@ -1697,17 +1801,16 @@ function stopCentralArrangementPlayback() {
 
 function scheduleCentralSection(idx) {
   if (!cpActive) return;
-  const sectionName = SB_SECTIONS[idx];
-  if (!sectionName) { stopCentralArrangementPlayback(); return; }
-
-  const barsEl = document.getElementById(`sbCardBars_${sectionName}`);
-  const bars = barsEl ? parseInt(barsEl.textContent) || 4 : 4;
+  const sec = arrangementSections[idx];
+  if (!sec) { stopCentralArrangementPlayback(); return; }
+  const sectionName = sec.name;
+  const bars = sec.bars;
   const bpm = Number(bpmInput.value) || 120;
   const beatsPerBar = Number(beatsPerBarSel.value) || 4;
   const msPerBar = (60000 / bpm) * beatsPerBar;
   const sectionDurationMs = msPerBar * bars;
 
-  const nextSectionName = SB_SECTIONS[idx + 1] || null;
+  const nextSectionName = arrangementSections[idx + 1]?.name || null;
   sbHighlight(sectionName, nextSectionName);
   sbState.section = sectionName;
   sbState.upcoming = nextSectionName;
@@ -1755,3 +1858,123 @@ function scheduleCentralSection(idx) {
   };
   tick();
 }
+
+
+// ── Section CRUD ──────────────────────────────────────────────
+window.editSection = function(id) {
+  const sec = arrangementSections.find(s => s.id === id);
+  if (!sec) return;
+  const newName = prompt("Section Name:", sec.name);
+  if (newName === null) return;
+  const newBarsStr = prompt("Bars:", sec.bars);
+  if (newBarsStr === null) return;
+  const newBars = parseInt(newBarsStr) || 4;
+  
+  // If name changed, migrate assignments
+  if (newName.trim() && newName !== sec.name) {
+    if (songBoardData[sec.name]) {
+      songBoardData[newName] = songBoardData[sec.name];
+      delete songBoardData[sec.name];
+    }
+    sec.name = newName.trim();
+  }
+  sec.bars = newBars;
+  saveSongBoard();
+  sbRenderCards();
+};
+
+window.duplicateSection = function(id) {
+  const idx = arrangementSections.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  const sec = arrangementSections[idx];
+  
+  // Find a unique name
+  let newName = sec.name + " (Copy)";
+  let counter = 1;
+  while (arrangementSections.some(s => s.name === newName)) {
+    counter++;
+    newName = `${sec.name} (Copy ${counter})`;
+  }
+
+  const newSec = {
+    id: generateSectionId(),
+    name: newName,
+    bars: sec.bars,
+    notes: sec.notes,
+    energy: sec.energy
+  };
+
+  // Copy assignments
+  if (songBoardData[sec.name]) {
+    songBoardData[newName] = [...songBoardData[sec.name]];
+  }
+
+  arrangementSections.splice(idx + 1, 0, newSec);
+  saveSongBoard();
+  sbRenderCards();
+};
+
+window.deleteSection = function(id) {
+  const idx = arrangementSections.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  const sec = arrangementSections[idx];
+  if (!confirm(`Delete section "${sec.name}"?`)) return;
+  
+  delete songBoardData[sec.name];
+  arrangementSections.splice(idx, 1);
+  saveSongBoard();
+  sbRenderCards();
+};
+
+window.addSection = function() {
+  const newName = prompt("New Section Name:", "New Section");
+  if (!newName || !newName.trim()) return;
+  if (arrangementSections.some(s => s.name === newName.trim())) {
+    alert("Section name must be unique.");
+    return;
+  }
+  arrangementSections.push({
+    id: generateSectionId(),
+    name: newName.trim(),
+    bars: 4,
+    notes: "",
+    energy: null
+  });
+  saveSongBoard();
+  sbRenderCards();
+};
+
+// ── Template Picker UI ────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  const sbHeader = document.querySelector(".sb-header") || document.getElementById("songBoardSections")?.parentElement;
+  if (sbHeader && !document.getElementById("templatePicker")) {
+    const tplDiv = document.createElement("div");
+    tplDiv.style.marginBottom = "10px";
+    tplDiv.style.display = "flex";
+    tplDiv.style.gap = "8px";
+    tplDiv.innerHTML = `
+      <select id="templatePicker" class="transport-select">
+        <option value="">-- Load Template --</option>
+        <option value="basic">Basic Song</option>
+        <option value="rock_pop">Rock/Pop</option>
+        <option value="jam_session">Jam Session</option>
+        <option value="classroom_abc">Classroom A/B/C</option>
+        <option value="energy_build">Energy Build</option>
+      </select>
+      <button class="transport-btn" onclick="addSection()">+ Add Section</button>
+    `;
+    
+    // Insert before the sections container
+    const container = document.getElementById("songBoardSections");
+    if (container) {
+      container.parentNode.insertBefore(tplDiv, container);
+    }
+    
+    document.getElementById("templatePicker")?.addEventListener("change", (e) => {
+      if (e.target.value) {
+        loadTemplate(e.target.value);
+        e.target.value = "";
+      }
+    });
+  }
+});

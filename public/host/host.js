@@ -297,6 +297,12 @@ loadSessionBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   loadSavedSession();
 });
+
+function updateInboxCount() {
+  const countEl = document.getElementById("inboxCount");
+  const list = document.getElementById("loopInboxList");
+  if (countEl && list) countEl.textContent = list.children.length;
+}
 // ─────────────────────────────────────────────────────────────
 //  Room setup
 // ─────────────────────────────────────────────────────────────

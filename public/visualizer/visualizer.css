@@ -761,3 +761,223 @@ html, body {
   .playback-controls { gap: 0.25rem; padding: 0.3rem 0.5rem; }
   .pb-bpm-slider { width: 60px; }
 }
+
+/* ── Musician Reference Panel ────────────────────────────────── */
+.viz-ref-panel {
+  grid-area: footer; /* Share the bottom area, or position absolutely */
+  position: absolute;
+  bottom: 120px; /* Above the energy meter */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1200px;
+  background: rgba(15, 19, 24, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10;
+}
+
+.ref-header {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  font-weight: 800;
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ref-content {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 2fr;
+  gap: 24px;
+}
+
+.ref-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ref-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+
+/* Scale Notes */
+.scale-notes {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  letter-spacing: 0.1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scale-notes span {
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+}
+
+.scale-notes .root-note {
+  color: var(--accent);
+  background: rgba(255, 194, 71, 0.15);
+  border: 1px solid rgba(255, 194, 71, 0.3);
+}
+
+/* Piano Map */
+.piano-map {
+  display: flex;
+  height: 60px;
+  position: relative;
+  background: #111;
+  border-radius: 4px;
+  padding: 2px;
+  border: 1px solid var(--border);
+}
+
+.key-white {
+  flex: 1;
+  background: #e5e5e5;
+  border-right: 1px solid #999;
+  border-radius: 0 0 3px 3px;
+  position: relative;
+  transition: background 0.2s;
+}
+.key-white:last-child { border-right: none; }
+
+.key-black {
+  width: 4.5%;
+  height: 60%;
+  background: #222;
+  position: absolute;
+  top: 2px;
+  z-index: 2;
+  border-radius: 0 0 2px 2px;
+  margin-left: -2.25%;
+  transition: background 0.2s;
+}
+
+/* Position the black keys manually for 2 octaves */
+.key-black:nth-child(2) { left: 7.14%; }
+.key-black:nth-child(4) { left: 14.28%; }
+.key-black:nth-child(7) { left: 28.57%; }
+.key-black:nth-child(9) { left: 35.71%; }
+.key-black:nth-child(11) { left: 42.85%; }
+
+.key-black:nth-child(14) { left: 57.14%; }
+.key-black:nth-child(16) { left: 64.28%; }
+.key-black:nth-child(19) { left: 78.57%; }
+.key-black:nth-child(21) { left: 85.71%; }
+.key-black:nth-child(23) { left: 92.85%; }
+
+/* Active states */
+.key-white.in-scale { background: #fff; box-shadow: inset 0 -4px 0 var(--accent2); }
+.key-black.in-scale { background: #444; box-shadow: inset 0 -4px 0 var(--accent2); }
+
+.key-white.is-root { background: #fff; box-shadow: inset 0 -4px 0 var(--accent); }
+.key-black.is-root { background: #444; box-shadow: inset 0 -4px 0 var(--accent); }
+
+/* Guitar Map */
+.guitar-map {
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 0;
+  position: relative;
+}
+
+.fretboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.fret-markers {
+  position: absolute;
+  top: 0; bottom: 0; left: 20px; right: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.fret-marker {
+  flex: 1;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  position: relative;
+}
+
+.fret-marker.nut {
+  border-left: 4px solid #ddd;
+  flex: 0 0 0;
+}
+
+.fret-marker.dot::after {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.fret-marker:nth-child(13).dot::before {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  top: 25%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.fret-marker:nth-child(13).dot::after {
+  top: 75%;
+}
+
+.string {
+  height: 2px;
+  background: #888;
+  position: relative;
+  z-index: 1;
+}
+
+.string:nth-child(2) { height: 2.5px; }
+.string:nth-child(3) { height: 3px; }
+.string:nth-child(4) { height: 3.5px; }
+.string:nth-child(5) { height: 4px; }
+.string:nth-child(6) { height: 4.5px; }
+
+.note-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  background: var(--accent2);
+  color: #000;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.note-dot.is-root {
+  background: var(--accent);
+  transform: translate(-50%, -50%) scale(1.15);
+}

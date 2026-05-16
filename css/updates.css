@@ -309,11 +309,30 @@
 }
 .lab-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 18px;
 }
 
 .tags span {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(101,214,206,.1);
+  border: 1px solid rgba(101,214,206,.25);
+  color: var(--accent2);
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+.tags,
+.lab-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tags span,
+.lab-tag {
   display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;

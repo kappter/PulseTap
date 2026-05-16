@@ -1277,9 +1277,7 @@ document.getElementById("sbStartSongBtn")?.addEventListener("pointerdown", (e) =
   e.preventDefault();
   if (!currentRoom) { log("Open a room first", "system"); return; }
   socket.emit("host:song-start", { roomId: currentRoom });
-  log("\u25b6 Song start requested", "system");
-  // Optimistic UI update
-  sbUpdateStatus({ ...sbState, songActive: true });
+  startCentralArrangementPlayback();
 });
 
 // ── Transport: Stop Song ──────────────────────────────────────
@@ -1287,9 +1285,7 @@ document.getElementById("sbStopSongBtn")?.addEventListener("pointerdown", (e) =>
   e.preventDefault();
   if (!currentRoom) return;
   socket.emit("host:song-stop", { roomId: currentRoom });
-  log("\u25a0 Song stop requested", "system");
-  sbUpdateStatus({ ...sbState, songActive: false });
-  sbHighlight(null, null);
+  stopCentralArrangementPlayback();
 });
 
 // ── Transport: Next Section ───────────────────────────────────
@@ -1298,7 +1294,14 @@ document.getElementById("sbNextSectionBtn")?.addEventListener("pointerdown", (e)
   e.preventDefault();
   if (!currentRoom) return;
   socket.emit("host:song-next", { roomId: currentRoom });
-  log("\u23ed Next section requested", "system");
+  if (cpActive) {
+    if (cpTimer) clearTimeout(cpTimer);
+    cpSectionIndex++;
+    scheduleCentralSection(cpSectionIndex);
+    log("\u23ed Next section forced locally", "system");
+  } else {
+    log("\u23ed Next section requested", "system");
+  }
 });
 
 // ── Save drag-and-drop board data (legacy) ────────────────────
@@ -1336,3 +1339,396 @@ function makeLoopCardsDraggable() {
     card.dataset.draggableSet = "true";
   });
 };
+
+
+// ═══════════════════════════════════════════════════════════════
+//  Central Playback Engine (Phase 1.5)
+//  Allows the Host to play the arrangement through local speakers
+//  using Web Audio without requiring connected players.
+// ═══════════════════════════════════════════════════════════════
+
+let hostAudioCtx = null;
+let hostMasterGain = null;
+
+function initHostAudio() {
+  if (hostAudioCtx) {
+    if (hostAudioCtx.state === "suspended") hostAudioCtx.resume();
+    return;
+  }
+  hostAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" });
+  hostMasterGain = hostAudioCtx.createGain();
+  hostMasterGain.gain.value = 0.8;
+  hostMasterGain.connect(hostAudioCtx.destination);
+}
+
+// Unlock audio on interaction
+document.body.addEventListener("pointerdown", initHostAudio, { once: true });
+
+// ── Synth Helpers (Adapted from player.js) ───────────────
+
+const SCALES = {
+  major:      [0, 2, 4, 5, 7, 9, 11, 12],
+  minor:      [0, 2, 3, 5, 7, 8, 10, 12],
+  dorian:     [0, 2, 3, 5, 7, 9, 10, 12],
+  phrygian:   [0, 1, 3, 5, 7, 8, 10, 12],
+  lydian:     [0, 2, 4, 6, 7, 9, 11, 12],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10, 12],
+  pentatonic: [0, 2, 4, 7, 9, 12, 14, 16],
+  chromatic:  [0, 1, 2, 3, 4, 5, 6, 7]
+};
+
+const KEY_FREQ = {
+  C: 261.63, "C#": 277.18, D: 293.66, "D#": 311.13,
+  E: 329.63, F: 349.23, "F#": 369.99, G: 392.00,
+  "G#": 415.30, A: 440.00, "A#": 466.16, B: 493.88
+};
+
+function semitoneToHz(rootHz, semitones) {
+  return rootHz * Math.pow(2, semitones / 12);
+}
+
+function hostPadFrequency(degree) {
+  const root  = KEY_FREQ[keySelect.value] || 261.63;
+  const scale = SCALES[modeSelect.value]  || SCALES.major;
+  return semitoneToHz(root, scale[degree] ?? 0);
+}
+
+function hostSynthTone(freq, type = "sine", velocity = 1, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const gain = hostAudioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, time);
+  gain.gain.setValueAtTime(0.4 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
+  osc.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.25);
+}
+
+function hostSynthKick(time) {
+  const osc = hostAudioCtx.createOscillator();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(150, time);
+  osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+  gain.gain.setValueAtTime(1.0, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
+  osc.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.13);
+}
+
+function hostSynthSnare(time) {
+  const noise = hostAudioCtx.createBufferSource();
+  const buffer = hostAudioCtx.createBuffer(1, hostAudioCtx.sampleRate * 0.2, hostAudioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  noise.buffer = buffer;
+  const filter = hostAudioCtx.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.value = 1000;
+  const gain = hostAudioCtx.createGain();
+  gain.gain.setValueAtTime(0.7, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  noise.start(time);
+  noise.stop(time + 0.2);
+}
+
+function hostSynthHiHat(time) {
+  const noise = hostAudioCtx.createBufferSource();
+  const buffer = hostAudioCtx.createBuffer(1, hostAudioCtx.sampleRate * 0.05, hostAudioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  noise.buffer = buffer;
+  const filter = hostAudioCtx.createBiquadFilter();
+  filter.type = "highpass";
+  filter.frequency.value = 5000;
+  const gain = hostAudioCtx.createGain();
+  gain.gain.setValueAtTime(0.3, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  noise.start(time);
+  noise.stop(time + 0.05);
+}
+
+function hostSynthTom(freq, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, time);
+  gain.gain.setValueAtTime(0.5, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.2);
+  osc.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.25);
+}
+
+function hostSynthBass(freq, velocity = 1, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const filter = hostAudioCtx.createBiquadFilter();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(freq / 2, time);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(400 + velocity * 800, time);
+  gain.gain.setValueAtTime(0.6 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.25);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.3);
+}
+
+function hostSynthPluck(freq, velocity = 1, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const filter = hostAudioCtx.createBiquadFilter();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, time);
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(800 + velocity * 800, time);
+  gain.gain.setValueAtTime(0.7 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.12);
+}
+
+function hostSynthBell(freq, velocity = 1, time) {
+  const osc1 = hostAudioCtx.createOscillator();
+  const osc2 = hostAudioCtx.createOscillator();
+  const gain = hostAudioCtx.createGain();
+  osc1.type = "sine";
+  osc2.type = "sine";
+  osc1.frequency.setValueAtTime(freq, time);
+  osc2.frequency.setValueAtTime(freq * 2.01, time);
+  gain.gain.setValueAtTime(0.5 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 1.2);
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(hostMasterGain);
+  osc1.start(time);
+  osc2.start(time);
+  osc1.stop(time + 1.3);
+  osc2.stop(time + 1.3);
+}
+
+function hostSynthPad(freq, velocity = 1, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const filter = hostAudioCtx.createBiquadFilter();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, time);
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(800 + velocity * 1200, time);
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.linearRampToValueAtTime(0.3 * velocity, time + 0.3);
+  gain.gain.linearRampToValueAtTime(0.0001, time + 1.5);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 1.6);
+}
+
+function hostSynthLead(freq, velocity = 1, time) {
+  const osc = hostAudioCtx.createOscillator();
+  const filter = hostAudioCtx.createBiquadFilter();
+  const gain = hostAudioCtx.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(freq, time);
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(freq * (1.5 + velocity), time);
+  gain.gain.setValueAtTime(0.5 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.3);
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(hostMasterGain);
+  osc.start(time);
+  osc.stop(time + 0.35);
+}
+
+function playHostSound(degree, instrument, time, velocity = 1) {
+  if (!hostAudioCtx) return;
+  const freq = hostPadFrequency(degree);
+
+  switch (instrument) {
+    case "sine":     hostSynthTone(freq, "sine", velocity, time);      break;
+    case "triangle": hostSynthTone(freq, "triangle", velocity, time);  break;
+    case "square":   hostSynthTone(freq, "square", velocity, time);    break;
+    case "sawtooth": hostSynthTone(freq, "sawtooth", velocity, time);  break;
+    case "bass":     hostSynthBass(freq, velocity, time);  break;
+    case "pluck":    hostSynthPluck(freq, velocity, time); break;
+    case "bell":     hostSynthBell(freq, velocity, time);  break;
+    case "pad":      hostSynthPad(freq, velocity, time);   break;
+    case "lead":     hostSynthLead(freq, velocity, time);  break;
+    case "kick":     hostSynthKick(time);              break;
+    case "snare":    hostSynthSnare(time);             break;
+    case "hi-hat":   hostSynthHiHat(time);             break;
+    case "tom":      hostSynthTom(freq, time);         break;
+    case "kit":
+      switch (degree) {
+        case 0: hostSynthKick(time); break;
+        case 1: hostSynthSnare(time); break;
+        case 2: hostSynthHiHat(time); break;
+        case 3: hostSynthTom(220, time); break;
+        case 4: hostSynthTom(180, time); break;
+        case 5: hostSynthHiHat(time); break;
+        case 6: hostSynthSnare(time); break;
+        case 7: hostSynthKick(time); break;
+        default: hostSynthKick(time);
+      }
+      break;
+    default: hostSynthTone(freq, "sine", velocity, time);
+  }
+}
+
+// ── Playback Engine ───────────────
+
+let cpActive = false;
+let cpSectionIndex = 0;
+let cpTimer = null;
+
+function getEventsFromLoop(loopData) {
+  const events = [];
+  const loopLenMs = loopData.loopLengthMs || 2000;
+  
+  if (loopData.loopEvents) {
+    loopData.loopEvents.forEach(ev => {
+      events.push({ timeMs: ev.timeMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
+    });
+  }
+  
+  if (loopData.stepGridEvents) {
+    const steps = loopData.stepGridSteps || 16;
+    loopData.stepGridEvents.forEach(ev => {
+      const timeMs = (ev.step / steps) * loopLenMs;
+      events.push({ timeMs, degree: ev.degree, instrument: ev.instrument || loopData.instrument });
+    });
+  }
+  
+  return events;
+}
+
+function startCentralArrangementPlayback() {
+  if (!hostAudioCtx) initHostAudio();
+  if (hostAudioCtx.state === "suspended") hostAudioCtx.resume();
+  
+  cpActive = true;
+  cpSectionIndex = 0;
+  
+  const startBtn = document.getElementById("sbStartSongBtn");
+  const stopBtn  = document.getElementById("sbStopSongBtn");
+  if (startBtn) startBtn.disabled = true;
+  if (stopBtn)  stopBtn.disabled = false;
+  
+  sbUpdateStatus({ ...sbState, songActive: true });
+  log("Central Playback started", "system");
+  
+  scheduleCentralSection(cpSectionIndex);
+}
+
+function stopCentralArrangementPlayback() {
+  cpActive = false;
+  if (cpTimer) clearTimeout(cpTimer);
+  cpTimer = null;
+  
+  const startBtn = document.getElementById("sbStartSongBtn");
+  const stopBtn  = document.getElementById("sbStopSongBtn");
+  if (startBtn) startBtn.disabled = false;
+  if (stopBtn)  stopBtn.disabled = true;
+  
+  sbUpdateStatus({ ...sbState, songActive: false });
+  sbHighlight(null, null);
+  log("Central Playback stopped", "system");
+}
+
+function scheduleCentralSection(idx) {
+  if (!cpActive) return;
+  
+  const sectionName = SB_SECTIONS[idx];
+  if (!sectionName) {
+    stopCentralArrangementPlayback();
+    return;
+  }
+  
+  const barsEl = document.getElementById(`sbCardBars_${sectionName}`);
+  const bars = barsEl ? parseInt(barsEl.textContent) || 4 : 4;
+  
+  const bpm = Number(bpmInput.value) || 120;
+  const beatsPerBar = Number(beatsPerBarSel.value) || 4;
+  const msPerBeat = 60000 / bpm;
+  const msPerBar = msPerBeat * beatsPerBar;
+  const sectionDurationMs = msPerBar * bars;
+  
+  const nextSectionName = SB_SECTIONS[idx + 1] || null;
+  sbHighlight(sectionName, nextSectionName);
+  
+  // Update state for UI
+  sbState.section = sectionName;
+  sbState.upcoming = nextSectionName;
+  sbState.barsLeft = bars;
+  sbUpdateStatus(sbState);
+  
+  const assignment = songBoardData[sectionName];
+  if (assignment && assignment.playerId) {
+    const loopData = passedLoopsLibrary.get(assignment.playerId);
+    if (loopData) {
+      const events = getEventsFromLoop(loopData);
+      const loopLenMs = loopData.loopLengthMs || msPerBar;
+      
+      const startTime = hostAudioCtx.currentTime + 0.1;
+      
+      // Schedule all loops for this section
+      const loopsNeeded = Math.ceil(sectionDurationMs / loopLenMs);
+      for (let i = 0; i < loopsNeeded; i++) {
+        const loopStartOffset = i * (loopLenMs / 1000);
+        
+        events.forEach(ev => {
+          const evTime = startTime + loopStartOffset + (ev.timeMs / 1000);
+          if (evTime < startTime + (sectionDurationMs / 1000)) {
+            playHostSound(ev.degree, ev.instrument, evTime);
+          }
+        });
+      }
+    }
+  }
+  
+  // Bar countdown UI update loop
+  let currentBar = 0;
+  const updateBarCountdown = () => {
+    if (!cpActive || sbState.section !== sectionName) return;
+    
+    sbState.barsLeft = bars - currentBar;
+    const barsLabel = document.getElementById(`sbCardBars_${sectionName}`);
+    if (barsLabel) barsLabel.textContent = `${sbState.barsLeft} bars`;
+    
+    currentBar++;
+    if (currentBar < bars) {
+      cpTimer = setTimeout(updateBarCountdown, msPerBar);
+    } else {
+      cpTimer = setTimeout(() => {
+        cpSectionIndex++;
+        scheduleCentralSection(cpSectionIndex);
+      }, msPerBar);
+    }
+  };
+  
+  updateBarCountdown();
+}
+
+// Wire Central Playback to Transport buttons
+// We replace the socket.emit logic for song start/stop with Central Playback
+// if there are no connected players, or we can just use Central Playback as the default
+// behavior when Host clicks Start on the Song Board.

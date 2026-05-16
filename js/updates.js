@@ -32,7 +32,7 @@
     `;
   };
 
-  fetch('/data/updates.json')
+  fetch('data/updates.json')
     .then((response) => {
       if (!response.ok) throw new Error(`Could not load updates: ${response.status}`);
       return response.json();

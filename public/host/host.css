@@ -903,6 +903,33 @@
   border-radius: 10px;
   pointer-events: none;
 }
+.sb-card-assign-list {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sb-assigned-row {
+  display: grid;
+  grid-template-columns: 1fr auto 22px;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px;
+  border-radius: 7px;
+  background: rgba(101,214,206,0.10);
+  border: 1px solid rgba(101,214,206,0.22);
+}
+
+.sb-remove-btn,
+.lc-delete-btn {
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255,107,107,0.18);
+  color: #ff8a8a;
+  cursor: pointer;
+  font-weight: 800;
+}
 .sb-pill--active {
   background: rgba(101, 214, 206, 0.22);
   color: #65d6ce;

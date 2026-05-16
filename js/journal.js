@@ -19,7 +19,7 @@ async function loadJournal() {
 
     entries.forEach(entry => {
       const card = document.createElement("a");
-      card.className = "journal-card";
+      card.className = "lab-card journal-card";
       card.href = entry.link;
 
       card.innerHTML = `

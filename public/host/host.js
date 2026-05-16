@@ -67,6 +67,8 @@ let metroBeat     = 0;
 let metroTimer    = null;
 let metroBeatsPerBar = 4;
 const savedLoopStates = new Map();
+// Full loop library: Map<playerId, full passed-loop payload>
+const passedLoopsLibrary = new Map();
 
 /** Map<playerId, { playerName, role, socketId, muted, volume, stripEl, meterEl, meterTimer }> */
 const players = new Map();
@@ -141,7 +143,6 @@ socket.on("room:state", (state) => {
     bpmInput.value          = state.settings.bpm      || 120;
     keySelect.value         = state.settings.key      || "C";
     modeSelect.value        = state.settings.mode     || "major";
-    document.dispatchEvent(new Event("pulsetap:room-settings"));
     quantizeSelect.value    = state.settings.quantize || "none";
     isRunning               = state.settings.running  || false;
     updateStartStopBtn();
@@ -225,6 +226,8 @@ socket.on("host:passed-loop", (data) => {
   }
   // Store full data on card for assign button
   card.dataset.loopJson = JSON.stringify(data);
+  // Also keep in the in-memory library for export
+  passedLoopsLibrary.set(playerId, data);
   card.innerHTML = `
     <div class="lc-top">
       <strong class="lc-name">${escHtml(playerName)}</strong>
@@ -351,6 +354,227 @@ function saveCurrentSession() {
   localStorage.setItem("pulsetap_saved_session", JSON.stringify(sessionSave));
   log("Session saved", "system");
 }
+
+// ─────────────────────────────────────────────────────────────
+//  .ptarr Arrangement Export / Import
+// ─────────────────────────────────────────────────────────────
+
+/** Build a .ptarr JSON object from current host state */
+function buildArrangementFile() {
+  const sections = ["Intro","Verse","Chorus","Bridge","Outro"];
+  const sectionStructure = sections.map((name, idx) => {
+    const barsEl = document.getElementById(`sbCardBars_${name}`);
+    const notesRaw = localStorage.getItem(`pulsetap_section_notes_${name}`) || "";
+    const assigned = songBoardData[name] || null;
+    return {
+      name,
+      slot: idx + 1,
+      bars: barsEl ? parseInt(barsEl.textContent) || 4 : 4,
+      feel: "",
+      lyrics: notesRaw,
+      energy: null,
+      assignedPlayerId:     assigned ? assigned.playerId     : null,
+      assignedPlayerName:   assigned ? assigned.playerName   : null,
+      assignedRole:         assigned ? assigned.role         : null,
+      assignedSlot:         assigned ? assigned.slot         : null,
+      assignedLoopLengthMs: assigned ? assigned.loopLengthMs : null
+    };
+  });
+
+  const loopLibrary = Array.from(passedLoopsLibrary.values()).map(loop => ({
+    playerId:       loop.playerId,
+    playerName:     loop.playerName,
+    role:           loop.role,
+    slot:           loop.slot,
+    instrument:     loop.instrument     || "",
+    loopLengthMs:   loop.loopLengthMs,
+    loopEvents:     loop.loopEvents     || [],
+    stepGridEvents: loop.stepGridEvents || [],
+    stepGridSteps:  loop.stepGridSteps  || 16,
+    settings:       loop.settings       || {}
+  }));
+
+  return {
+    ptarrVersion: "1.0",
+    exportedAt:   new Date().toISOString(),
+    title:        currentRoom ? `PulseTap Room ${currentRoom}` : "PulseTap Arrangement",
+    roomId:       currentRoom || "",
+    metadata: {
+      exportedBy:  "host",
+      playerCount: players.size
+    },
+    settings: {
+      bpm:         Number(bpmInput.value)         || 120,
+      beatsPerBar: Number(beatsPerBarSel.value)   || 4,
+      beatUnit:    Number(beatUnitSel.value)       || 4,
+      key:         keySelect.value                || "C",
+      mode:        modeSelect.value               || "major",
+      quantize:    quantizeSelect.value           || "off",
+      timeSig:     `${beatsPerBarSel.value || 4}/${beatUnitSel.value || 4}`
+    },
+    songStructure: sectionStructure,
+    loopLibrary,
+    arrangementAssignments: Object.fromEntries(
+      sections
+        .filter(s => songBoardData[s])
+        .map(s => [s, {
+          playerId:     songBoardData[s].playerId,
+          playerName:   songBoardData[s].playerName,
+          role:         songBoardData[s].role,
+          slot:         songBoardData[s].slot,
+          loopLengthMs: songBoardData[s].loopLengthMs,
+          instrument:   songBoardData[s].instrument
+        }])
+    )
+  };
+}
+
+/** Trigger a .ptarr file download */
+function exportArrangement() {
+  const data = buildArrangementFile();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const title = (data.title || "arrangement").replace(/[^a-z0-9_-]/gi, "_").toLowerCase();
+  a.href     = url;
+  a.download = `${title}.ptarr`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  log("Arrangement exported as .ptarr", "system");
+}
+
+/** Load a .ptarr JSON object into the host */
+function importArrangement(data) {
+  if (!data || data.ptarrVersion !== "1.0") {
+    log("Invalid .ptarr file (version mismatch)", "error");
+    return;
+  }
+
+  // 1. Restore global settings
+  if (data.settings) {
+    bpmInput.value          = data.settings.bpm         || 120;
+    beatsPerBarSel.value    = data.settings.beatsPerBar  || 4;
+    beatUnitSel.value       = data.settings.beatUnit     || 4;
+    keySelect.value         = data.settings.key          || "C";
+    modeSelect.value        = data.settings.mode         || "major";
+    quantizeSelect.value    = data.settings.quantize     || "off";
+    broadcastSettings();
+  }
+
+  // 2. Restore loop library into passedLoopsLibrary and Inbox UI
+  passedLoopsLibrary.clear();
+  (data.loopLibrary || []).forEach(loop => {
+    passedLoopsLibrary.set(loop.playerId, loop);
+    // Re-render inbox card
+    if (loopInboxList) {
+      const cardId = `passed_${loop.playerId}`;
+      let card = document.getElementById(cardId);
+      if (!card) {
+        card = document.createElement("div");
+        card.id = cardId;
+        card.className = "loop-card loop-card--passed";
+        card.draggable = true;
+        card.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", cardId);
+          e.dataTransfer.setData("application/json", JSON.stringify({
+            playerId:    loop.playerId,
+            playerName:  loop.playerName,
+            role:        loop.role,
+            slot:        loop.slot,
+            loopLengthMs: loop.loopLengthMs,
+            totalEvents: (loop.loopEvents?.length || 0) + (loop.stepGridEvents?.length || 0),
+            instrument:  loop.instrument
+          }));
+          card.classList.add("loop-card--dragging");
+        });
+        card.addEventListener("dragend", () => card.classList.remove("loop-card--dragging"));
+        loopInboxList.prepend(card);
+      }
+      card.dataset.loopJson = JSON.stringify(loop);
+      const totalEvents = (loop.loopEvents?.length || 0) + (loop.stepGridEvents?.length || 0);
+      const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
+      card.innerHTML = `
+        <div class="lc-top">
+          <strong class="lc-name">${escHtml(loop.playerName || "")}</strong>
+          <span class="lc-role">${escHtml(loop.role || "")}</span>
+          <span class="lc-badge lc-badge--available">Imported</span>
+        </div>
+        <div class="lc-meta">
+          Slot ${loop.slot ?? "—"} · ${totalEvents} events · ${lenSec}
+          ${loop.instrument ? `· ${escHtml(loop.instrument)}` : ""}
+        </div>
+        <div class="lc-assign-row">
+          <span class="lc-assign-label">Assign to:</span>
+          ${["Intro","Verse","Chorus","Bridge","Outro"].map(s =>
+            `<button class="lc-assign-btn" data-section="${s}">${s}</button>`
+          ).join("")}
+        </div>
+      `;
+      card.querySelectorAll(".lc-assign-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const loopData = JSON.parse(card.dataset.loopJson || "{}");
+          sbAssignLoopToSection(btn.dataset.section, loopData);
+          btn.classList.add("lc-assign-btn--done");
+          btn.textContent = "✓ " + btn.dataset.section;
+        });
+      });
+    }
+  });
+  updateInboxCount();
+
+  // 3. Restore section notes
+  (data.songStructure || []).forEach(sec => {
+    if (sec.lyrics) {
+      localStorage.setItem(`pulsetap_section_notes_${sec.name}`, sec.lyrics);
+    }
+  });
+
+  // 4. Restore Song Board assignments
+  songBoardData = {};
+  Object.entries(data.arrangementAssignments || {}).forEach(([section, assignment]) => {
+    songBoardData[section] = assignment;
+  });
+  saveSongBoard();
+  sbRenderCards();
+
+  log(`Arrangement "${data.title}" imported · ${(data.loopLibrary || []).length} loops · ${Object.keys(data.arrangementAssignments || {}).length} assignments`, "system");
+}
+
+/** Wire the Export Arrangement button */
+const exportArrBtn = document.getElementById("exportArrBtn");
+if (exportArrBtn) {
+  exportArrBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    exportArrangement();
+  });
+}
+
+/** Wire the Open Arrangement button (hidden file input) */
+const openArrBtn   = document.getElementById("openArrBtn");
+const openArrInput = document.getElementById("openArrInput");
+if (openArrBtn && openArrInput) {
+  openArrBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    openArrInput.click();
+  });
+  openArrInput.addEventListener("change", () => {
+    const file = openArrInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        importArrangement(data);
+      } catch (err) {
+        log("Failed to parse .ptarr file: " + err.message, "error");
+      }
+    };
+    reader.readAsText(file);
+    openArrInput.value = "";
+  });
+}
 // ─────────────────────────────────────────────────────────────
 //  Transport — settings broadcast
 // ─────────────────────────────────────────────────────────────
@@ -395,62 +619,6 @@ function broadcastSettings() {
 [keySelect, modeSelect, quantizeSelect].forEach(el => {
   el.addEventListener("change", broadcastSettings);
 });
-// ── Key Shift Performance Pad ─────────────────────────────────────────────
-(function initKeyShiftPad() {
-  const pad       = document.getElementById("keyShiftPad");
-  const kspActive = document.getElementById("kspActive");
-  const rootBtns  = document.querySelectorAll(".ksp-root");
-  const modeBtns  = document.querySelectorAll(".ksp-mode");
-
-  // Keep pad state in sync with the main keySelect/modeSelect
-  function syncPadState() {
-    const activeKey  = keySelect.value  || "C";
-    const activeMode = modeSelect.value || "major";
-    rootBtns.forEach(b => b.classList.toggle("ksp-root--active", b.dataset.root === activeKey));
-    modeBtns.forEach(b => b.classList.toggle("ksp-mode--active", b.dataset.mode === activeMode));
-    if (kspActive) kspActive.textContent = activeKey + " · " + activeMode.charAt(0).toUpperCase() + activeMode.slice(1);
-  }
-
-  // Root note click — update keySelect and broadcast
-  rootBtns.forEach(btn => {
-    btn.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      keySelect.value = btn.dataset.root;
-      syncPadState();
-      broadcastSettings();
-    });
-    // Hover preview — highlight matching mode buttons (visual only)
-    btn.addEventListener("pointerenter", () => {
-      btn.classList.add("ksp-root--hover");
-    });
-    btn.addEventListener("pointerleave", () => {
-      btn.classList.remove("ksp-root--hover");
-    });
-  });
-
-  // Mode button click — update modeSelect and broadcast
-  modeBtns.forEach(btn => {
-    btn.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      modeSelect.value = btn.dataset.mode;
-      syncPadState();
-      broadcastSettings();
-    });
-  });
-
-  // Keep pad in sync when keySelect/modeSelect change via other controls
-  keySelect.addEventListener("change",  syncPadState);
-  modeSelect.addEventListener("change", syncPadState);
-
-  // Initial sync on load
-  syncPadState();
-
-  // Also sync when room state arrives
-  const _origRoomState = window._kspRoomStateHook;
-  document.addEventListener("pulsetap:room-settings", syncPadState);
-})();
-
-
 
 bpmInput.addEventListener("change", broadcastSettings);
 
@@ -892,6 +1060,13 @@ function loadSavedSession() {
     savedLoopStates.set(loopState.playerId, loopState);
     updateLoopMirror(loopState);
   });
+
+  // Backward compat: restore songBoardData if present in legacy save
+  if (sessionSave.songBoardData) {
+    songBoardData = sessionSave.songBoardData;
+    saveSongBoard();
+    sbRenderCards();
+  }
 
   startHostLoopMirrorAnimation();
   log("Session loaded on host", "system");

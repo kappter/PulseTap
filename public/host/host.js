@@ -1481,17 +1481,19 @@ function sbHandleVizState(payload) {
 // The player handles the actual Song Mode start; host is a conductor.
 document.getElementById("sbStartSongBtn")?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  if (!currentRoom) { log("Open a room first", "system"); return; }
+
+  if (cpActive) {
+    log("Arrangement already running", "system");
+    return;
+  }
+
+  if (!currentRoom) {
+    log("Open a room first", "system");
+    return;
+  }
+
   socket.emit("host:song-start", { roomId: currentRoom });
   startCentralArrangementPlayback();
-});
-
-// ── Transport: Stop Song ──────────────────────────────────────
-document.getElementById("sbStopSongBtn")?.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  if (!currentRoom) return;
-  socket.emit("host:song-stop", { roomId: currentRoom });
-  stopCentralArrangementPlayback();
 });
 
 // ── Transport: Next Section ───────────────────────────────────

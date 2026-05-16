@@ -81,6 +81,12 @@ app.use("/host",   express.static(path.join(__dirname, "public", "host")));
 app.use("/shared", express.static(path.join(__dirname, "public", "shared")));
 // Serve /visualizer  →  public/visualizer/
 app.use("/visualizer", express.static(path.join(__dirname, "public", "visualizer")));
+// Serve living archive assets and standalone project information pages
+app.use("/css", express.static(path.join(__dirname, "css")));
+app.use("/js", express.static(path.join(__dirname, "js")));
+app.use("/data", express.static(path.join(__dirname, "data")));
+app.use("/journal", express.static(path.join(__dirname, "journal")));
+app.use("/pulsetap-info", express.static(path.join(__dirname, "pulsetap-info")));
 
 // ─────────────────────────────────────────────────────────────
 //  Room state

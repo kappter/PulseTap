@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/updates.css">
   <style>
     :root{
       --bg:#0c0f14;--panel:#151a22;--panel2:#202733;--text:#f4f1ea;--muted:#aeb6c2;
@@ -168,6 +169,8 @@
     <header>
       <a href="#top" class="logo"><div class="logo-mark">P</div><div>PulseTap</div></a>
       <nav>
+        <a href="#updates">Updates</a>
+        <a href="#journal">Journal</a>
         <a href="#idea">Roadmap</a>
         <a href="#cube">Cube</a>
         <a href="#modes">Modes</a>
@@ -204,6 +207,44 @@ so musicians can focus on movement, interaction, and emotional direction before 
             <div class="tap-grid"><div class="tap">I</div><div class="tap">II</div><div class="tap active">III</div><div class="tap">IV</div><div class="tap">V</div><div class="tap">VI</div></div>
             <div class="phone-caption">Tap zones become notes, chords, percussion, loops, or walking-synced musical gestures.</div>
           </div>
+        </div>
+      </section>
+
+      <section id="updates" class="lab-section">
+        <div class="lab-heading-row">
+          <div class="section-title">
+            <div class="section-label">Recent Project Updates</div>
+            <h2>Field signals from the build.</h2>
+            <p>
+              PulseTap is not presented here as a finished product. It is an evolving musical research lab: a place where timing experiments, interface sketches, hardware ideas, and collaboration questions remain visible while they are still changing.
+            </p>
+          </div>
+          <aside class="lab-note">
+            <strong>Living archive protocol.</strong>
+            <p>Updates are loaded from a simple JSON feed so future commits, GitHub events, and manual field notes can grow into a public history without turning the site into a corporate changelog.</p>
+          </aside>
+        </div>
+        <div class="lab-grid" data-updates-list>
+          <p class="lab-empty">Loading project signals from the lab bench...</p>
+        </div>
+      </section>
+
+      <section id="journal" class="lab-section">
+        <div class="lab-heading-row">
+          <div class="section-title">
+            <div class="section-label">Development Journal</div>
+            <h2>Notes from the phase before the song exists.</h2>
+            <p>
+              The journal holds longer reflections about musical structure, emotional direction, browser-based sketching, collaborative trust, and the philosophy behind PulseTap’s design decisions.
+            </p>
+          </div>
+          <aside class="lab-note">
+            <strong>Not a dashboard.</strong>
+            <p>These cards are meant to feel tactile, slightly unstable, and alive: part archive, part notebook, part workbench for ideas that are still becoming.</p>
+          </aside>
+        </div>
+        <div class="lab-grid journal-grid" data-journal-list>
+          <p class="lab-empty">Opening the development journal...</p>
         </div>
       </section>
 
@@ -455,6 +496,8 @@ Players privately sketch loops, textures, and ideas while the host shapes arrang
     </main>
     <footer><div>© <span id="year"></span> PulseTap</div><div>Tap · sway · hear · loop · record</div></footer>
   </div>
+  <script src="/js/updates.js" defer></script>
+  <script src="/js/journal.js" defer></script>
   <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
 </body>
 </html>

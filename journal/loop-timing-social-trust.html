@@ -1,1 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop Timing as Social Trust | PulseTap Journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/updates.css">
+  <style>
+    :root{--bg:#0c0f14;--text:#f4f1ea;--muted:#aeb6c2;--accent:#f0b84d;--accent2:#65d6ce;--line:rgba(255,255,255,.12);--shadow:0 24px 80px rgba(0,0,0,.35)}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 12% 0%,rgba(101,214,206,.16),transparent 30%),radial-gradient(circle at 90% 100%,rgba(240,184,77,.16),transparent 30%),var(--bg);color:var(--text);line-height:1.6}a{color:inherit;text-decoration:none}.page{width:min(1500px,calc(100% - 40px));margin:auto}header{display:flex;justify-content:space-between;align-items:center;padding:28px 0;gap:20px}.logo{display:flex;align-items:center;gap:12px;font-weight:850}.logo-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#071014;font-weight:950}nav{display:flex;gap:22px;color:var(--muted);font-size:.95rem;flex-wrap:wrap}nav a:hover{color:var(--text)}h1{font-size:clamp(3rem,8vw,6.4rem);line-height:.9;letter-spacing:-.075em}h1 span{color:var(--accent)}.eyebrow{display:inline-flex;color:var(--accent2);background:rgba(101,214,206,.1);border:1px solid rgba(101,214,206,.25);padding:8px 12px;border-radius:999px;font-size:.82rem;margin-bottom:22px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}.button{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:16px;font-weight:800;border:1px solid var(--line)}.secondary{background:rgba(255,255,255,.06)}footer{padding:32px 0 48px;color:var(--muted);display:flex;justify-content:space-between;border-top:1px solid var(--line);font-size:.92rem}@media(max-width:760px){nav{display:none}.page{width:min(100% - 32px,680px)}footer{flex-direction:column;gap:10px}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a href="/" class="logo"><div class="logo-mark">P</div><div>PulseTap</div></a>
+      <nav><a href="/#updates">Updates</a><a href="/#journal">Journal</a><a href="/#join">Launch</a></nav>
+    </header>
+  </div>
 
+  <main class="journal-body">
+    <section class="journal-hero">
+      <div class="eyebrow">Development Journal</div>
+      <h1>Loop Timing as <span>Social Trust.</span></h1>
+      <div class="journal-meta-line"><span class="lab-date">May 16, 2026</span><span class="lab-tag quiet">sync</span><span class="lab-tag quiet">trust</span><span class="lab-tag quiet">performance</span></div>
+      <p>Notes on why bar boundaries, quantized transitions, and predictable loop movement are emotional design problems as much as engineering problems.</p>
+    </section>
+
+    <article class="journal-shell">
+      <p>In collaborative music software, timing is not simply a calculation. It is the surface on which people decide whether they can trust each other. If a loop changes too early, too late, or unpredictably, the musicians do not merely notice a technical defect. They feel the agreement fracture.</p>
+      <p>PulseTap treats loop timing as a social contract. A player should be able to queue an idea, wait for the measure boundary, and believe that the transition will arrive with the rest of the ensemble. Bar-quantized switching keeps human intention intact while protecting the group from accidental rhythmic collapse.</p>
+      <blockquote class="journal-pullquote">Precision matters because it gives people permission to be less cautious.</blockquote>
+      <p>This is why local-first playback and synchronized structure must coexist. The player needs immediate touch response, but the room needs shared timing. PulseTap’s design challenge is to let both truths remain active: the individual should feel instant agency, and the group should feel collective stability.</p>
+      <p>When timing is reliable, musicians take risks. They add density, remove it, switch sections, and reinterpret the sketch without fearing that the system will betray the pulse. That reliability is not the opposite of human feel. It is what makes human feel safe enough to appear.</p>
+    </article>
+
+    <nav class="journal-nav" aria-label="Journal navigation">
+      <a class="button secondary" href="/">Back to PulseTap Home</a>
+      <a class="button secondary" href="/journal/music-as-temporary-agreement.html">Read Music as Temporary Agreement</a>
+    </nav>
+  </main>
+
+  <div class="page"><footer><div>© <span id="year"></span> PulseTap</div><div>field notes · timing · collaboration</div></footer></div>
+  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+</body>
+</html>

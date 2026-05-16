@@ -1,1 +1,30 @@
-
+[
+  {
+    "date": "2026-05-16",
+    "title": "Living Development Archive Begins",
+    "summary": "PulseTap's front page now opens a public lab notebook for updates, long-form design reflections, and historical milestones.",
+    "tags": ["archive", "journal", "homepage"],
+    "link": "journal/music-as-temporary-agreement.html"
+  },
+  {
+    "date": "2026-05-16",
+    "title": "Bar-Quantized Slot Switching",
+    "summary": "Loop transitions now queue to measure boundaries, making ensemble movement feel tighter without removing human timing.",
+    "tags": ["sync", "timing", "loops"],
+    "link": "journal/loop-timing-social-trust.html"
+  },
+  {
+    "date": "2026-05-15",
+    "title": "Songmaker to PulseTap Workflow",
+    "summary": "The ecosystem vision is becoming clearer: structure, emotional direction, and section logic can become playable musical momentum.",
+    "tags": ["songmaker", "structure", "workflow"],
+    "link": "journal/music-as-temporary-agreement.html"
+  },
+  {
+    "date": "2026-05-14",
+    "title": "Instrument Cube Research Thread",
+    "summary": "The hardware concept continues to shape the visual language: tactile surfaces, glowing centers, and motion-first interaction.",
+    "tags": ["cube", "hardware", "interaction"],
+    "link": "pulsetap-info/info.html"
+  }
+]

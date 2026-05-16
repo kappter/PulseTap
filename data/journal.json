@@ -1,1 +1,18 @@
-
+[
+  {
+    "id": "music-temporary-agreement",
+    "date": "2026-05-16",
+    "title": "Music as Temporary Agreement",
+    "excerpt": "Music may be a temporary agreement about frequencies over time: a shared decision to let tempo, key, mode, and structure carry feeling forward.",
+    "tags": ["music-theory", "philosophy", "collaboration"],
+    "link": "journal/music-as-temporary-agreement.html"
+  },
+  {
+    "id": "loop-timing-social-trust",
+    "date": "2026-05-16",
+    "title": "Loop Timing as Social Trust",
+    "excerpt": "Quantization is not only a technical convenience. In collaborative music software, timing precision becomes a form of trust between people.",
+    "tags": ["sync", "trust", "performance"],
+    "link": "journal/loop-timing-social-trust.html"
+  }
+]

@@ -1,1 +1,303 @@
+:root {
+  --lab-earth: #b07a45;
+  --lab-clay: #d28d57;
+  --lab-moss: #8aa36d;
+  --lab-ink: #201911;
+  --lab-paper: #f3eadb;
+  --lab-rust: #a45534;
+}
 
+.lab-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.lab-section::before,
+.lab-section::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.lab-section::before {
+  right: -120px;
+  top: 40px;
+  background: var(--lab-clay);
+}
+
+.lab-section::after {
+  left: -150px;
+  bottom: -120px;
+  background: var(--lab-moss);
+}
+
+.lab-heading-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 36px;
+  align-items: end;
+  margin-bottom: 34px;
+}
+
+.lab-note {
+  border: 1px solid rgba(240, 184, 77, 0.28);
+  border-radius: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(176, 122, 69, 0.15), rgba(138, 163, 109, 0.08));
+  color: var(--muted);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+}
+
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.journal-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lab-card {
+  position: relative;
+  display: flex;
+  min-height: 270px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  padding: 24px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(243, 234, 219, 0.12), rgba(176, 122, 69, 0.08)),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  isolation: isolate;
+}
+
+.lab-card::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(243, 234, 219, 0.12);
+  border-radius: 22px;
+  z-index: -1;
+}
+
+.lab-card::after {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -48px;
+  top: -48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(101, 214, 206, 0.18), transparent 66%);
+  z-index: -1;
+}
+
+.lab-card:hover,
+.lab-card:focus-visible {
+  transform: translateY(-7px) scale(1.015) rotate(0deg);
+  border-color: rgba(240, 184, 77, 0.45);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.36);
+  outline: none;
+}
+
+.tilt-left { transform: rotate(-1.2deg); }
+.tilt-right { transform: rotate(1.1deg); }
+
+.lab-date {
+  color: var(--accent2);
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lab-card h3 {
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1.08;
+}
+
+.lab-card p {
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.lab-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.lab-tag {
+  display: inline-flex;
+  border: 1px solid rgba(240, 184, 77, 0.32);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: #f5c978;
+  background: rgba(240, 184, 77, 0.09);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.lab-tag.quiet {
+  border-color: rgba(138, 163, 109, 0.36);
+  color: #c9d9ab;
+  background: rgba(138, 163, 109, 0.1);
+}
+
+.journal-card {
+  min-height: 310px;
+  background:
+    linear-gradient(145deg, rgba(32, 25, 17, 0.4), rgba(164, 85, 52, 0.12)),
+    rgba(255, 255, 255, 0.05);
+}
+
+.journal-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journal-card__id {
+  color: rgba(244, 241, 234, 0.5);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.journal-read-link {
+  align-self: flex-start;
+  border-bottom: 1px solid rgba(101, 214, 206, 0.55);
+  color: var(--accent2);
+  font-weight: 850;
+}
+
+.lab-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.journal-body {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+  color: var(--text);
+}
+
+.journal-hero {
+  position: relative;
+  padding: 86px 0 52px;
+  border-top: 0;
+}
+
+.journal-hero h1 {
+  max-width: 980px;
+  margin-bottom: 20px;
+}
+
+.journal-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.journal-shell {
+  position: relative;
+  margin-bottom: 80px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 36px;
+  padding: clamp(28px, 5vw, 58px);
+  background:
+    linear-gradient(180deg, rgba(243, 234, 219, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.035);
+  box-shadow: var(--shadow);
+}
+
+.journal-shell::before {
+  content: "field note";
+  position: absolute;
+  right: 28px;
+  top: -14px;
+  border: 1px solid rgba(240, 184, 77, 0.34);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #16130f;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.journal-shell p {
+  margin: 0 0 1.25rem;
+  color: #d8d2c8;
+  font-size: 1.09rem;
+  line-height: 1.86;
+}
+
+.journal-shell h2 {
+  margin-top: 2.2rem;
+  margin-bottom: 1rem;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.journal-pullquote {
+  margin: 2rem 0;
+  border-left: 4px solid var(--accent);
+  padding: 18px 0 18px 24px;
+  color: var(--lab-paper);
+  font-size: 1.35rem;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.journal-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 28px 0 44px;
+}
+
+@media (max-width: 1100px) {
+  .lab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .lab-heading-row,
+  .lab-grid,
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tilt-left,
+  .tilt-right {
+    transform: none;
+  }
+
+  .journal-nav {
+    flex-direction: column;
+  }
+}

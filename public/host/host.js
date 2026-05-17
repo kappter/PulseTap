@@ -1993,7 +1993,12 @@ window.addSection = function() {
   saveSongBoard();
   sbRenderCards();
 };
-
+document.getElementById("sbStopSongBtn")?.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (!currentRoom) return;
+  socket.emit("host:song-stop", { roomId: currentRoom });
+  stopCentralArrangementPlayback();
+});
 // ── Song Parts Toolbar ───────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("songBoardSections");

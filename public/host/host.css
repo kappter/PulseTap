@@ -1191,3 +1191,164 @@
   border-radius: 999px;
   text-transform: uppercase;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Song Parts Toolbar
+═══════════════════════════════════════════════════════════════ */
+.sb-parts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid rgba(148,163,184,0.10);
+  background: rgba(8,14,28,0.70);
+  flex-wrap: wrap;
+}
+
+.sb-parts-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sb-parts-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sb-parts-label {
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  white-space: nowrap;
+}
+
+.sb-parts-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 150px;
+}
+
+.sb-parts-btn {
+  background: rgba(101,214,206,0.08);
+  border: 1px solid rgba(101,214,206,0.30);
+  border-radius: 6px;
+  color: #65d6ce;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+  touch-action: manipulation;
+}
+.sb-parts-btn:hover {
+  background: rgba(101,214,206,0.18);
+  border-color: rgba(101,214,206,0.60);
+}
+
+/* Per-card section control buttons */
+.sb-card-controls {
+  display: flex;
+  gap: 3px;
+}
+.sb-ctrl-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.40);
+  cursor: pointer;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 2px 5px;
+  transition: background 0.12s, color 0.12s;
+  touch-action: manipulation;
+}
+.sb-ctrl-btn:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
+
+/* ═══════════════════════════════════════════════════════════════
+   Mobile UI tightening  (≤ 700 px)
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  /* Transport bar: allow wrapping, remove horizontal scroll */
+  .transport-bar {
+    overflow-x: visible;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .transport-group { flex-shrink: 1; }
+
+  /* Mixer body: reduce padding */
+  .mixer-body { padding: 10px 10px; }
+
+  /* Host sidebar: full width stacked */
+  .host-sidebar {
+    width: 100%;
+  }
+
+  /* Song Board cards: full width */
+  .sb-card {
+    grid-template-columns: 28px 1fr auto;
+  }
+  .sb-sections { max-height: none; }
+
+  /* Inbox cards: compact */
+  .loop-card--passed { padding: 0.4rem 0.5rem; }
+  .lc-name  { font-size: 0.72rem; }
+  .lc-meta  { font-size: 0.62rem; }
+
+  /* Assign buttons: wrap and use short labels */
+  .lc-assign-row { flex-wrap: wrap; gap: 0.25rem; }
+  .lc-assign-btn {
+    font-size: 0.58rem;
+    padding: 2px 5px;
+  }
+
+  /* Arrangement file buttons */
+  .arr-file-btns { flex-wrap: wrap; }
+  .arr-btn { font-size: 0.66rem; padding: 4px 8px; }
+
+  /* Song Parts toolbar */
+  .sb-parts-toolbar { padding: 5px 6px 3px; }
+  .sb-parts-select  { max-width: 120px; font-size: 0.62rem; }
+  .sb-parts-btn     { font-size: 0.60rem; padding: 3px 7px; }
+
+  /* Song Board transport buttons */
+  .sb-transport { flex-wrap: wrap; }
+  .sb-btn { flex: 1 1 45%; font-size: 0.60rem; padding: 5px 3px; }
+
+  /* Nav: tighten */
+  .mixer-nav { padding: 8px 12px; gap: 10px; }
+  .room-pill { padding: 4px 10px; }
+
+  /* Hide secondary metadata text */
+  .sb-card-notes { display: none; }
+  .lc-role { font-size: 0.60rem; }
+}
+
+/* Short assign-button labels on mobile via data-short attribute */
+@media (max-width: 700px) {
+  .lc-assign-btn[data-short]::before {
+    content: attr(data-short);
+  }
+  .lc-assign-btn[data-short] .lc-assign-full {
+    display: none;
+  }
+}

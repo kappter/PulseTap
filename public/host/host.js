@@ -555,8 +555,8 @@ function importArrangement(data) {
         </div>
         <div class="lc-assign-row">
           <span class="lc-assign-label">Assign to:</span>
-          ${["Intro","Verse","Chorus","Bridge","Outro"].map(s =>
-            `<button class="lc-assign-btn" data-section="${s}">${s}</button>`
+          ${arrangementSections.map(sec =>
+            `<button class="lc-assign-btn" data-section="${escHtml(sec.name)}" data-short="${escHtml(sec.name.slice(0,3))}">${escHtml(sec.name)}</button>`
           ).join("")}
         </div>
       `;
@@ -1803,6 +1803,16 @@ function stopCentralArrangementPlayback() {
   if (nextBtn)  { nextBtn.disabled  = true; }
   sbUpdateStatus({ ...sbState, songActive: false });
   sbHighlight(null, null);
+  // Emit idle state to Visualizer
+  if (currentRoom) {
+    socket.emit("host:viz-state", {
+      roomId:     currentRoom,
+      section:    null,
+      upcoming:   null,
+      barsLeft:   0,
+      songActive: false
+    });
+  }
   log("Central Playback stopped", "system");
 }
 
@@ -1823,6 +1833,23 @@ function scheduleCentralSection(idx) {
   sbState.upcoming = nextSectionName;
   sbState.barsLeft = bars;
   sbUpdateStatus(sbState);
+
+  // ── Emit viz:state to Visualizer ────────────────────────────
+  if (currentRoom) {
+    socket.emit("host:viz-state", {
+      roomId:       currentRoom,
+      section:      sectionName,
+      upcoming:     nextSectionName,
+      barsLeft:     bars,
+      slot:         idx,
+      sectionIndex: idx,
+      bpm:          Number(bpmInput.value) || 120,
+      key:          keySelect.value || "C",
+      mode:         modeSelect.value || "major",
+      timeSig:      `${beatsPerBarSel.value || 4}/${beatUnitSel.value || 4}`,
+      songActive:   true
+    });
+  }
 
   // ── Layered multi-loop scheduling ────────────────────────────
   const assignedIds = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
@@ -1853,6 +1880,22 @@ function scheduleCentralSection(idx) {
     sbState.barsLeft = bars - currentBar;
     const barsLabel = document.getElementById(`sbCardBars_${sectionName}`);
     if (barsLabel) barsLabel.textContent = `${sbState.barsLeft} bars`;
+    // Emit bar update to Visualizer
+    if (currentRoom) {
+      socket.emit("host:viz-state", {
+        roomId:       currentRoom,
+        section:      sectionName,
+        upcoming:     nextSectionName,
+        barsLeft:     sbState.barsLeft,
+        slot:         idx,
+        sectionIndex: idx,
+        bpm:          Number(bpmInput.value) || 120,
+        key:          keySelect.value || "C",
+        mode:         modeSelect.value || "major",
+        timeSig:      `${beatsPerBarSel.value || 4}/${beatUnitSel.value || 4}`,
+        songActive:   true
+      });
+    }
     currentBar++;
     if (currentBar < bars) {
       cpTimer = setTimeout(tick, msPerBar);
@@ -1951,37 +1994,34 @@ window.addSection = function() {
   sbRenderCards();
 };
 
-// ── Template Picker UI ────────────────────────────────────────
+// ── Song Parts Toolbar ───────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  const sbHeader = document.querySelector(".sb-header") || document.getElementById("songBoardSections")?.parentElement;
-  if (sbHeader && !document.getElementById("templatePicker")) {
-    const tplDiv = document.createElement("div");
-    tplDiv.style.marginBottom = "10px";
-    tplDiv.style.display = "flex";
-    tplDiv.style.gap = "8px";
-    tplDiv.innerHTML = `
-      <select id="templatePicker" class="transport-select">
-        <option value="">-- Load Template --</option>
+  const container = document.getElementById("songBoardSections");
+  if (!container || document.getElementById("songPartsToolbar")) return;
+
+  const toolbar = document.createElement("div");
+  toolbar.id = "songPartsToolbar";
+  toolbar.className = "sb-parts-toolbar";
+  toolbar.innerHTML = `
+    <div class="sb-parts-left">
+      <span class="sb-parts-label">SONG PARTS</span>
+      <select id="templatePicker" class="sb-parts-select">
+        <option value="">Load Template…</option>
         <option value="basic">Basic Song</option>
-        <option value="rock_pop">Rock/Pop</option>
+        <option value="rock_pop">Rock / Pop</option>
         <option value="jam_session">Jam Session</option>
         <option value="classroom_abc">Classroom A/B/C</option>
         <option value="energy_build">Energy Build</option>
       </select>
-      <button class="transport-btn" onclick="addSection()">+ Add Section</button>
-    `;
-    
-    // Insert before the sections container
-    const container = document.getElementById("songBoardSections");
-    if (container) {
-      container.parentNode.insertBefore(tplDiv, container);
-    }
-    
-    document.getElementById("templatePicker")?.addEventListener("change", (e) => {
-      if (e.target.value) {
-        loadTemplate(e.target.value);
-        e.target.value = "";
-      }
-    });
-  }
+    </div>
+    <div class="sb-parts-right">
+      <button class="sb-parts-btn" id="sbAddPartBtn" title="Add Section">+ Part</button>
+    </div>
+  `;
+  container.parentNode.insertBefore(toolbar, container);
+
+  document.getElementById("templatePicker")?.addEventListener("change", (e) => {
+    if (e.target.value) { loadTemplate(e.target.value); e.target.value = ""; }
+  });
+  document.getElementById("sbAddPartBtn")?.addEventListener("click", addSection);
 });

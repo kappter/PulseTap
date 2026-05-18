@@ -1505,8 +1505,11 @@ document.getElementById("sbNextSectionBtn")?.addEventListener("pointerdown", (e)
   if (cpActive) {
     if (cpTimer) clearTimeout(cpTimer);
     cpSectionIndex++;
-    scheduleCentralSection(cpSectionIndex);
-    log("\u23ed Next section forced locally", "system");
+    // Snap to the next bar boundary for a clean cut
+    const nextWallMs  = cpNextBarStartMs();
+    const nextAcSec   = msToAudioTime(nextWallMs);
+    scheduleCentralSection(cpSectionIndex, nextAcSec);
+    log("⏭ Next section forced locally (bar-aligned)", "system");
   } else {
     log("\u23ed Next section requested", "system");
   }
@@ -1773,13 +1776,56 @@ function getEventsFromLoop(loopData) {
 let cpActive = false;
 let cpSectionIndex = 0;
 let cpTimer = null;
+// Wall-clock ms of the AudioContext epoch (Date.now() when ctx was created)
+let cpAudioEpochMs = 0;
+
+/**
+ * Convert a wall-clock ms timestamp to AudioContext seconds.
+ * hostAudioCtx.currentTime is seconds since ctx was created.
+ */
+function msToAudioTime(wallMs) {
+  return (wallMs - cpAudioEpochMs) / 1000;
+}
+
+/**
+ * Compute the next bar-one wall-clock start time.
+ * If the session clock is running, align to the next bar boundary.
+ * If not, auto-start the metronome and schedule one bar from now.
+ */
+function cpNextBarStartMs() {
+  const bpm         = Number(bpmInput.value) || 120;
+  const beatsPerBar = Number(beatsPerBarSel.value) || 4;
+  const msPerBar    = (60000 / bpm) * beatsPerBar;
+
+  if (!isRunning || !metroBarZeroTime) {
+    // Auto-start the session clock so the grid is established
+    isRunning = true;
+    updateStartStopBtn();
+    startMetronome();
+    // metroBarZeroTime is now set to Date.now() + 300 inside startMetronome
+    return metroBarZeroTime + msPerBar;  // first full bar after clock start
+  }
+
+  const now = Date.now();
+  const elapsed = now - metroBarZeroTime;
+  const phaseInBar = elapsed % msPerBar;
+  const untilNextBar = msPerBar - phaseInBar;
+  // Give at least 200 ms of lead time; if we're within 200 ms of the next bar, skip ahead one more
+  return untilNextBar < 200 ? now + untilNextBar + msPerBar : now + untilNextBar;
+}
 
 function startCentralArrangementPlayback() {
   if (cpActive) return;  // guard: ignore repeated calls while running
   if (!hostAudioCtx) initHostAudio();
   if (hostAudioCtx.state === "suspended") hostAudioCtx.resume();
+
+  // Record the AudioContext epoch so we can convert wall-clock times to AC times
+  // hostAudioCtx.currentTime is 0 at creation; we capture the wall-clock offset now.
+  cpAudioEpochMs = Date.now() - (hostAudioCtx.currentTime * 1000);
+
   cpActive = true;
   cpSectionIndex = 0;
+
   const startBtn = document.getElementById("sbStartSongBtn");
   const stopBtn  = document.getElementById("sbStopSongBtn");
   const nextBtn  = document.getElementById("sbNextSectionBtn");
@@ -1787,8 +1833,33 @@ function startCentralArrangementPlayback() {
   if (stopBtn)  { stopBtn.disabled  = false; }
   if (nextBtn)  { nextBtn.disabled  = false; }
   sbUpdateStatus({ ...sbState, songActive: true });
-  log("Central Playback started", "system");
-  scheduleCentralSection(cpSectionIndex);
+
+  // Compute bar-boundary start and emit pendingStart to Visualizer
+  const startWallMs = cpNextBarStartMs();
+  const startAcSec  = msToAudioTime(startWallMs);
+
+  if (currentRoom) {
+    const bpm         = Number(bpmInput.value) || 120;
+    const beatsPerBar = Number(beatsPerBarSel.value) || 4;
+    const firstSec    = arrangementSections[0];
+    socket.emit("host:viz-state", {
+      roomId:       currentRoom,
+      section:      firstSec?.name || null,
+      upcoming:     arrangementSections[1]?.name || null,
+      barsLeft:     firstSec?.bars || 4,
+      sectionIndex: 0,
+      bpm,
+      key:          keySelect.value || "C",
+      mode:         modeSelect.value || "major",
+      timeSig:      `${beatsPerBar}/${beatUnitSel.value || 4}`,
+      songActive:   true,
+      pendingStart: true,
+      startTime:    startWallMs
+    });
+  }
+
+  log(`Central Playback starts at bar boundary (in ${Math.round(startWallMs - Date.now())} ms)`, "system");
+  scheduleCentralSection(cpSectionIndex, startAcSec);
 }
 
 function stopCentralArrangementPlayback() {
@@ -1816,97 +1887,98 @@ function stopCentralArrangementPlayback() {
   log("Central Playback stopped", "system");
 }
 
-function scheduleCentralSection(idx) {
+/**
+ * Schedule a section starting at `sectionStartAcSec` (AudioContext seconds).
+ * Audio for the NEXT section is pre-scheduled before this one ends (look-ahead).
+ * Bar countdown ticks use wall-clock setTimeout aligned to the same grid.
+ *
+ * @param {number} idx             - Index into arrangementSections
+ * @param {number} sectionStartAcSec - AudioContext time (seconds) for bar-one of this section
+ */
+function scheduleCentralSection(idx, sectionStartAcSec) {
   if (!cpActive) return;
   const sec = arrangementSections[idx];
   if (!sec) { stopCentralArrangementPlayback(); return; }
-  const sectionName = sec.name;
-  const bars = sec.bars;
-  const bpm = Number(bpmInput.value) || 120;
-  const beatsPerBar = Number(beatsPerBarSel.value) || 4;
-  const msPerBar = (60000 / bpm) * beatsPerBar;
-  const sectionDurationMs = msPerBar * bars;
+
+  const sectionName     = sec.name;
+  const bars            = sec.bars;
+  const bpm             = Number(bpmInput.value) || 120;
+  const beatsPerBar     = Number(beatsPerBarSel.value) || 4;
+  const secPerBar       = (60 / bpm) * beatsPerBar;          // seconds per bar (AC time)
+  const msPerBar        = secPerBar * 1000;                   // ms per bar (wall-clock)
+  const sectionDurSec   = secPerBar * bars;                   // total section duration in AC seconds
+  const nextSectionStartAcSec = sectionStartAcSec + sectionDurSec;  // exact gapless boundary
 
   const nextSectionName = arrangementSections[idx + 1]?.name || null;
   sbHighlight(sectionName, nextSectionName);
-  sbState.section = sectionName;
+  sbState.section  = sectionName;
   sbState.upcoming = nextSectionName;
   sbState.barsLeft = bars;
   sbUpdateStatus(sbState);
 
-  // ── Emit viz:state to Visualizer ────────────────────────────
-  if (currentRoom) {
+  // ── Emit section-start viz state ────────────────────────────────────────
+  const emitVizState = (barsLeft) => {
+    if (!currentRoom) return;
     socket.emit("host:viz-state", {
       roomId:       currentRoom,
       section:      sectionName,
       upcoming:     nextSectionName,
-      barsLeft:     bars,
+      barsLeft,
       slot:         idx,
       sectionIndex: idx,
-      bpm:          Number(bpmInput.value) || 120,
+      bpm,
       key:          keySelect.value || "C",
       mode:         modeSelect.value || "major",
-      timeSig:      `${beatsPerBarSel.value || 4}/${beatUnitSel.value || 4}`,
+      timeSig:      `${beatsPerBar}/${beatUnitSel.value || 4}`,
       songActive:   true
     });
-  }
+  };
+  emitVizState(bars);
 
-  // ── Layered multi-loop scheduling ────────────────────────────
+  // ── Layered multi-loop audio scheduling ────────────────────────────────
   const assignedIds = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
-  const startTime = hostAudioCtx.currentTime + 0.1;
 
   assignedIds.forEach(loopId => {
     const loopData = passedLoopsLibrary.get(loopId);
     if (!loopData) return;
-    const events = getEventsFromLoop(loopData);
-    const loopLenMs = loopData.loopLengthMs || msPerBar;
-    const loopsNeeded = Math.ceil(sectionDurationMs / loopLenMs);
+    const events    = getEventsFromLoop(loopData);
+    const loopLenSec = (loopData.loopLengthMs || msPerBar) / 1000;
+    const loopsNeeded = Math.ceil(sectionDurSec / loopLenSec);
 
     for (let i = 0; i < loopsNeeded; i++) {
-      const loopOffset = i * (loopLenMs / 1000);
+      const loopOffsetSec = i * loopLenSec;
       events.forEach(ev => {
-        const evTime = startTime + loopOffset + (ev.timeMs / 1000);
-        if (evTime < startTime + (sectionDurationMs / 1000)) {
-          playHostSound(ev.degree, ev.instrument, evTime);
+        const evAcTime = sectionStartAcSec + loopOffsetSec + (ev.timeMs / 1000);
+        // Only schedule events that fall within this section's window
+        if (evAcTime >= sectionStartAcSec && evAcTime < nextSectionStartAcSec) {
+          playHostSound(ev.degree, ev.instrument, evAcTime);
         }
       });
     }
   });
 
-  // ── Bar countdown + auto-advance ─────────────────────────────
+  // ── Bar countdown + auto-advance ────────────────────────────────────────
   let currentBar = 0;
   const tick = () => {
     if (!cpActive || sbState.section !== sectionName) return;
+    currentBar++;
     sbState.barsLeft = bars - currentBar;
     const barsLabel = document.getElementById(`sbCardBars_${sectionName}`);
-    if (barsLabel) barsLabel.textContent = `${sbState.barsLeft} bars`;
-    // Emit bar update to Visualizer
-    if (currentRoom) {
-      socket.emit("host:viz-state", {
-        roomId:       currentRoom,
-        section:      sectionName,
-        upcoming:     nextSectionName,
-        barsLeft:     sbState.barsLeft,
-        slot:         idx,
-        sectionIndex: idx,
-        bpm:          Number(bpmInput.value) || 120,
-        key:          keySelect.value || "C",
-        mode:         modeSelect.value || "major",
-        timeSig:      `${beatsPerBarSel.value || 4}/${beatUnitSel.value || 4}`,
-        songActive:   true
-      });
-    }
-    currentBar++;
+    if (barsLabel) barsLabel.textContent = `${Math.max(0, sbState.barsLeft)} bars`;
+    emitVizState(Math.max(0, sbState.barsLeft));
+
     if (currentBar < bars) {
       cpTimer = setTimeout(tick, msPerBar);
     } else {
+      // Advance to next section at the exact gapless boundary
       cpTimer = setTimeout(() => {
         cpSectionIndex++;
-        scheduleCentralSection(cpSectionIndex);
-      }, msPerBar);
+        scheduleCentralSection(cpSectionIndex, nextSectionStartAcSec);
+      }, 0);  // fire immediately — audio is already pre-scheduled
     }
   };
-  tick();
+  // First tick fires after the first bar
+  cpTimer = setTimeout(tick, msPerBar);
 }
 
 
@@ -1993,12 +2065,7 @@ window.addSection = function() {
   saveSongBoard();
   sbRenderCards();
 };
-document.getElementById("sbStopSongBtn")?.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  if (!currentRoom) return;
-  socket.emit("host:song-stop", { roomId: currentRoom });
-  stopCentralArrangementPlayback();
-});
+
 // ── Song Parts Toolbar ───────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("songBoardSections");

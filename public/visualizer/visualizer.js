@@ -162,6 +162,9 @@ socket.on("tap:event", () => {
 // ─────────────────────────────────────────────────────────────
 //  Apply full viz state (from viz:state relay)
 // ─────────────────────────────────────────────────────────────
+// Pending-start countdown timer handle
+let _pendingStartTimer = null;
+
 function applyVizState(state) {
   if (!state) return;
 
@@ -172,6 +175,39 @@ function applyVizState(state) {
   if (state.timeSig) vizTimeSig.textContent = state.timeSig;
 
   songActive = !!state.songActive;
+
+  // ── pendingStart: show countdown until bar-one ────────────────────────────────
+  if (state.pendingStart && state.startTime) {
+    if (_pendingStartTimer) clearInterval(_pendingStartTimer);
+    const targetMs = state.startTime;
+    const tick = () => {
+      const msLeft = targetMs - Date.now();
+      if (msLeft <= 0) {
+        clearInterval(_pendingStartTimer);
+        _pendingStartTimer = null;
+        setStatus("Song Running", "ready");
+        return;
+      }
+      const secs = (msLeft / 1000).toFixed(1);
+      setStatus(`Starting in ${secs}s…`, "accent2");
+    };
+    tick();
+    _pendingStartTimer = setInterval(tick, 100);
+    // Pre-fill section display during countdown
+    updateSection(
+      state.section  || null,
+      state.upcoming || null,
+      state.barsLeft != null ? state.barsLeft : null,
+      state.slot     || null
+    );
+    return;  // skip normal status update until countdown clears
+  }
+
+  // Clear any lingering countdown if we receive a non-pending update
+  if (_pendingStartTimer) {
+    clearInterval(_pendingStartTimer);
+    _pendingStartTimer = null;
+  }
 
   updateSection(
     state.section  || null,
@@ -186,6 +222,8 @@ function applyVizState(state) {
     setStatus("Song Running", "ready");
   } else if (isPlaying) {
     setStatus("Playing", "ready");
+  } else if (!state.songActive && state.section === null) {
+    setStatus("Idle", "accent2");
   }
 }
 

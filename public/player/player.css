@@ -1217,3 +1217,99 @@ body.solo-active .performance-module .pad {
 .loop-btn--pass:hover, .loop-btn--pass:active {
   background: rgba(0, 229, 255, 0.22);
 }
+
+/* ── Named Loop Pass ────────────────────────────────────────── */
+.loop-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+.loop-name-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent2, #65d6ce);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.loop-name-input {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(101, 214, 206, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8f4f3;
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.loop-name-input::placeholder {
+  color: rgba(200, 230, 228, 0.38);
+  font-style: italic;
+}
+.loop-name-input:focus {
+  border-color: rgba(101, 214, 206, 0.75);
+  background: rgba(101, 214, 206, 0.08);
+}
+@media (max-width: 600px) {
+  .loop-name-row { flex-direction: column; align-items: stretch; }
+  .loop-name-input { max-width: 100
+/* ── Named Loop Pass ────────────────────────────────────────── */
+.loop-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+
+.loop-name-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent2, #65d6ce);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.loop-name-input {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(101, 214, 206, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8f4f3;
+  font-size: 0.82rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.loop-name-input::placeholder {
+  color: rgba(200, 230, 228, 0.38);
+  font-style: italic;
+}
+
+.loop-name-input:focus {
+  border-color: rgba(101, 214, 206, 0.75);
+  background: rgba(101, 214, 206, 0.08);
+}
+
+@media (max-width: 600px) {
+  .loop-name-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .loop-name-input {
+    max-width: 100%;
+  }
+}

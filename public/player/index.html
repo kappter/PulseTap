@@ -173,6 +173,18 @@
           <button id="shareLoopBtn" class="loop-btn">Share</button>
           <button id="importLoopBtn" class="loop-btn">Import</button>
           <button id="exportMidiBtn" class="loop-btn loop-btn--midi" title="Export loop as .mid file">↓ MIDI</button>
+        </div>
+        <div class="loop-name-row">
+          <label class="loop-name-label" for="loopNameInput">Loop Name</label>
+          <input
+            id="loopNameInput"
+            class="loop-name-input"
+            type="text"
+            maxlength="20"
+            placeholder="Bass Hook, Soft Pad, Kick Grid…"
+            autocomplete="off"
+            spellcheck="false"
+          />
           <button id="passToHostBtn" class="loop-btn loop-btn--pass" title="Send current loop to Host arrangement inbox">⬆ Pass to Host</button>
         </div>
 

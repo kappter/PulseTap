@@ -570,34 +570,53 @@ importLoopBtn?.addEventListener("click", importLoopFromClipboard);
 exportMidiBtn?.addEventListener("pointerdown", (e) => { e.preventDefault(); exportMidi(); });
 
 // ── Pass to Host ──────────────────────────────────────────────
-const passToHostBtn = document.getElementById("passToHostBtn");
+const passToHostBtn  = document.getElementById("passToHostBtn");
+const loopNameInput  = document.getElementById("loopNameInput");
+
 passToHostBtn?.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   if (!socket.connected) { setLoopStatus("Not connected to a room"); return; }
   const roomId = roomCodeIn?.value?.trim()?.toUpperCase() || "";
   if (!roomId) { setLoopStatus("Join a room first"); return; }
+
+  // Require a non-empty loop name
+  const loopName = (loopNameInput?.value || "").trim();
+  if (!loopName) {
+    setLoopStatus("Give this loop a name before passing (e.g. Bass Hook, Soft Pad)");
+    loopNameInput?.focus();
+    return;
+  }
+  if (loopName.length > 20) {
+    setLoopStatus("Loop name must be 20 characters or fewer");
+    loopNameInput?.focus();
+    return;
+  }
+
   const data = getCurrentLoopData();
-const totalEvents = (data.loopEvents?.length || 0) + (data.stepGridEvents?.length || 0);
+  const totalEvents = (data.loopEvents?.length || 0) + (data.stepGridEvents?.length || 0);
+  if (!totalEvents) {
+    setLoopStatus("Nothing to pass — record or load a loop first");
+    return;
+  }
 
-if (!totalEvents) {
-  setLoopStatus("Nothing to pass — record or load a loop first");
-  return;
-}
+  socket.emit("player:pass-to-host", {
+    roomId,
+    playerId,
+    playerName:    playerNameIn?.value?.trim() || "Player",
+    role:          selectedRole,
+    slot:          currentLoopSlot,
+    loopName,
+    loopLengthMs:  data.loopLengthMs,
+    loopEvents:    data.loopEvents,
+    stepGridEvents: data.stepGridEvents,
+    stepGridSteps: data.stepGridSteps,
+    instrument:    instrumentSel?.value || "—",
+    settings:      data.settings
+  });
 
-socket.emit("player:pass-to-host", {
-  roomId,
-  playerId,
-  playerName: playerNameIn?.value?.trim() || "Player",
-  role: selectedRole,
-  slot: currentLoopSlot,
-  loopLengthMs: data.loopLengthMs,
-  loopEvents: data.loopEvents,
-  stepGridEvents: data.stepGridEvents,
-  stepGridSteps: data.stepGridSteps,
-  instrument: instrumentSel?.value || "—",
-  settings: data.settings
-});
-  setLoopStatus("Passed to Host · available for arrangement.");
+  setLoopStatus(`“${loopName}” passed to Host · available for arrangement.`);
+  // Clear the name field so the next loop gets a fresh name
+  if (loopNameInput) loopNameInput.value = "";
 });
 
 const slotButtons = document.querySelectorAll(".slot-btn");

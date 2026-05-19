@@ -981,3 +981,40 @@ html, body {
   background: var(--accent);
   transform: translate(-50%, -50%) scale(1.15);
 }
+
+/* ── Role Picker ────────────────────────────────────────────── */
+.rh-role-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(101, 214, 206, 0.4);
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.rh-role-select:focus {
+  border-color: var(--accent);
+}
+.rh-section-loops {
+  margin: 6px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.rh-section-loops.empty {
+  color: #888;
+  font-size: 0.75rem;
+  font-style: italic;
+  padding: 4px 0;
+}
+.rh-loop-chip {
+  background: rgba(101, 214, 206, 0.15);
+  border: 1px solid rgba(101, 214, 206, 0.3);
+  color: var(--accent);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}

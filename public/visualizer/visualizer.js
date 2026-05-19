@@ -652,9 +652,12 @@ function scheduleSectionAudio(sectionName, startTime, barDuration) {
     if (loop && loop.loopId) loopIds.push(loop.loopId);
   }
   
+  const currentRole = (typeof rhRoleSelect !== "undefined" && rhRoleSelect) ? rhRoleSelect.value : "All";
+  
   loopIds.forEach(lid => {
     const loop = pbArrangement.loopLibrary.find(l => l.loopId === lid);
     if (!loop) return;
+    if (currentRole !== "All" && loop.role !== currentRole) return;
     
     // Calculate how many times this loop repeats in a bar
     const loopLenSec = loop.loopLengthMs / 1000;
@@ -1026,15 +1029,33 @@ function renderRehearsalSections() {
     rhSectionList.innerHTML = '<div class="rh-empty">No sections loaded yet. Load from a room or connect to a live session.</div>';
     return;
   }
-  rhSectionList.innerHTML = rehearsalData.sections.map((sec, i) => `
-    <div class="rh-section-card" data-section="${sec.name}" data-index="${i}">
-      <div class="rh-section-head">
-        <span class="rh-section-name">${sec.name}</span>
-        <span class="rh-section-meta">Slot ${sec.slot} · ${sec.bars} bars</span>
+  const currentRole = (typeof rhRoleSelect !== "undefined" && rhRoleSelect) ? rhRoleSelect.value : "All";
+  rhSectionList.innerHTML = rehearsalData.sections.map((sec, i) => {
+    let assignedLoopsHtml = "";
+    if (pbArrangement && pbArrangement.arrangementAssignments && pbArrangement.arrangementAssignments[sec.name]) {
+      const assignedIds = pbArrangement.arrangementAssignments[sec.name];
+      const lib = (pbArrangement.loopLibrary || []);
+      const loops = (Array.isArray(assignedIds) ? assignedIds : []).map(id => lib.find(l => l.loopId === id)).filter(Boolean);
+      const roleLoops = currentRole === "All" ? loops : loops.filter(l => l.role === currentRole);
+      if (roleLoops.length > 0) {
+        assignedLoopsHtml = `<div class="rh-section-loops">` +
+          roleLoops.map(l => `<span class="rh-loop-chip">${l.loopName || (l.role + ' ' + l.slot)}</span>`).join("") +
+          `</div>`;
+      } else if (currentRole !== "All") {
+        assignedLoopsHtml = `<div class="rh-section-loops empty">No ${currentRole} loops assigned</div>`;
+      }
+    }
+    return `
+      <div class="rh-section-card" data-section="${sec.name}" data-index="${i}">
+        <div class="rh-section-head">
+          <span class="rh-section-name">${sec.name}</span>
+          <span class="rh-section-meta">${sec.bars} bars</span>
+        </div>
+        ${assignedLoopsHtml}
+        <textarea class="rh-section-notes" placeholder="Cues, notes, lyrics sketch…" rows="2">${sec.notes || ""}</textarea>
       </div>
-      <textarea class="rh-section-notes" placeholder="Cues, notes, lyrics sketch…" rows="2">${sec.notes || ""}</textarea>
-    </div>
-  `).join("");
+    `;
+  }).join("");
   // Auto-save notes on input
   rhSectionList.querySelectorAll(".rh-section-notes").forEach(ta => {
     ta.addEventListener("input", saveRehearsalToLocalStorage);

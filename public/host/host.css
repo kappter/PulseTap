@@ -1352,3 +1352,48 @@
     display: none;
   }
 }
+
+/* ── Loop Name identity display ─────────────────────────────── */
+.lc-loop-name {
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #e8f4f3;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.lc-meta-player {
+  font-weight: 700;
+  color: var(--accent2, #65d6ce);
+}
+
+.lc-meta-role {
+  color: var(--muted, #94a3b8);
+}
+
+.lc-meta-sep {
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0 1px;
+}
+
+/* Song Board assigned row — loopName as primary label */
+.sb-assigned-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #e8f4f3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-assigned-meta {
+  font-size: 0.68rem;
+  color: var(--muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

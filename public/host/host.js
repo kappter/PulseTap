@@ -239,15 +239,22 @@ socket.on("host:passed-loop", (data) => {
   card.dataset.loopId = loopId;
   passedLoopsLibrary.set(loopId, data);
 
+  const displayName = data.loopName
+    ? data.loopName
+    : `${role || "Loop"} Slot ${slot ?? "—"}`;
+
   card.innerHTML = `
     <div class="lc-top">
-      <strong class="lc-name">${escHtml(playerName)}</strong>
-      <span class="lc-role">${escHtml(role)}</span>
+      <strong class="lc-loop-name">${escHtml(displayName)}</strong>
       <span class="lc-badge lc-badge--available">Available</span>
       <button class="lc-delete-btn" title="Delete loop">✕</button>
     </div>
     <div class="lc-meta">
-      Slot ${slot ?? "—"} · ${totalEvents} events · ${lenSec}
+      <span class="lc-meta-player">${escHtml(playerName)}</span>
+      <span class="lc-meta-sep">·</span>
+      <span class="lc-meta-role">${escHtml(role)}</span>
+      <span class="lc-meta-sep">·</span>
+      Slot ${slot ?? "—"} · ${lenSec}
       ${instrument ? `· ${escHtml(instrument)}` : ""}
     </div>
     <div class="lc-assign-row">
@@ -428,6 +435,7 @@ function buildArrangementFile() {
 
   const loopLibrary = Array.from(passedLoopsLibrary.values()).map(loop => ({
     loopId:         loop.loopId || `${loop.playerId}_${loop.slot || "slot"}_export`,
+    loopName:       loop.loopName || "",
     playerId:       loop.playerId,
     playerName:     loop.playerName,
     role:           loop.role,
@@ -542,15 +550,21 @@ function importArrangement(data) {
       card.dataset.loopId = importLoopId;
       const totalEvents = (loop.loopEvents?.length || 0) + (loop.stepGridEvents?.length || 0);
       const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
+      const importDisplayName = loop.loopName
+        ? loop.loopName
+        : `${loop.role || "Loop"} Slot ${loop.slot ?? "—"}`;
       card.innerHTML = `
         <div class="lc-top">
-          <strong class="lc-name">${escHtml(loop.playerName || "")}</strong>
-          <span class="lc-role">${escHtml(loop.role || "")}</span>
-          <span class="lc-badge lc-badge--available">Imported</span>
+          <strong class="lc-loop-name">${escHtml(importDisplayName)}</strong>
+          <span class="lc-badge lc-badge--available lc-badge--imported">Imported</span>
           <button class="lc-delete-btn" title="Delete loop">✕</button>
         </div>
         <div class="lc-meta">
-          Slot ${loop.slot ?? "—"} · ${totalEvents} events · ${lenSec}
+          <span class="lc-meta-player">${escHtml(loop.playerName || "")}</span>
+          <span class="lc-meta-sep">·</span>
+          <span class="lc-meta-role">${escHtml(loop.role || "")}</span>
+          <span class="lc-meta-sep">·</span>
+          Slot ${loop.slot ?? "—"} · ${lenSec}
           ${loop.instrument ? `· ${escHtml(loop.instrument)}` : ""}
         </div>
         <div class="lc-assign-row">
@@ -1371,9 +1385,12 @@ function sbRenderCards() {
 
         if (loop) {
           const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
+          const rowDisplayName = loop.loopName
+            ? loop.loopName
+            : `${loop.role || "Loop"} Slot ${loop.slot ?? "—"}`;
           row.innerHTML = `
-            <span class="sb-assigned-name">${escHtml(loop.playerName || "")}</span>
-            <span class="sb-assigned-meta">${escHtml(loop.role || "")} · Slot ${loop.slot ?? "—"} · ${lenSec}</span>
+            <span class="sb-assigned-name">${escHtml(rowDisplayName)}</span>
+            <span class="sb-assigned-meta">${escHtml(loop.playerName || "")} · ${escHtml(loop.role || "")} · Slot ${loop.slot ?? "—"} · ${lenSec}</span>
             <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(card.dataset.section)}" title="Remove from section">✕</button>
           `;
         } else {

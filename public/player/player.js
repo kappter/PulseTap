@@ -389,14 +389,21 @@ const loopLengthSelect = document.getElementById("loopLengthSelect");
 const quantizeSelect = document.getElementById("quantizeSelect");
 const loopPlayhead = document.getElementById("loopPlayhead");
 const currentStep = document.getElementById("currentStep");
-const setupScreen    = document.getElementById("setupScreen");
-const padScreen      = document.getElementById("padScreen");
 const playerNameIn   = document.getElementById("playerName");
-const roomCodeIn     = document.getElementById("roomCode");
-const roleGrid       = document.getElementById("roleGrid");
 const joinBtn        = document.getElementById("joinBtn");
 const setupError     = document.getElementById("setupError");
+const padScreen      = document.getElementById("padScreen");
+const setupScreen    = document.getElementById("setupScreen");
 const padRoomLabel   = document.getElementById("padRoomLabel");
+
+const tabLive        = document.getElementById("tabLive");
+const tabArr         = document.getElementById("tabArr");
+const liveSetup      = document.getElementById("liveSetup");
+const arrSetup       = document.getElementById("arrSetup");
+const arrFileInput   = document.getElementById("arrFileInput");
+const arrFileStatus  = document.getElementById("arrFileStatus");
+
+let loadedArrangement = null;
 const padPlayerLabel = document.getElementById("padPlayerLabel");
 const connStatus     = document.getElementById("connStatus");
 const connLabel      = document.getElementById("connLabel");
@@ -611,7 +618,8 @@ passToHostBtn?.addEventListener("pointerdown", (e) => {
     stepGridEvents: data.stepGridEvents,
     stepGridSteps: data.stepGridSteps,
     instrument:    instrumentSel?.value || "—",
-    settings:      data.settings
+    settings:      data.settings,
+    sourceArrangement: loadedArrangement ? loadedArrangement.metadata?.title : null
   });
 
   setLoopStatus(`“${loopName}” passed to Host · available for arrangement.`);
@@ -2473,41 +2481,108 @@ roleGrid.querySelectorAll(".role-btn").forEach((btn) => {
     roleGrid.querySelectorAll(".role-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     selectedRole = btn.dataset.role;
+    
+    // Update ref panel if an arrangement is loaded
+    if (loadedArrangement) {
+      populateArrangementRefPanel();
+    }
   });
 });
 
 // ─────────────────────────────────────────────────────────────
-//  Join / Leave
+//  Join / Leave / Load Arrangement
 // ─────────────────────────────────────────────────────────────
+tabLive?.addEventListener("click", () => {
+  tabLive.classList.add("active");
+  tabArr.classList.remove("active");
+  liveSetup.classList.remove("hidden");
+  arrSetup.classList.add("hidden");
+  joinBtn.textContent = "Join Live Session";
+});
+
+tabArr?.addEventListener("click", () => {
+  tabArr.classList.add("active");
+  tabLive.classList.remove("active");
+  arrSetup.classList.remove("hidden");
+  liveSetup.classList.add("hidden");
+  joinBtn.textContent = "Load Arrangement";
+});
+
+arrFileInput?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.ptarrVersion) {
+        loadedArrangement = data;
+        arrFileStatus.textContent = `Loaded: ${data.metadata?.title || "Arrangement"}`;
+        arrFileStatus.style.color = "#65d6ce";
+      } else {
+        throw new Error("Invalid format");
+      }
+    } catch (err) {
+      arrFileStatus.textContent = "Error loading .ptarr file";
+      arrFileStatus.style.color = "#ff6b6b";
+    }
+  };
+  reader.readAsText(file);
+});
+
 joinBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   const name = playerNameIn.value.trim();
-  const room = roomCodeIn.value.trim().toUpperCase();
-
   if (!name) { setupError.textContent = "Please enter your name."; return; }
-  if (!room) { setupError.textContent = "Please enter a room code."; return; }
-  setupError.textContent = "";
+  
+  const isLive = tabLive.classList.contains("active");
 
-  initAudio();
+  if (isLive) {
+    const room = roomCodeIn.value.trim().toUpperCase();
+    if (!room) { setupError.textContent = "Please enter a room code."; return; }
+    setupError.textContent = "";
 
-  socket.emit("player:join", {
-    roomId:     room,
-    playerId,
-    playerName: name,
-    role:       selectedRole
-  });
+    initAudio();
 
-  // Update top bar labels
-  padRoomLabel.textContent   = room;
+    socket.emit("player:join", {
+      roomId:     room,
+      playerId,
+      playerName: name,
+      role:       selectedRole
+    });
+
+    padRoomLabel.textContent = room;
+  } else {
+    if (!loadedArrangement) { setupError.textContent = "Please select a .ptarr file."; return; }
+    setupError.textContent = "";
+    
+    initAudio();
+    
+    // Set local session settings from arrangement
+    const s = loadedArrangement.settings || {};
+    sessionSettings.key = s.key || "C";
+    sessionSettings.mode = s.mode || "major";
+    sessionSettings.bpm = s.bpm || 120;
+    sessionSettings.quantize = s.quantize || "off";
+    
+    // Apply settings to UI
+    dispKey.textContent = sessionSettings.key;
+    dispMode.textContent = sessionSettings.mode;
+    dispBpm.textContent = sessionSettings.bpm;
+    dispQuantize.textContent = sessionSettings.quantize;
+    
+    padRoomLabel.textContent = loadedArrangement.metadata?.title || "Local File";
+    
+    // Populate arrangement reference panel
+    populateArrangementRefPanel();
+  }
+
   padPlayerLabel.textContent = name + " · " + selectedRole;
 
-  // Switch screens
   setupScreen.classList.add("hidden");
   padScreen.classList.remove("hidden");
 
-  // Build default beat dots
   buildBeatDots(metroBeatsPerBar || 4);
-  // Song Context panel init
   ctxInitNotesSave();
   document.getElementById("songCtxToggle")?.addEventListener("pointerdown", (e) => {
     e.preventDefault();
@@ -2516,6 +2591,86 @@ joinBtn.addEventListener("pointerdown", (e) => {
   updateSongContext();
   updateEditingBanner(currentLoopSlot);
 });
+
+function populateArrangementRefPanel() {
+  const panel = document.getElementById("arrRefPanel");
+  const list = document.getElementById("arrRefList");
+  const roleLabel = document.getElementById("arrRefRole");
+  
+  if (!loadedArrangement || !panel || !list) return;
+  
+  panel.classList.remove("hidden");
+  roleLabel.textContent = selectedRole;
+  list.innerHTML = "";
+  
+  const loops = loadedArrangement.loopLibrary || [];
+  const roleMap = loadedArrangement.roleMap || {};
+  
+  // Find loops for this role
+  let roleLoopIds = roleMap[selectedRole] || [];
+  
+  // Fallback: search loopLibrary directly if roleMap is missing or empty
+  if (roleLoopIds.length === 0) {
+    roleLoopIds = loops.filter(l => l.role === selectedRole).map(l => l.loopId);
+  }
+  
+  const relevantLoops = loops.filter(l => roleLoopIds.includes(l.loopId));
+  
+  if (relevantLoops.length === 0) {
+    list.innerHTML = `<div style="color:#888; font-style:italic; padding:10px;">No ${selectedRole} loops in this arrangement.</div>`;
+    return;
+  }
+  
+  relevantLoops.forEach(loop => {
+    const item = document.createElement("div");
+    item.className = "arr-ref-item";
+    
+    const name = loop.loopName || `${loop.role} Slot ${loop.slot}`;
+    const instr = loop.instrument || "kit";
+    
+    item.innerHTML = `
+      <div class="arr-ref-info">
+        <span class="arr-ref-name">${name}</span>
+        <span class="arr-ref-meta">${loop.playerName || "Unknown"} · ${instr}</span>
+      </div>
+      <button class="arr-ref-btn" data-loop-id="${loop.loopId}">Load to Editor</button>
+    `;
+    list.appendChild(item);
+  });
+  
+  // Add listeners to load buttons
+  list.querySelectorAll(".arr-ref-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const loopId = e.target.dataset.loopId;
+      const loop = relevantLoops.find(l => l.loopId === loopId);
+      if (loop) {
+        // Find an empty slot or use slot 1
+        let targetSlot = 1;
+        for (let i = 1; i <= 8; i++) {
+          if (!localStorage.getItem(`pulsetap_loop_slot_${i}`)) {
+            targetSlot = i;
+            break;
+          }
+        }
+        
+        // Save to slot and load
+        localStorage.setItem(`pulsetap_loop_slot_${targetSlot}`, JSON.stringify(loop));
+        document.querySelector(`.slot-btn[data-slot="${targetSlot}"]`)?.classList.add("saved");
+        
+        applyLoopData(loop);
+        currentLoopSlot = targetSlot;
+        
+        document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
+        document.querySelector(`.slot-btn[data-slot="${targetSlot}"]`)?.classList.add("active");
+        
+        if (loopNameInput) loopNameInput.value = loop.loopName || "";
+        
+        setLoopStatus(`Loaded "${name}" from arrangement`, "ready");
+        updateEditingBanner(targetSlot);
+      }
+    });
+  });
+}
 
 leaveBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();

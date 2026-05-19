@@ -23,17 +23,32 @@
     </header>
 
     <div class="setup-card">
-      <h1 class="setup-title">Join a Session</h1>
+      <h1 class="setup-title">Join or Load Session</h1>
 
       <div class="field-group">
         <label for="playerName">Your name</label>
         <input id="playerName" type="text" placeholder="e.g. Alex" maxlength="24" autocomplete="off" />
       </div>
 
-      <div class="field-group">
-        <label for="roomCode">Room code</label>
-        <input id="roomCode" type="text" placeholder="e.g. JAZZ01" maxlength="16"
-               autocomplete="off" autocapitalize="characters" />
+      <div class="setup-tabs">
+        <button id="tabLive" class="setup-tab active">Live Room</button>
+        <button id="tabArr" class="setup-tab">Arrangement File</button>
+      </div>
+
+      <div id="liveSetup" class="setup-panel active">
+        <div class="field-group">
+          <label for="roomCode">Room code</label>
+          <input id="roomCode" type="text" placeholder="e.g. JAZZ01" maxlength="16"
+                 autocomplete="off" autocapitalize="characters" />
+        </div>
+      </div>
+
+      <div id="arrSetup" class="setup-panel hidden">
+        <div class="field-group">
+          <label>Arrangement File (.ptarr)</label>
+          <input type="file" id="arrFileInput" accept=".ptarr,.json" class="file-input" />
+          <div id="arrFileStatus" class="file-status">No file loaded</div>
+        </div>
       </div>
 
       <div class="field-group">
@@ -47,7 +62,7 @@
         </div>
       </div>
 
-      <button id="joinBtn" class="btn-primary">Join Session</button>
+      <button id="joinBtn" class="btn-primary">Start Session</button>
       <p id="setupError" class="setup-error" aria-live="polite"></p>
     </div>
   </div>
@@ -238,6 +253,15 @@
     </section>
 
         <section class="song-context-module" id="songContextModule">
+      <div class="arr-ref-panel hidden" id="arrRefPanel">
+        <div class="arr-ref-header">
+          <span class="arr-ref-title">Arrangement Loops: <span id="arrRefRole">Melody</span></span>
+        </div>
+        <div class="arr-ref-list" id="arrRefList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
       <div class="song-ctx-panel">
         <div class="song-ctx-header">
           <span class="song-ctx-title">Song Context</span>

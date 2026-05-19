@@ -1313,3 +1313,107 @@ body.solo-active .performance-module .pad {
     max-width: 100%;
   }
 }
+
+/* ── Arrangement Load UI ────────────────────────────────────── */
+.setup-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.setup-tab {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #aaa;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.setup-tab.active {
+  background: rgba(101,214,206,0.15);
+  border-color: var(--accent);
+  color: #fff;
+}
+.file-input {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0,0,0,0.2);
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.85rem;
+}
+.file-status {
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-top: 5px;
+  text-align: center;
+}
+
+/* ── Arrangement Reference Panel ────────────────────────────── */
+.arr-ref-panel {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(101,214,206,0.3);
+  border-radius: 12px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+.arr-ref-header {
+  background: rgba(101,214,206,0.1);
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(101,214,206,0.2);
+}
+.arr-ref-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.arr-ref-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.arr-ref-item {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.arr-ref-info {
+  display: flex;
+  flex-direction: column;
+}
+.arr-ref-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+.arr-ref-meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+.arr-ref-btn {
+  background: rgba(101,214,206,0.15);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.arr-ref-btn:hover {
+  background: rgba(101,214,206,0.3);
+}

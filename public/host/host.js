@@ -1311,6 +1311,16 @@ let sbState = {
 let songBoardData = JSON.parse(localStorage.getItem("pulsetap_song_board") || "{}");
 
 // ── Render section cards ──────────────────────────────────────
+function getSectionColorClass(name) {
+  const n = name.toLowerCase();
+  if (n.includes("intro")) return "sec-color-intro";
+  if (n.includes("verse")) return "sec-color-verse";
+  if (n.includes("chorus")) return "sec-color-chorus";
+  if (n.includes("bridge")) return "sec-color-bridge";
+  if (n.includes("outro")) return "sec-color-outro";
+  return "sec-color-default";
+}
+
 function sbRenderCards() {
   const container = document.getElementById("songBoardSections");
   if (!container) return;
@@ -1319,63 +1329,80 @@ function sbRenderCards() {
   arrangementSections.forEach((sec, idx) => {
     const section = sec.name;
     const card = document.createElement("div");
-    card.className = "sb-card";
+    card.className = `sb-card ${getSectionColorClass(section)}`;
     card.dataset.section = section;
     card.dataset.sectionId = sec.id;
 
-    // Header row with slot badge and controls
-    const headerRow = document.createElement("div");
-    headerRow.className = "sb-card-header";
-    headerRow.style.display = "flex";
-    headerRow.style.justifyContent = "space-between";
-    headerRow.style.alignItems = "center";
-    headerRow.style.marginBottom = "8px";
-
-    const slotBadge = document.createElement("div");
-    slotBadge.className = "sb-card-slot";
-    slotBadge.textContent = `Sec ${idx + 1}`;
-
-    const controls = document.createElement("div");
-    controls.className = "sb-card-controls";
-    controls.innerHTML = `
-      <button class="sb-ctrl-btn" onclick="editSection('${sec.id}')" title="Edit Section">✎</button>
-      <button class="sb-ctrl-btn" onclick="duplicateSection('${sec.id}')" title="Duplicate Section">+</button>
-      <button class="sb-ctrl-btn" onclick="deleteSection('${sec.id}')" title="Delete Section">✕</button>
-    `;
-    controls.style.display = "flex";
-    controls.style.gap = "4px";
-
-    headerRow.appendChild(slotBadge);
-    headerRow.appendChild(controls);
-
-    // Section name
-    const nameEl = document.createElement("div");
+    // --- 1. Header ---
+    const header = document.createElement("div");
+    header.className = "sb-card-header";
+    
+    const nameWrap = document.createElement("div");
+    nameWrap.className = "sb-header-name-wrap";
+    
+    const nameEl = document.createElement("span");
     nameEl.className = "sb-card-name";
     nameEl.textContent = section;
-
-    // Bars label
-    const barsEl = document.createElement("div");
+    
+    const barsEl = document.createElement("span");
     barsEl.className = "sb-card-bars";
     barsEl.id = `sbCardBars_${section}`;
-    barsEl.textContent = `${sec.bars} bars`;
-
-    // Notes preview
-    const notesEl = document.createElement("div");
-    notesEl.className = "sb-card-notes";
-    notesEl.id = `sbCardNotes_${section}`;
-    notesEl.textContent = sec.notes ? sec.notes.split("\n")[0].slice(0, 60) : "";
-
-    // Active/next indicator pill
-    const pillEl = document.createElement("div");
+    barsEl.textContent = `· ${sec.bars} bars`;
+    
+    const pillEl = document.createElement("span");
     pillEl.className = "sb-card-pill";
     pillEl.id = `sbCardPill_${section}`;
+    
+    nameWrap.appendChild(nameEl);
+    nameWrap.appendChild(barsEl);
+    nameWrap.appendChild(pillEl);
+    header.appendChild(nameWrap);
+    card.appendChild(header);
 
-    card.appendChild(headerRow);
-    card.appendChild(nameEl);
-    card.appendChild(barsEl);
-    card.appendChild(notesEl);
-    card.appendChild(pillEl);
-    // Drop zone for dragged inbox cards
+    // --- 2. Assigned Loops (Chips) ---
+    const assignedIds = Array.isArray(songBoardData[section])
+      ? songBoardData[section]
+      : (songBoardData[section] ? [songBoardData[section].playerId].filter(Boolean) : []);
+
+    const assignList = document.createElement("div");
+    assignList.className = "sb-card-assign-list";
+
+    if (assignedIds.length > 0) {
+      card.classList.add("sb-card--has-loop");
+      assignedIds.forEach(lid => {
+        const loop = passedLoopsLibrary.get(lid);
+        const chip = document.createElement("div");
+        chip.className = "sb-assigned-chip";
+
+        if (loop) {
+          const rowDisplayName = loop.loopName ? loop.loopName : `${loop.role || "Loop"} ${loop.slot ?? ""}`;
+          chip.innerHTML = `
+            <span class="sb-chip-player">${escHtml(loop.playerName || "Player")}</span>
+            <span class="sb-chip-name">${escHtml(rowDisplayName)}</span>
+            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(section)}" title="Remove">✕</button>
+          `;
+        } else {
+          chip.innerHTML = `
+            <span class="sb-chip-name sb-assigned-missing">[deleted]</span>
+            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(section)}" title="Remove">✕</button>
+          `;
+        }
+        assignList.appendChild(chip);
+      });
+    }
+    card.appendChild(assignList);
+
+    // --- 3. Footer Controls ---
+    const footer = document.createElement("div");
+    footer.className = "sb-card-footer";
+    footer.innerHTML = `
+      <button class="sb-ctrl-btn" onclick="editSection('${sec.id}')" title="Edit Section">✎ Edit</button>
+      <button class="sb-ctrl-btn" onclick="duplicateSection('${sec.id}')" title="Duplicate Section">+ Dup</button>
+      <button class="sb-ctrl-btn" onclick="deleteSection('${sec.id}')" title="Delete Section">✕ Del</button>
+    `;
+    card.appendChild(footer);
+
+    // --- Drop Zone ---
     card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("sb-card--drop-hover"); });
     card.addEventListener("dragleave", () => card.classList.remove("sb-card--drop-hover"));
     card.addEventListener("drop", (e) => {
@@ -1383,7 +1410,6 @@ function sbRenderCards() {
       card.classList.remove("sb-card--drop-hover");
       try {
         const dragData = JSON.parse(e.dataTransfer.getData("application/json") || "{}");
-        // Prefer full loop from library if loopId is present
         const loopData = (dragData.loopId && passedLoopsLibrary.has(dragData.loopId))
           ? passedLoopsLibrary.get(dragData.loopId)
           : dragData;
@@ -1393,43 +1419,7 @@ function sbRenderCards() {
         }
       } catch {}
     });
-    // Restore saved assignments (array of loopIds)
-    const assignedIds = Array.isArray(songBoardData[card.dataset.section])
-      ? songBoardData[card.dataset.section]
-      : (songBoardData[card.dataset.section] ? [songBoardData[card.dataset.section].playerId].filter(Boolean) : []);
 
-    if (assignedIds.length > 0) {
-      card.classList.add("sb-card--has-loop");
-      const assignList = document.createElement("div");
-      assignList.className = "sb-card-assign-list";
-
-      assignedIds.forEach(lid => {
-        const loop = passedLoopsLibrary.get(lid);
-        const row = document.createElement("div");
-        row.className = "sb-assigned-row";
-
-        if (loop) {
-          const lenSec = loop.loopLengthMs ? (loop.loopLengthMs / 1000).toFixed(2) + "s" : "—";
-          const rowDisplayName = loop.loopName
-            ? loop.loopName
-            : `${loop.role || "Loop"} Slot ${loop.slot ?? "—"}`;
-          row.innerHTML = `
-            <span class="sb-assigned-name">${escHtml(rowDisplayName)}</span>
-            <span class="sb-assigned-meta">${escHtml(loop.playerName || "")} · ${escHtml(loop.role || "")} · Slot ${loop.slot ?? "—"} · ${lenSec}</span>
-            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(card.dataset.section)}" title="Remove from section">✕</button>
-          `;
-        } else {
-          // Loop was deleted from library but still referenced
-          row.innerHTML = `
-            <span class="sb-assigned-name sb-assigned-missing">[deleted]</span>
-            <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(card.dataset.section)}" title="Remove">✕</button>
-          `;
-        }
-        assignList.appendChild(row);
-      });
-
-      card.appendChild(assignList);
-    }
     container.appendChild(card);
   });
 }

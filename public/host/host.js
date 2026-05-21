@@ -111,8 +111,8 @@ function sbAssignLoopToSection(section, loopData) {
   }
 
   // Add loopId only if not already assigned to this section
-  if (!songBoardData[section].includes(loopData.loopId)) {
-    songBoardData[section].push(loopData.loopId);
+  if (!songBoardData[section].some(a => (a.loopId || a) === loopData.loopId)) {
+    songBoardData[section].push({ loopId: loopData.loopId, energy: 1.0 });
   }
 
   saveSongBoard();
@@ -334,7 +334,7 @@ function deletePassedLoop(loopId) {
   arrangementSections.forEach(sec => {
     const section = sec.name;
     if (Array.isArray(songBoardData[section])) {
-      songBoardData[section] = songBoardData[section].filter(id => id !== loopId);
+      songBoardData[section] = songBoardData[section].filter(a => (a.loopId || a) !== loopId);
       if (songBoardData[section].length === 0) {
         delete songBoardData[section];
       }
@@ -1360,25 +1360,36 @@ function sbRenderCards() {
     card.appendChild(header);
 
     // --- 2. Assigned Loops (Chips) ---
-    const assignedIds = Array.isArray(songBoardData[section])
+    const assignments = Array.isArray(songBoardData[section])
       ? songBoardData[section]
-      : (songBoardData[section] ? [songBoardData[section].playerId].filter(Boolean) : []);
+      : (songBoardData[section] ? [{ loopId: songBoardData[section].playerId, energy: 1.0 }] : []);
 
     const assignList = document.createElement("div");
     assignList.className = "sb-card-assign-list";
 
-    if (assignedIds.length > 0) {
+    if (assignments.length > 0) {
       card.classList.add("sb-card--has-loop");
-      assignedIds.forEach(lid => {
+      assignments.forEach(assign => {
+        const lid = assign.loopId || assign; // handle legacy string
+        const energy = assign.energy ?? 1.0;
         const loop = passedLoopsLibrary.get(lid);
         const chip = document.createElement("div");
         chip.className = "sb-assigned-chip";
+        
+        // Visual brightness based on energy
+        if (energy < 0.4) chip.classList.add("sb-chip--low");
+        else if (energy > 0.8) chip.classList.add("sb-chip--high");
 
         if (loop) {
           const rowDisplayName = loop.loopName ? loop.loopName : `${loop.role || "Loop"} ${loop.slot ?? ""}`;
           chip.innerHTML = `
             <span class="sb-chip-player">${escHtml(loop.playerName || "Player")}</span>
             <span class="sb-chip-name">${escHtml(rowDisplayName)}</span>
+            <div class="sb-chip-energy">
+              <input type="range" class="sb-energy-slider" min="0" max="1" step="0.1" value="${energy}" 
+                     onchange="setLoopEnergy('${escHtml(section)}', '${escHtml(lid)}', this.value)" 
+                     title="Energy: ${Math.round(energy * 100)}%">
+            </div>
             <button class="sb-remove-btn" data-loop-id="${escHtml(lid)}" data-section="${escHtml(section)}" title="Remove">✕</button>
           `;
         } else {
@@ -1432,7 +1443,7 @@ document.addEventListener("click", (e) => {
   const section = btn.dataset.section;
   if (!loopId || !section) return;
   if (Array.isArray(songBoardData[section])) {
-    songBoardData[section] = songBoardData[section].filter(id => id !== loopId);
+    songBoardData[section] = songBoardData[section].filter(a => (a.loopId || a) !== loopId);
     if (songBoardData[section].length === 0) delete songBoardData[section];
   }
   saveSongBoard();
@@ -1441,6 +1452,26 @@ document.addEventListener("click", (e) => {
 });
 
 // ── Highlight current and next section ───────────────────────
+
+// ── Set Loop Energy ───────────────────────────────────────────
+window.setLoopEnergy = function(section, loopId, value) {
+  if (Array.isArray(songBoardData[section])) {
+    const assign = songBoardData[section].find(a => (a.loopId || a) === loopId);
+    if (assign) {
+      if (typeof assign === "string") {
+        // Upgrade on the fly if needed
+        const idx = songBoardData[section].indexOf(assign);
+        songBoardData[section][idx] = { loopId: assign, energy: parseFloat(value) };
+      } else {
+        assign.energy = parseFloat(value);
+      }
+      saveSongBoard();
+      sbRenderCards();
+      log(`Energy set to ${value} for loop in ${section}`, "system");
+    }
+  }
+};
+
 function sbHighlight(currentSection, nextSection) {
   document.querySelectorAll(".sb-card").forEach(card => {
     const s = card.dataset.section;
@@ -1968,9 +1999,11 @@ function scheduleCentralSection(idx, sectionStartAcSec) {
   emitVizState(bars);
 
   // ── Layered multi-loop audio scheduling ────────────────────────────────
-  const assignedIds = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
+  const assignments = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
 
-  assignedIds.forEach(loopId => {
+  assignments.forEach(assign => {
+    const loopId = assign.loopId || assign;
+    const energy = assign.energy ?? 1.0;
     const loopData = passedLoopsLibrary.get(loopId);
     if (!loopData) return;
     const events    = getEventsFromLoop(loopData);
@@ -1983,7 +2016,7 @@ function scheduleCentralSection(idx, sectionStartAcSec) {
         const evAcTime = sectionStartAcSec + loopOffsetSec + (ev.timeMs / 1000);
         // Only schedule events that fall within this section's window
         if (evAcTime >= sectionStartAcSec && evAcTime < nextSectionStartAcSec) {
-          playHostSound(ev.degree, ev.instrument, evAcTime);
+          playHostSound(ev.degree, ev.instrument, evAcTime, ev.velocity * energy);
         }
       });
     }
@@ -2235,9 +2268,11 @@ async function renderArrangementToWav() {
     const sectionName = sec.name;
     const bars = sec.bars;
     const sectionDurSec = secPerBar * bars;
-    const assignedIds = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
+    const assignments = Array.isArray(songBoardData[sectionName]) ? songBoardData[sectionName] : [];
 
-    assignedIds.forEach(loopId => {
+    assignments.forEach(assign => {
+      const loopId = assign.loopId || assign;
+      const energy = assign.energy ?? 1.0;
       const loopData = passedLoopsLibrary.get(loopId);
       if (!loopData) return;
       const events = getEventsFromLoop(loopData);

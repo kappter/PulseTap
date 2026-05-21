@@ -1424,3 +1424,53 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Loop Energy System ───────────────────────────────────────── */
+.sb-chip-energy {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+  margin-right: 2px;
+}
+
+.sb-energy-slider {
+  -webkit-appearance: none;
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sb-energy-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 12px;
+  background: #65d6ce;
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.sb-energy-slider::-moz-range-thumb {
+  width: 8px;
+  height: 12px;
+  background: #65d6ce;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* Brightness levels based on energy */
+.sb-chip--low {
+  opacity: 0.6;
+  filter: saturate(0.7);
+}
+
+.sb-chip--high {
+  background: rgba(101,214,206,0.15);
+  border-color: rgba(101,214,206,0.3);
+  box-shadow: 0 0 8px rgba(101,214,206,0.1);
+}
